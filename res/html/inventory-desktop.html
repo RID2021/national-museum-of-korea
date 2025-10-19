@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inventory</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Noto Sans KR", "Segoe UI", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: rgba(12, 10, 8, 0.86);
+      }
+
+      .inventory {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 24px;
+      }
+
+      .inventory__panel {
+        position: relative;
+        width: min(90vw, 502px);
+        max-width: 502px;
+        aspect-ratio: 502 / 656;
+        background: url("../images/inventory/inventory_backplate.png") center / contain no-repeat;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 110px 56px 140px;
+        box-sizing: border-box;
+      }
+
+      .inventory__header {
+        position: absolute;
+        top: 38px;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 4px;
+        pointer-events: none;
+      }
+
+      .inventory__title {
+        font-size: 20px;
+        color: #ffedd1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        margin: 0;
+      }
+
+      .inventory__size {
+        font-size: 13px;
+        color: rgba(255, 237, 209, 0.75);
+        margin: 0;
+      }
+
+      .inventory__grid {
+        --inventory-cols: 3;
+        width: 100%;
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(var(--inventory-cols), 1fr);
+        grid-auto-rows: 1fr;
+        gap: 24px;
+      }
+
+      .inventory__slot {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .inventory__slot::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("../images/inventory/item_backplate.png") center / cover no-repeat;
+        opacity: 1;
+        pointer-events: none;
+      }
+
+      .inventory__slot::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 18px;
+        background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0));
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+      }
+
+      .inventory__slot--empty:hover::after {
+        opacity: 0.45;
+      }
+
+      .inventory__slot--filled:hover::after {
+        opacity: 0.2;
+      }
+
+      .inventory__slot-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .inventory__image {
+        width: 80%;
+        aspect-ratio: 1 / 1;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.15);
+        background-size: cover;
+        background-position: center;
+        box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45);
+      }
+
+      .inventory__quantity {
+        position: absolute;
+        right: 14px;
+        bottom: 14px;
+        border-radius: 999px;
+        background: rgba(32, 24, 18, 0.85);
+        color: #ffe2a6;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        display: none;
+      }
+
+      .inventory__slot[data-has-quantity="true"] .inventory__quantity {
+        display: inline-flex;
+      }
+
+      .inventory__name {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: #ffe2a6;
+        text-align: center;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      }
+
+      .inventory__tooltip {
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 14px);
+        transform: translate(-50%, 10px);
+        background: rgba(20, 16, 12, 0.92);
+        border: 1px solid rgba(255, 206, 150, 0.4);
+        border-radius: 10px;
+        padding: 12px;
+        width: min(220px, 70vw);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        color: #ffebd4;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        z-index: 5;
+      }
+
+      .inventory__slot--filled:hover .inventory__tooltip {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      .inventory__tooltip img {
+        width: 100%;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+
+      .inventory__tooltip-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      .inventory__tooltip-desc {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.5;
+        color: rgba(255, 235, 212, 0.85);
+      }
+
+      .inventory__close {
+        position: absolute;
+        bottom: 42px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 143px;
+        height: 89px;
+        border: none;
+        background: url("../images/inventory/cancel_button.png") center / contain no-repeat;
+        color: transparent;
+        cursor: pointer;
+      }
+
+      .inventory__close:focus-visible {
+        outline: 2px solid rgba(255, 214, 158, 0.8);
+        outline-offset: 2px;
+      }
+
+      .inventory__size-display {
+        font-size: 12px;
+        color: rgba(255, 237, 209, 0.7);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="inventory">
+      <div class="inventory__panel">
+        <header class="inventory__header">
+          <h1 class="inventory__title">인벤토리</h1>
+          <p class="inventory__size" data-size></p>
+        </header>
+        <div class="inventory__grid" data-grid></div>
+        <button type="button" class="inventory__close" data-close aria-label="닫기"></button>
+      </div>
+    </section>
+    <script>
+      const state = {
+        size: { rows: 3, cols: 3 },
+        items: [],
+      };
+
+      const grid = document.querySelector('[data-grid]');
+      const sizeLabel = document.querySelector('[data-size]');
+      const closeButton = document.querySelector('[data-close]');
+
+      function escapeHtml(value) {
+        return value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function toCssUrl(value) {
+        const sanitized = String(value).replace(/"/g, '\\"');
+        return `url("${sanitized}")`;
+      }
+
+      function updateSizeLabel() {
+        sizeLabel.textContent = `${state.size.rows}행 × ${state.size.cols}열`;
+      }
+
+      function buildSlots() {
+        const rows = Math.max(1, Number(state.size.rows) || 1);
+        const cols = Math.max(1, Number(state.size.cols) || 1);
+        const totalSlots = rows * cols;
+
+        grid.style.setProperty('--inventory-cols', String(cols));
+
+        const slots = [];
+        for (let index = 0; index < totalSlots; index += 1) {
+          slots.push(state.items[index] ?? null);
+        }
+
+        return slots;
+      }
+
+      function renderItems() {
+        const slots = buildSlots();
+        grid.innerHTML = '';
+
+        slots.forEach((item) => {
+          const slot = document.createElement('article');
+          slot.className = 'inventory__slot';
+
+          if (item) {
+            slot.classList.add('inventory__slot--filled');
+
+            if (item.quantity && item.quantity > 1) {
+              slot.dataset.hasQuantity = 'true';
+            }
+
+            const content = document.createElement('div');
+            content.className = 'inventory__slot-content';
+
+            const image = document.createElement('div');
+            image.className = 'inventory__image';
+            if (item.imageUrl) {
+              image.style.backgroundImage = toCssUrl(item.imageUrl);
+            }
+
+            const quantity = document.createElement('span');
+            quantity.className = 'inventory__quantity';
+            quantity.textContent = `×${item.quantity}`;
+
+            const name = document.createElement('p');
+            name.className = 'inventory__name';
+            name.textContent = item.name;
+
+            const tooltip = document.createElement('aside');
+            tooltip.className = 'inventory__tooltip';
+            tooltip.innerHTML = `
+              ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />` : ''}
+              <h3 class="inventory__tooltip-title">${escapeHtml(item.name)}</h3>
+              <p class="inventory__tooltip-desc">${escapeHtml(item.description || '설명이 없습니다.')}</p>
+            `;
+
+            content.appendChild(image);
+            content.appendChild(name);
+            slot.appendChild(content);
+            slot.appendChild(quantity);
+            slot.appendChild(tooltip);
+          } else {
+            slot.classList.add('inventory__slot--empty');
+          }
+
+          grid.appendChild(slot);
+        });
+      }
+
+      function updateInventory(payload) {
+        if (!payload) {
+          return;
+        }
+
+        if (payload.size) {
+          state.size = {
+            rows: Math.max(1, parseInt(payload.size.rows, 10) || 1),
+            cols: Math.max(1, parseInt(payload.size.cols, 10) || 1),
+          };
+        }
+
+        if (Array.isArray(payload.items)) {
+          state.items = payload.items.map((item) => ({
+            name: String(item.name || ''),
+            imageUrl: String(item.imageUrl || ''),
+            description: String(item.description || ''),
+            quantity: Math.max(1, Number(item.quantity) || 0),
+          }));
+        }
+
+        updateSizeLabel();
+        renderItems();
+      }
+
+      function handleMessage(event) {
+        const { data } = event;
+        if (!data || (data.type !== 'inventory:init' && data.type !== 'inventory:update')) {
+          return;
+        }
+
+        updateInventory(data.payload);
+      }
+
+      function requestClose() {
+        if (typeof window.ZEPWidget !== 'undefined' && typeof window.ZEPWidget.close === 'function') {
+          window.ZEPWidget.close();
+          return;
+        }
+
+        window.parent?.postMessage({ type: 'inventory:close' }, '*');
+      }
+
+      closeButton?.addEventListener('click', requestClose);
+      window.addEventListener('message', handleMessage);
+
+      updateSizeLabel();
+      renderItems();
+    </script>
+  </body>
+</html>

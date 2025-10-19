@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Task Widget</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #task-widget-image {
+        display: block;
+        max-width: 100%;
+        max-height: 100vh;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="task-widget-image" alt="" />
+    <script>
+      (function () {
+        const imageElement = document.getElementById("task-widget-image");
+
+        function applyPayload(payload) {
+          const imageUrl = typeof payload?.imageUrl === "string" ? payload.imageUrl : "";
+          const altText = typeof payload?.alt === "string" ? payload.alt : "";
+
+          if (imageUrl) {
+            imageElement.src = imageUrl;
+          } else {
+            imageElement.removeAttribute("src");
+          }
+
+          imageElement.alt = altText;
+        }
+
+        function handleMessage(event) {
+          const data = event?.data;
+          if (!data || data.type !== "task:image") {
+            return;
+          }
+
+          applyPayload(data.payload || {});
+        }
+
+        window.addEventListener("message", handleMessage);
+        window.parent?.postMessage({ type: "task:ready" }, "*");
+      })();
+    </script>
+  </body>
+</html>
