@@ -8,3 +8,18 @@ export const taskMap = {
 
 export const DEFAULT_TASK =
   "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/mission_x.png";
+
+export const doubleTaskMap = {
+  종로시전_프롤로그: {
+    before:
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/mission_x.png",
+    after:
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/15.png",
+  },
+  경공장_작업장: {
+    before:
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/mission_x.png",
+    after:
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/15.png",
+  },
+};

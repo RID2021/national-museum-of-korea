@@ -7,7 +7,7 @@ import {
   preparePlayerTag,
   savePlayerStorage,
 } from "../utils/player";
-import { DEFAULT_TASK, taskMap } from "./constants";
+import { DEFAULT_TASK, doubleTaskMap } from "./constants";
 const TASK_WIDGET_TEMPLATE = "html/task-widget.html";
 
 const TASK_WIDGET_DIMENSIONS = Object.freeze({
@@ -15,8 +15,12 @@ const TASK_WIDGET_DIMENSIONS = Object.freeze({
   mobile: { width: 250, height: 180 },
 });
 
+type TaskStage = "before" | "after";
+
 type TaskPlayerTag = PlayerTagRecord & {
   taskWidget?: ScriptWidget | null;
+  taskStage?: TaskStage;
+  lastWidgetMapName?: string;
 };
 
 interface TaskWidgetIncomingMessage {
@@ -31,13 +35,20 @@ interface TaskWidgetOutgoingMessage {
   };
 }
 
-function resolveImageUrl(mapName: string): string | undefined {
-  const entry = (taskMap as Record<string, string | undefined>)[mapName];
-  if (typeof entry !== "string" || !entry.trim()) {
+type TaskStorage = {
+  lastWidgetMapName?: string;
+  lastTaskStage?: TaskStage;
+};
+
+function resolveTaskImage(mapName: string, stage: TaskStage): string {
+  const entry = doubleTaskMap[mapName as keyof typeof doubleTaskMap];
+  const imageUrl = entry?.[stage];
+
+  if (typeof imageUrl !== "string" || !imageUrl.trim()) {
     return DEFAULT_TASK;
   }
 
-  return entry;
+  return imageUrl;
 }
 
 function pickWidgetDimensions(player: ScriptPlayer): {
@@ -69,6 +80,8 @@ function sendImageToWidget(
 function teardownTaskWidget(tag: TaskPlayerTag): void {
   const existing = tag.taskWidget;
   tag.taskWidget = null;
+  tag.taskStage = undefined;
+  tag.lastWidgetMapName = undefined;
 
   if (existing && typeof existing.destroy === "function") {
     existing.destroy();
@@ -79,38 +92,45 @@ export function toggleTaskWidget(
   mapName: string,
   player: ScriptPlayer
 ): ScriptWidget | null {
-  const imageUrl = resolveImageUrl(mapName);
-  debugMessage(imageUrl);
   const tag = preparePlayerTag(player) as TaskPlayerTag;
-  if (!imageUrl) {
-    debugMessage({ type: "task:image:not-found", mapName });
+  const storage = loadPlayerStorage(player) as TaskStorage;
+
+  if (tag.taskWidget) {
     teardownTaskWidget(tag);
     return null;
   }
-  if (tag.taskWidget) {
-    teardownTaskWidget(tag);
-    return;
-  }
-  return loadTaskWidget(mapName, player);
+
+  const stage =
+    storage.lastTaskStage ?? tag.taskStage ?? ("before" as TaskStage);
+  debugMessage({ type: "task:toggle", mapName, stage });
+
+  return loadTaskWidget(mapName, player, stage);
 }
 
 export function loadTaskWidget(
   mapName: string,
-  player: ScriptPlayer
+  player: ScriptPlayer,
+  stage?: TaskStage
 ): ScriptWidget | null {
-  const imageUrl = resolveImageUrl(mapName);
-  debugMessage(imageUrl);
   const tag = preparePlayerTag(player) as TaskPlayerTag;
-  if (!imageUrl) {
-    return null;
-  }
-  const storage = loadPlayerStorage(player);
+  const storage = loadPlayerStorage(player) as TaskStorage;
+  const targetStage =
+    stage ?? storage.lastTaskStage ?? tag.taskStage ?? ("before" as TaskStage);
+  const imageUrl = resolveTaskImage(mapName, targetStage);
+  debugMessage({ type: "task:load", mapName, stage: targetStage, imageUrl });
+
   if (tag.taskWidget) {
-    if (storage.lastWidgetMapName === mapName) {
-      return tag.taskWidget;
-    }
-    teardownTaskWidget(tag); // 내리고 다시 실행
+    tag.taskStage = targetStage;
+    tag.lastWidgetMapName = mapName;
+    savePlayerStorage(player, {
+      ...storage,
+      lastWidgetMapName: mapName,
+      lastTaskStage: targetStage,
+    });
+    sendImageToWidget(tag.taskWidget, mapName, imageUrl);
+    return tag.taskWidget;
   }
+
   const { width, height } = pickWidgetDimensions(player);
   const widget = player.showWidget(
     TASK_WIDGET_TEMPLATE,
@@ -120,9 +140,12 @@ export function loadTaskWidget(
   );
 
   tag.taskWidget = widget;
+  tag.taskStage = targetStage;
+  tag.lastWidgetMapName = mapName;
   savePlayerStorage(player, {
     ...storage,
     lastWidgetMapName: mapName,
+    lastTaskStage: targetStage,
   });
 
   widget.onMessage.Add(function (_sender, data) {
@@ -134,7 +157,10 @@ export function loadTaskWidget(
     }
 
     if (type === "task:ready") {
-      sendImageToWidget(widget, mapName, imageUrl);
+      const currentMapName = tag.lastWidgetMapName ?? mapName;
+      const currentStage = tag.taskStage ?? targetStage;
+      const currentImage = resolveTaskImage(currentMapName, currentStage);
+      sendImageToWidget(widget, currentMapName, currentImage);
     }
   });
 
@@ -142,45 +168,9 @@ export function loadTaskWidget(
   return widget;
 }
 
-export function loadLastWidget(player: ScriptPlayer): ScriptWidget | null {
-  const tag = preparePlayerTag(player) as TaskPlayerTag;
-  debugMessage(tag);
-
-  const storage = loadPlayerStorage(player);
-  if (!storage.lastWidgetMapName) {
-    return null;
-  }
-  const imageUrl = resolveImageUrl(storage.lastWidgetMapName as string);
-  debugMessage(imageUrl);
-  if (!imageUrl) {
-    return null;
-  }
-  if (tag.taskWidget) {
-    teardownTaskWidget(tag); // 내리고 다시 실행
-  }
-  const { width, height } = pickWidgetDimensions(player);
-  const widget = player.showWidget(
-    TASK_WIDGET_TEMPLATE,
-    player.isMobile ? "top" : "bottomright",
-    width,
-    height
-  );
-
-  tag.taskWidget = widget;
-
-  widget.onMessage.Add(function (_sender, data) {
-    const type = (data as TaskWidgetIncomingMessage | undefined)?.type;
-
-    if (type === "task:close") {
-      teardownTaskWidget(tag);
-      return;
-    }
-
-    if (type === "task:ready") {
-      sendImageToWidget(widget, tag.lastWidgetMapName as string, imageUrl);
-    }
-  });
-
-  sendImageToWidget(widget, tag.lastWidgetMapName as string, imageUrl);
-  return widget;
+export function loadLastWidget(
+  mapName: string,
+  player: ScriptPlayer
+): ScriptWidget | null {
+  return loadTaskWidget(mapName, player, "before");
 }

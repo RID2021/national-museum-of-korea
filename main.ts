@@ -64,7 +64,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
 
   cameraMoveByMapName(player, mapName);
   if (!player.isMobile) {
-    loadLastWidget(player);
+    loadLastWidget(mapName, player);
   }
 
   if (mapName == "피마길") {
@@ -73,7 +73,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
 });
 
 ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
-  loadTaskWidget(ScriptMap.name, player);
+  loadTaskWidget(ScriptMap.name, player, "after");
 });
 
 ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
