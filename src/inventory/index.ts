@@ -18,18 +18,10 @@ import {
   ShowInventoryOptions,
 } from "./interfaces";
 import { earnItemMap } from "./constants";
+import type { EarnedItemConfig } from "./constants";
 type PlayerStorageData = PlayerStorageRecord & {
   inventory?: InventoryState;
   [key: string]: unknown;
-};
-
-type EarnedItemConfig = {
-  name: string;
-  url: string;
-  mobileMessage: string;
-  pcMessage: string;
-  description?: string;
-  quantity?: number;
 };
 
 const STORAGE_KEY = "inventory";
@@ -73,17 +65,11 @@ function resolveEarnedItem(mapName: string): EarnedItemConfig | undefined {
 
 type InventoryPlayerTag = PlayerTagRecord & {
   inventoryWidget?: ScriptWidget | null;
+  inventoryWidgetOptions?: ShowInventoryOptions | undefined;
 };
 
 function readPlayerStorage(player: ScriptPlayer): PlayerStorageData {
   return preparePlayerStorage<PlayerStorageData>(player);
-}
-
-function writePlayerStorage(
-  player: ScriptPlayer,
-  data: PlayerStorageData
-): void {
-  savePlayerStorage(player, data);
 }
 
 function normalizeSize(size?: InventorySize): InventorySize {
@@ -141,13 +127,44 @@ function normalizeItem(item: unknown): InventoryItem | undefined {
   };
 }
 
+function normalizeRemovalList(list: unknown): string[] {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      list
+        .map((entry) =>
+          typeof entry === "string" ? entry.trim() : ""
+        )
+        .filter(Boolean)
+    )
+  );
+}
+
+function cloneShowInventoryOptions(
+  options: ShowInventoryOptions | undefined
+): ShowInventoryOptions | undefined {
+  if (!options) {
+    return undefined;
+  }
+
+  const cloned: ShowInventoryOptions = { ...options };
+  if (options.size) {
+    cloned.size = { ...options.size };
+  }
+
+  return cloned;
+}
+
 function persistInventory(
   player: ScriptPlayer,
   storage: PlayerStorageData,
   state: InventoryState
 ): InventoryState {
   storage[STORAGE_KEY] = state;
-  writePlayerStorage(player, storage);
+  savePlayerStorage(player, storage, { persist: true });
   return state;
 }
 
@@ -258,12 +275,26 @@ export function addInventoryItemByMapName(
     ? Math.max(1, Math.floor(config.quantity as number))
     : 1;
 
-  addInventoryItem(player, {
+  let finalState = addInventoryItem(player, {
     name: config.name,
     imageUrl: config.url,
     description: config.description ?? "",
     quantity,
   });
+
+  const removalTargets = normalizeRemovalList(config.removeItemList);
+  if (removalTargets.length > 0) {
+    removalTargets.forEach((itemName) => {
+      const existing = finalState.items.find(
+        (entry) => entry.name === itemName
+      );
+      if (!existing) {
+        return;
+      }
+      finalState = removeInventoryItem(player, itemName, existing.quantity);
+    });
+  }
+
   player.showCustomLabel(
     player.isMobile ? config.mobileMessage : config.pcMessage,
     0xffffff,
@@ -279,7 +310,17 @@ export function addInventoryItemByMapName(
   );
   player.sendUpdated();
   player.save();
-  return;
+
+  const tag = preparePlayerTag(player) as InventoryPlayerTag;
+  if (tag.inventoryWidget) {
+    const previousOptions = cloneShowInventoryOptions(
+      tag.inventoryWidgetOptions
+    );
+    teardownInventoryWidget(player);
+    showInventoryWidget(player, previousOptions);
+  }
+
+  return finalState;
 }
 
 export function removeInventoryItem(
@@ -378,6 +419,7 @@ function teardownInventoryWidget(player: ScriptPlayer): void {
   const existing = tag.inventoryWidget as ScriptWidget | undefined;
 
   tag.inventoryWidget = null;
+  tag.inventoryWidgetOptions = undefined;
 
   if (existing && typeof existing.destroy === "function") {
     existing.destroy();
@@ -403,6 +445,7 @@ export function showInventoryWidget(
 
   const widget = player.showWidget(template, align, width, height);
   tag.inventoryWidget = widget;
+  tag.inventoryWidgetOptions = cloneShowInventoryOptions(options);
 
   widget.onMessage.Add(function (_sender, data) {
     if (
