@@ -35,9 +35,32 @@ const DEFAULT_WAIT_BUFFER = 1;
 const DEFAULT_MOVE_SPEED = 80;
 
 const cameraRoutes: Record<string, CameraRouteConfig> = {
+  종로시전_프롤로그: {
+    path: [[41, 23, 1]],
+    options: {
+      origin: { x: 60, y: 67 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
+  경공장_작업장: {
+    path: [[46, 26, 1]],
+    options: {
+      origin: { x: 22, y: 9 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
   피마길: {
-    path: [[33, 37]],
-    options: { origin: { x: 33, y: 59 }, returnToStart: true },
+    path: [[76, 2, 1]],
+    options: {
+      origin: { x: 1, y: 24 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
   종로시전1: {
     path: [
@@ -48,59 +71,156 @@ const cameraRoutes: Record<string, CameraRouteConfig> = {
       [23, 55, 1],
       [42, 64, 1],
     ],
-    options: { origin: { x: 61, y: 67 }, returnToStart: true },
+    options: {
+      origin: { x: 61, y: 67 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  근정전2번: {
-    path: [[46, 34]],
-    options: { origin: { x: 16, y: 54 }, returnToStart: true },
+  비단상점: {
+    path: [[51, 39, 1]],
+    options: {
+      origin: { x: 23, y: 38 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  근정전내부1번: {
-    path: [[22, 32]],
-    options: { origin: { x: 33, y: 59 }, returnToStart: true },
+  종로시전2: {
+    path: [[74, 69, 1]],
+    options: {
+      origin: { x: 39, y: 66 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  근정전내부2번: {
-    path: [[33, 37]],
-    options: { origin: { x: 33, y: 59 }, returnToStart: true },
+  종이상점: {
+    path: [
+      [19, 21, 1],
+      [23, 39, 1],
+    ],
+    options: {
+      origin: { x: 16, y: 39 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  사정전낮: {
-    path: [[23, 33]],
-    options: { origin: { x: 33, y: 57 }, returnToStart: true },
+  종로시전: {
+    path: [[35, 29, 1]],
+    options: {
+      origin: { x: 72, y: 69 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  사정전밤: {
-    path: [[33, 30]],
-    options: { origin: { x: 32, y: 60 }, returnToStart: true },
+  경시서: {
+    path: [
+      [39, 24, 1],
+      [51, 39, 1],
+    ],
+    options: {
+      origin: { x: 22, y: 36 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  집현전내부: {
-    path: [[26, 29]],
-    options: { origin: { x: 13, y: 46 }, returnToStart: true },
+  종로시전4: {
+    path: [
+      [21, 37, 1],
+      [39, 65, 1],
+    ],
+    options: {
+      origin: { x: 97, y: 29 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  집현전외부: {
-    path: [[50, 39]],
-    options: { origin: { x: 49, y: 50 }, returnToStart: true },
+  비단상점2: {
+    path: [[35, 34, 1]],
+    options: {
+      origin: { x: 22, y: 38 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  경회루일반: {
-    path: [[74, 25]],
-    options: { origin: { x: 30, y: 30 }, returnToStart: true },
+  종로시전5: {
+    path: [[42, 21, 1]],
+    options: {
+      origin: { x: 45, y: 66 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  경회루기녀: {
-    path: [[27, 33]],
-    options: { origin: { x: 70, y: 22 }, returnToStart: true },
+  경공장2: {
+    path: [[38, 14, 1]],
+    options: {
+      origin: { x: 17, y: 10 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  강녕전외부: {
-    path: [[92, 28]],
-    options: { origin: { x: 48, y: 43 }, returnToStart: true },
+  종로시전7: {
+    path: [[122, 44, 1]],
+    options: {
+      origin: { x: 42, y: 22 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  강녕전외부2: {
-    path: [[83, 34]],
-    options: { origin: { x: 47, y: 43 }, returnToStart: true },
+  시전귀퉁이: {
+    path: [[27, 21, 1]],
+    options: {
+      origin: { x: 12, y: 23 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  바람: {
-    path: [[23, 9]],
-    options: { origin: { x: 23, y: 124 }, returnToStart: true },
+  종로길거리_아픈여성: {
+    path: [[108, 37, 1]],
+    options: {
+      origin: { x: 124, y: 44 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
-  강녕전내부: {
-    path: [[25, 19]],
-    options: { origin: { x: 32, y: 62 }, returnToStart: true },
+  제생원: {
+    path: [[19, 37, 1]],
+    options: {
+      origin: { x: 6, y: 40 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
+  종로길거리_장영실: {
+    path: [[65, 14, 1]],
+    options: {
+      origin: { x: 100, y: 45 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
+  혜정교: {
+    path: [[31, 5, 1]],
+    options: {
+      origin: { x: 29, y: 32 },
+      returnToStart: true,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
   },
 };
 
