@@ -6,7 +6,6 @@ import {
   preparePlayerTag,
   PlayerTagRecord,
   PlayerStorageRecord,
-  loadPlayerStorage,
 } from "../utils/player";
 
 import {
@@ -18,7 +17,7 @@ import {
   ShowInventoryOptions,
 } from "./interfaces";
 import { earnItemMap } from "./constants";
-import type { EarnedItemConfig } from "./constants";
+import type { EarnedItemEntry, EarnedItemConfig } from "./constants";
 type PlayerStorageData = PlayerStorageRecord & {
   inventory?: InventoryState;
   [key: string]: unknown;
@@ -41,26 +40,18 @@ const TEMPLATE_BY_DEVICE = Object.freeze({
   mobile: "html/inventory-mobile.html",
 });
 
-function resolveEarnedItem(mapName: string): EarnedItemConfig | undefined {
-  const entry = (earnItemMap as Record<string, EarnedItemConfig | undefined>)[
-    mapName
-  ];
+interface NormalizedEarnedItemConfig {
+  name: string;
+  url: string;
+  description: string;
+  quantity: number;
+}
 
-  if (!entry) {
-    return undefined;
-  }
-
-  const { name, url } = entry;
-
-  if (typeof name !== "string" || !name.trim()) {
-    return undefined;
-  }
-
-  if (typeof url !== "string" || !url.trim()) {
-    return undefined;
-  }
-
-  return entry;
+interface ResolvedEarnedItem {
+  items: NormalizedEarnedItemConfig[];
+  mobileMessage: string;
+  pcMessage: string;
+  removeItemList: string[];
 }
 
 type InventoryPlayerTag = PlayerTagRecord & {
@@ -141,6 +132,78 @@ function normalizeRemovalList(list: unknown): string[] {
         .filter(Boolean)
     )
   );
+}
+
+function normalizeEarnedItemConfig(
+  item: unknown
+): NormalizedEarnedItemConfig | undefined {
+  if (!item || typeof item !== "object") {
+    return undefined;
+  }
+
+  const { name, url, description, quantity } = item as EarnedItemConfig;
+
+  if (typeof name !== "string" || !name.trim()) {
+    return undefined;
+  }
+
+  if (typeof url !== "string" || !url.trim()) {
+    return undefined;
+  }
+
+  const normalizedQuantity = Number.isFinite(quantity)
+    ? Math.max(1, Math.floor(quantity as number))
+    : 1;
+
+  return {
+    name: name.trim(),
+    url: url.trim(),
+    description: typeof description === "string" ? description : "",
+    quantity: normalizedQuantity,
+  };
+}
+
+function normalizeEarnedItemList(
+  list: unknown
+): NormalizedEarnedItemConfig[] {
+  if (!Array.isArray(list)) {
+    return [];
+  }
+
+  return list
+    .map((entry) => normalizeEarnedItemConfig(entry))
+    .filter(Boolean) as NormalizedEarnedItemConfig[];
+}
+
+function resolveEarnedItem(mapName: string): ResolvedEarnedItem | undefined {
+  const entry = (earnItemMap as Record<string, EarnedItemEntry | undefined>)[
+    mapName
+  ];
+
+  if (!entry) {
+    return undefined;
+  }
+
+  const items = normalizeEarnedItemList(entry.earnItemList);
+  if (items.length === 0) {
+    return undefined;
+  }
+
+  const mobileMessage =
+    typeof entry.mobileMessage === "string" ? entry.mobileMessage : "";
+  const pcMessage =
+    typeof entry.pcMessage === "string" ? entry.pcMessage : "";
+
+  if (!mobileMessage.trim() && !pcMessage.trim()) {
+    return undefined;
+  }
+
+  return {
+    items,
+    mobileMessage,
+    pcMessage,
+    removeItemList: normalizeRemovalList(entry.removeItemList),
+  };
 }
 
 function cloneShowInventoryOptions(
@@ -263,36 +326,40 @@ export function addInventoryItemByMapName(
   }
 
   const inventory = getInventory(player);
-  const alreadyOwned = inventory.items.some(
-    (entry) => entry.name === config.name
-  );
+  let finalState = inventory;
+  let addedAny = false;
 
-  if (alreadyOwned) {
-    return inventory;
+  for (const itemConfig of config.items) {
+    const exists = finalState.items.some(
+      (entry) => entry.name === itemConfig.name
+    );
+    if (exists) {
+      continue;
+    }
+
+    finalState = addInventoryItem(player, {
+      name: itemConfig.name,
+      imageUrl: itemConfig.url,
+      description: itemConfig.description,
+      quantity: itemConfig.quantity,
+    });
+    addedAny = true;
   }
 
-  const quantity = Number.isFinite(config.quantity)
-    ? Math.max(1, Math.floor(config.quantity as number))
-    : 1;
+  if (!addedAny) {
+    return finalState;
+  }
 
-  let finalState = addInventoryItem(player, {
-    name: config.name,
-    imageUrl: config.url,
-    description: config.description ?? "",
-    quantity,
-  });
-
-  const removalTargets = normalizeRemovalList(config.removeItemList);
-  if (removalTargets.length > 0) {
-    removalTargets.forEach((itemName) => {
+  if (config.removeItemList.length > 0) {
+    for (const itemName of config.removeItemList) {
       const existing = finalState.items.find(
         (entry) => entry.name === itemName
       );
       if (!existing) {
-        return;
+        continue;
       }
       finalState = removeInventoryItem(player, itemName, existing.quantity);
-    });
+    }
   }
 
   player.showCustomLabel(
