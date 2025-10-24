@@ -7,7 +7,7 @@ import {
   preparePlayerTag,
   savePlayerStorage,
 } from "../utils/player";
-import { DEFAULT_TASK, doubleTaskMap } from "./constants";
+import { doubleTaskMap } from "./constants";
 const TASK_WIDGET_TEMPLATE = "html/task-widget.html";
 
 const TASK_WIDGET_DIMENSIONS = Object.freeze({
@@ -45,7 +45,7 @@ function resolveTaskImage(mapName: string, stage: TaskStage): string {
   const imageUrl = entry?.[stage];
 
   if (typeof imageUrl !== "string" || !imageUrl.trim()) {
-    return DEFAULT_TASK;
+    return "";
   }
 
   return imageUrl;

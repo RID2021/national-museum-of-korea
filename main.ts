@@ -67,7 +67,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
     loadLastWidget(mapName, player);
   }
 
-  if (mapName == "피마길") {
+  if (mapName === "피마길") {
     handlePlayerJoin(player);
   }
 });

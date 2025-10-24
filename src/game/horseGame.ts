@@ -12,9 +12,9 @@ import {
   RETURN_DURATION,
   HORSE_LIFETIME,
   MAX_ACTIVE_HORSES,
-  LEFT_TARGET_X_OVERRIDE,
-  RIGHT_SPAWN_X_OVERRIDE,
-  RIGHT_TARGET_X_OVERRIDE,
+  USER_TARGET_X_OVERRIDE,
+  HORSE_SPAWN_X_OVERRIDE,
+  HORSE_TARGET_X_OVERRIDE,
   SPAWN_JITTER_RATIO,
   HORSE_SPRITE_WIDTH,
   HORSE_SPRITE_HEIGHT,
@@ -117,12 +117,12 @@ function buildHorseLanes(): HorseLane[] {
   const minY = 14;
 
   const spawnX =
-    RIGHT_SPAWN_X_OVERRIDE !== null
-      ? clamp(RIGHT_SPAWN_X_OVERRIDE, 0, width - 1)
+    HORSE_SPAWN_X_OVERRIDE !== null
+      ? clamp(HORSE_SPAWN_X_OVERRIDE, 0, width - 1)
       : clamp(width - 2, 0, width - 1);
   const targetX =
-    RIGHT_TARGET_X_OVERRIDE !== null
-      ? clamp(RIGHT_TARGET_X_OVERRIDE, 0, width - 1)
+    HORSE_TARGET_X_OVERRIDE !== null
+      ? clamp(HORSE_TARGET_X_OVERRIDE, 0, width - 1)
       : 0;
 
   return [
@@ -200,8 +200,8 @@ function sendPlayerToLeftEdge(player: ScriptPlayer): void {
 
   const width = Math.max(1, ScriptMap.width);
   const targetX =
-    LEFT_TARGET_X_OVERRIDE !== null
-      ? clamp(LEFT_TARGET_X_OVERRIDE, 0, width - 1)
+    USER_TARGET_X_OVERRIDE !== null
+      ? clamp(USER_TARGET_X_OVERRIDE, 0, width - 1)
       : 0;
 
   if (player.tileX === targetX) {
@@ -302,11 +302,6 @@ export function startHorseGame(): void {
     const initial = Math.random() * lane.interval;
     laneTimers[lane.id] = Math.max(0.05, initial);
   }
-  if ((ScriptApp.players as ScriptPlayer[]).length > 0) {
-    ScriptApp.showCenterLabel(
-      "우측에서 달려오는 말을 피해 왼쪽에서 오른쪽으로 달려가세요!"
-    );
-  }
 }
 
 export function handlePlayerJoin(player: ScriptPlayer): void {
@@ -320,7 +315,7 @@ export function handlePlayerJoin(player: ScriptPlayer): void {
   player.moveSpeed = DEFAULT_MOVE_SPEED;
   player.sprite = null;
   player.sendUpdated();
-  player.showCenterLabel("말을 피해서 오른쪽 끝까지 달려가세요.");
+  player.showCenterLabel("말을 피해서 피마길을 찾으세요!");
 
   if (activeHorseKeys.size === 0 && Object.keys(laneTimers).length === 0) {
     startHorseGame();
