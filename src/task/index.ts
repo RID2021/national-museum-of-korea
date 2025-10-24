@@ -12,7 +12,7 @@ const TASK_WIDGET_TEMPLATE = "html/task-widget.html";
 
 const TASK_WIDGET_DIMENSIONS = Object.freeze({
   desktop: { width: 250, height: 180 },
-  mobile: { width: 250, height: 180 },
+  mobile: { width: 208, height: 150 },
 });
 
 type TaskStage = "before" | "after";
@@ -89,6 +89,7 @@ function teardownTaskWidget(tag: TaskPlayerTag): void {
 }
 
 export function toggleTaskWidget(
+  
   mapName: string,
   player: ScriptPlayer
 ): ScriptWidget | null {

@@ -133,7 +133,7 @@ function loadPCButtonGroup(player: ScriptPlayer) {
     );
     pcButtonGroup.onMessage.Add(function (player: ScriptPlayer, message: any) {
       if (message.openTask) {
-        loadTaskWidget(ScriptMap.name, player);
+        toggleTaskWidget(ScriptMap.name, player);
       }
       if (message.openInventory) {
         showInventoryWidget(player, {
