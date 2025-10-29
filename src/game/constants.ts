@@ -5,8 +5,8 @@ export const HORSE_LIFETIME = 18;
 export const MAX_ACTIVE_HORSES = 5;
 export const SPAWN_JITTER_RATIO = 0.25;
 export const CLEANUP_POLL_INTERVAL = 1;
-export const HORSE_SPRITE_WIDTH = 220;
-export const HORSE_SPRITE_HEIGHT = 231;
+export const HORSE_SPRITE_WIDTH = 154;
+export const HORSE_SPRITE_HEIGHT = 162;
 export const START_BUFFER_TILES = 6;
 export const GOAL_BUFFER_TILES = 4;
 

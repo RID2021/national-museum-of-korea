@@ -185,9 +185,7 @@ function resolveEarnedItem(mapName: string): ResolvedEarnedItem | undefined {
   }
 
   const items = normalizeEarnedItemList(entry.earnItemList);
-  if (items.length === 0) {
-    return undefined;
-  }
+
 
   const mobileMessage =
     typeof entry.mobileMessage === "string" ? entry.mobileMessage : "";
@@ -328,6 +326,7 @@ export function addInventoryItemByMapName(
   const inventory = getInventory(player);
   let finalState = inventory;
   let addedAny = false;
+  let removedAny = false;
 
   for (const itemConfig of config.items) {
     const exists = finalState.items.some(
@@ -347,7 +346,9 @@ export function addInventoryItemByMapName(
   }
 
   if (!addedAny) {
-    return finalState;
+    removedAny = config.removeItemList.some((itemName) =>
+      finalState.items.some((entry) => entry.name === itemName)
+    );
   }
 
   if (config.removeItemList.length > 0) {
@@ -359,7 +360,12 @@ export function addInventoryItemByMapName(
         continue;
       }
       finalState = removeInventoryItem(player, itemName, existing.quantity);
+      removedAny = true;
     }
+  }
+
+  if (!addedAny && !removedAny) {
+    return finalState;
   }
 
   player.showCustomLabel(

@@ -7,7 +7,7 @@ export function setFinalTitle(player: ScriptPlayer, mapName) {
     player.sendUpdated();
   }
   if (mapName === "종로길거리_마지막_경시서_관리") {
-    player.title = "진정한 조선인";
+    player.title = "나도 조선 사람";
     player.titleColor = ColorType.WHITE;
     player.sendUpdated();
   }

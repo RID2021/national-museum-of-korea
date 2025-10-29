@@ -77,6 +77,7 @@ ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
 });
 
 ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
+  debugMessage("아이템 추가 땅 밟음")
   addInventoryItemByMapName(ScriptMap.name, player);
 });
 
