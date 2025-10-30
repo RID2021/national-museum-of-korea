@@ -315,7 +315,7 @@ export function handlePlayerJoin(player: ScriptPlayer): void {
   player.moveSpeed = DEFAULT_MOVE_SPEED;
   player.sprite = null;
   player.sendUpdated();
-  player.showCenterLabel("말을 피해서 피마길을 찾으세요!");
+  player.showCenterLabel("말을 피해서 피맛골 찾으세요!");
 
   if (activeHorseKeys.size === 0 && Object.keys(laneTimers).length === 0) {
     startHorseGame();
