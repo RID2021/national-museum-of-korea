@@ -9,6 +9,7 @@ import {
   FIX_TARGET_COUNT,
   brokenSprite,
   fixedSprite,
+  transparentGateSprite,
 } from "./constants";
 import type {
   FixGamePlayerStorage,
@@ -21,6 +22,8 @@ type GatePlacement = {
   key: string;
   x: number;
   y: number;
+  impassable: boolean;
+  resource: any;
 };
 
 const GATE_NEIGHBOR_OFFSETS: Array<{ dx: number; dy: number }> = [
@@ -34,21 +37,48 @@ const GATE_NEIGHBOR_OFFSETS: Array<{ dx: number; dy: number }> = [
   { dx: 1, dy: 1 },
 ];
 
+const GATE_BUFFER_OFFSETS: Array<{ dx: number; dy: number }> = [];
+
+for (let dx = -2; dx <= 2; dx += 1) {
+  for (let dy = -2; dy <= 2; dy += 1) {
+    if (Math.max(Math.abs(dx), Math.abs(dy)) === 2) {
+      GATE_BUFFER_OFFSETS.push({ dx, dy });
+    }
+  }
+}
+
 function isFixGameComplete(fixGame: FixGameStorage): boolean {
   return fixGame.fixedKeys.length >= FIX_TARGET_COUNT;
 }
 
 function buildGatePlacements(): GatePlacement[] {
-  return GATE_NEIGHBOR_OFFSETS.map(function (entry) {
+  const impassableRing = GATE_NEIGHBOR_OFFSETS.map(function (entry) {
     const x = FIX_GATE_TILE.x + entry.dx;
     const y = FIX_GATE_TILE.y + entry.dy;
 
     return {
-      key: `${FIX_GATE_KEY_PREFIX}-${x}-${y}`,
+      key: `${FIX_GATE_KEY_PREFIX}-wall-${x}-${y}`,
       x,
       y,
+      impassable: true,
+      resource: brokenSprite,
     };
   });
+
+  const passableRing = GATE_BUFFER_OFFSETS.map(function (entry) {
+    const x = FIX_GATE_TILE.x + entry.dx;
+    const y = FIX_GATE_TILE.y + entry.dy;
+
+    return {
+      key: `${FIX_GATE_KEY_PREFIX}-buffer-${x}-${y}`,
+      x,
+      y,
+      impassable: false,
+      resource: transparentGateSprite,
+    };
+  });
+
+  return [...impassableRing, ...passableRing];
 }
 
 function normalizeFixGameStorage(
@@ -127,16 +157,19 @@ function placeGateBlocks(
 ): FixGameStorage {
   const placements = buildGatePlacements();
   placements.forEach(function (placement) {
-    player.putIndividualObject(placement.x, placement.y, brokenSprite, {
-      type: ObjectEffectType.INTERACTION_WITH_ZEPSCRIPTS,
+    player.putIndividualObject(placement.x, placement.y, transparentGateSprite, {
+      type: ObjectEffectType.NONE,
       key: placement.key,
       overlap: true,
-      impassable: true,
+      impassable: placement.impassable,
     });
   });
 
   const gateObjectKeys = Array.from(
-    new Set([...fixGame.gateObjectKeys, ...placements.map((entry) => entry.key)])
+    new Set([
+      ...fixGame.gateObjectKeys,
+      ...placements.map((entry) => entry.key),
+    ])
   );
   const updated: FixGameStorage = {
     ...fixGame,
@@ -189,10 +222,7 @@ function isGateObjectKey(key: string, fixGame: FixGameStorage): boolean {
   );
 }
 
-function showIncompleteMessage(
-  player: ScriptPlayer,
-  fixedCount: number
-): void {
+function showIncompleteMessage(player: ScriptPlayer, fixedCount: number): void {
   const text = `수리가 완료되지 않았음 ${fixedCount}/${FIX_TARGET_COUNT}`;
 
   if (typeof (player as any).showCenterLabel === "function") {
