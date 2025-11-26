@@ -15,6 +15,7 @@ import {
 } from "./src/inventory";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
 import { debugMessage } from "./src/utils/message";
+import { registerConfiguredTileMessages, resetTileMessageHistory } from "./src/utils";
 import { preparePlayerStorage, preparePlayerTag } from "./src/utils/player";
 import { cameraMoveByMapName } from "./src/utils/camera";
 import { setFinalTitle } from "./src/josun";
@@ -26,6 +27,11 @@ import {
   handleUpdate,
   startHorseGame,
 } from "./src/game";
+import {
+  handleFixGameJoin,
+  handleFixGameObjectInteraction,
+} from "./src/fixGame";
+import { FIX_GAME_MAP_NAME } from "./src/fixGame/constants";
 import { ADD_ITEM_TILE_NAME, REFRESH_TASK_TILE_NAME } from "./src/constants";
 
 let task_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
@@ -52,12 +58,15 @@ ScriptApp.onInit.Add(function () {
     debugMessage("T: key Pressed");
     toggleTaskWidget(ScriptMap.name, player);
   });
+
+  registerConfiguredTileMessages();
 });
 
 ScriptApp.onJoinPlayer.Add(function (player) {
   loadPCButtonGroup(player);
   preparePlayerTag(player);
-  preparePlayerStorage(player, { purchases: {} });
+  preparePlayerStorage(player, { purchases: {}, fixGame: { fixedKeys: [] } });
+  resetTileMessageHistory(player);
   const mapName = ScriptMap.name;
   setFinalTitle(player, mapName);
   ensureInventory(player, DEFAULT_INVENTORY_SIZE);
@@ -70,6 +79,10 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   if (mapName === "피마길") {
     handlePlayerJoin(player);
   }
+
+  if (mapName === FIX_GAME_MAP_NAME) {
+    handleFixGameJoin(player, mapName);
+  }
 });
 
 ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
@@ -77,7 +90,7 @@ ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
 });
 
 ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
-  debugMessage("아이템 추가 땅 밟음")
+  debugMessage("아이템 추가 땅 밟음");
   addInventoryItemByMapName(ScriptMap.name, player);
 });
 
@@ -107,17 +120,28 @@ ScriptApp.onStart.Add(function () {
 ScriptApp.onStart.Add(startHorseGame);
 
 ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
-  handleHorseTouched(player, key);
+  if (ScriptMap.name === FIX_GAME_MAP_NAME) {
+    handleFixGameObjectInteraction(player, key, ScriptMap.name);
+  }
+  // handleHorseTouched(player, key);
 });
+
+ScriptApp.onTriggerObject.Add(
+  (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
+    if (ScriptMap.name === FIX_GAME_MAP_NAME) {
+      handleFixGameObjectInteraction(player, key, ScriptMap.name);
+    }
+  },
+);
 
 ScriptApp.onLeavePlayer.Add((player: ScriptPlayer) => {
   handlePlayerLeave(player);
 });
 
-ScriptApp.onUpdate.Add((dt: number) => {
-  if (ScriptMap.name === "피마길" && ScriptApp.players.length > 0)
-    handleUpdate(dt);
-});
+// ScriptApp.onUpdate.Add((dt: number) => {
+//   if (ScriptMap.name === "피마길" && ScriptApp.players.length > 0)
+//     handleUpdate(dt);
+// });
 
 ScriptApp.onDestroy.Add(function () {
   handleDestroy();

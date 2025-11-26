@@ -1,7 +1,8 @@
-export * from './message';
+export * from "./message";
+export * from "./addOneTimeTileMessage";
 
 export function clamp(value: number, min: number, max: number): number {
-    const low = Math.min(min, max);
-    const high = Math.max(min, max);
-    return Math.max(low, Math.min(high, value));
-  }
+  const low = Math.min(min, max);
+  const high = Math.max(min, max);
+  return Math.max(low, Math.min(high, value));
+}

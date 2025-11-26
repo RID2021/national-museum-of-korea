@@ -1,130 +1,100 @@
 
 
 export const doubleTaskMap = {
-  종로시전_프롤로그: {
+  광화문1: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/1_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/1_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/1_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/1_g.png",
   },
-  경공장_작업장: {
+  흥례문: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/2_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/2_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/2_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/2_g.png",
   },
-  피마길: {
+  근정전외부1: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/3_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/3_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/3_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/3_g.png",
   },
-  종로시전1: {
+  근정전내부: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/4_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/4_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/4_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/4_g.png",
   },
-  비단상점: {
+  근정전외부2: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/5_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/5_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/5_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/5_g.png",
   },
-  종로시전2: {
+  향원지불x: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/6_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/6_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/6_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/6_g.png",
   },
-  종이상점: {
+  영훈당: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/7_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/7_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/7_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/7_g.png",
   },
-  종로시전3: {
+  향원정불o: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/8_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/8_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/8_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/8_g.png",
   },
-  경시서: {
+  향원정: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/9_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/9_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/9_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/9_g.png",
   },
-  종로시전4: {
+  건청궁외부: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/10_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/10_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/10_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/10_g.png",
   },
-  비단상점2: {
+  강녕전외부1: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/11_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/11_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/11_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/11_g.png",
   },
-  종로시전5: {
+  강녕전내부: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/12_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/12_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/12_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/12_g.png",
   },
-  경공장2: {
+  강녕전외부2: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/13_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/13_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/13_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/13_g.png",
   },
-  종로시전7: {
+  경회루: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/14_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/14_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/14_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/14_g.png",
   },
-  시전귀퉁이: {
+  광화문2: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/15_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/15_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/15_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/15_g.png",
   },
-  종로길거리_아픈여성: {
+  광화문포토존: {
     before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/16_M.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/16_p.png",
     after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/16_S.png",
-  },
-  제생원: {
-    before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/17_M.png",
-    after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/17_S.png",
-  },
-  종로길거리_장영실: {
-    before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/18_M.png",
-    after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/18_S.png",
-  },
-  혜정교: {
-    before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/19_M.png",
-    after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/19_S.png",
-  },
-  종로길거리_마지막: {
-    before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/20_M.png",
-    after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/20_S.png",
-  },
-  종로길거리_마지막_경시서_관리: {
-    before:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/21_M.png",
-    after:
-      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/21_S.png",
+      "https://igbrtjdwfvvv11213562.cdn.ntruss.com/zep-script/history_josun/16_g.png",
   },
 };

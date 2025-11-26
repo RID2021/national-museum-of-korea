@@ -35,189 +35,201 @@ const DEFAULT_WAIT_BUFFER = 1;
 const DEFAULT_MOVE_SPEED = 80;
 
 const cameraRoutes: Record<string, CameraRouteConfig> = {
-  종로시전_프롤로그: {
-    path: [[41, 23, 1]],
-    options: {
-      origin: { x: 60, y: 67 },
-      returnToStart: true,
-      defaultDuration: 1,
-      waitBufferSeconds: 1,
-    },
-  },
-  경공장_작업장: {
-    path: [[46, 26, 1]],
-    options: {
-      origin: { x: 22, y: 9 },
-      returnToStart: true,
-      defaultDuration: 1,
-      waitBufferSeconds: 1,
-    },
-  },
-  피마길: {
-    path: [[76, 2, 1]],
-    options: {
-      origin: { x: 1, y: 24 },
-      returnToStart: true,
-      defaultDuration: 1,
-      waitBufferSeconds: 1,
-    },
-  },
-  종로시전1: {
+  광화문1: {
     path: [
-      [20, 36, 1],
-      [42, 22, 1],
-      [93, 23, 1],
-      [92, 51, 1],
-      [23, 55, 1],
-      [42, 64, 1],
+      [44, 56, 1],
+      [39, 30, 1],
     ],
     options: {
-      origin: { x: 61, y: 67 },
+      origin: { x: 39, y: 77 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  비단상점: {
-    path: [[51, 39, 1]],
-    options: {
-      origin: { x: 23, y: 38 },
-      returnToStart: true,
-      defaultDuration: 1,
-      waitBufferSeconds: 1,
-    },
-  },
-  종로시전2: {
-    path: [[74, 69, 1]],
-    options: {
-      origin: { x: 39, y: 66 },
-      returnToStart: true,
-      defaultDuration: 1,
-      waitBufferSeconds: 1,
-    },
-  },
-  종이상점: {
+  흥례문: {
     path: [
-      [19, 21, 1],
-      [23, 39, 1],
+      [21, 43, 1],
+      [49, 32, 1],
+      [71, 16, 1],
     ],
     options: {
-      origin: { x: 16, y: 39 },
+      origin: { x: 5, y: 56 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  종로시전: {
-    path: [[35, 29, 1]],
-    options: {
-      origin: { x: 72, y: 69 },
-      returnToStart: true,
-      defaultDuration: 1,
-      waitBufferSeconds: 1,
-    },
-  },
-  경시서: {
+  근정전외부1: {
     path: [
-      [39, 24, 1],
-      [51, 39, 1],
+      [11, 52, 1],
+      [34, 43, 1],
+      [49, 31, 1],
     ],
     options: {
-      origin: { x: 22, y: 36 },
+      origin: { x: 10, y: 58 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  종로시전4: {
+  근정전내부: {
     path: [
-      [21, 37, 1],
-      [39, 65, 1],
+      [30, 60, 1],
+      [33, 36, 1],
     ],
     options: {
-      origin: { x: 97, y: 29 },
+      origin: { x: 31, y: 54 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  비단상점2: {
-    path: [[35, 34, 1]],
+  근정전외부2: {
+    path: [
+      [10, 61, 1],
+      [33, 20, 1],
+    ],
     options: {
-      origin: { x: 22, y: 38 },
+      origin: { x: 10, y: 58 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  종로시전5: {
-    path: [[42, 21, 1]],
+  향원지불x: {
+    path: [
+      [38, 60, 1],
+      [38, 49, 1],
+      [37, 28, 1],
+    ],
     options: {
-      origin: { x: 45, y: 66 },
+      origin: { x: 37, y: 64 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  경공장2: {
-    path: [[38, 14, 1]],
+  영훈당: {
+    path: [
+      [48, 71, 1],
+      [39, 39, 1],
+    ],
     options: {
-      origin: { x: 17, y: 10 },
+      origin: { x: 42, y: 75 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  종로시전7: {
-    path: [[122, 44, 1]],
+  향원정불o: {
+    path: [
+      [38, 55, 1],
+      [36, 29, 1],
+    ],
     options: {
-      origin: { x: 42, y: 22 },
+      origin: { x: 36, y: 64 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  시전귀퉁이: {
-    path: [[27, 21, 1]],
+  향원정: {
+    path: [
+      [40, 29, 1],
+      [61, 22, 1],
+    ],
     options: {
-      origin: { x: 12, y: 23 },
+      origin: { x: 15, y: 50 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  종로길거리_아픈여성: {
-    path: [[108, 37, 1]],
+  건청궁외부: {
+    path: [
+      [57, 44, 1],
+      [33, 73, 1],
+    ],
     options: {
-      origin: { x: 124, y: 44 },
+      origin: { x: 43, y: 49 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  제생원: {
-    path: [[19, 37, 1]],
+  강녕전외부1: {
+    path: [[66, 33, 1]],
     options: {
-      origin: { x: 6, y: 40 },
+      origin: { x: 39, y: 48 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  종로길거리_장영실: {
-    path: [[65, 14, 1]],
+  강녕전내부: {
+    path: [
+      [46, 44, 1],
+      [71, 48, 1],
+    ],
     options: {
-      origin: { x: 100, y: 45 },
+      origin: { x: 38, y: 48 },
       returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
   },
-  혜정교: {
-    path: [[31, 5, 1]],
+  강녕전외부2: {
+    path: [[40, 70, 1]],
     options: {
-      origin: { x: 29, y: 32 },
+      origin: { x: 54, y: 42 },
       returnToStart: true,
+      returnDuration: 1,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
+  경회루: {
+    path: [[15, 47, 1]],
+    options: {
+      origin: { x: 57, y: 13 },
+      returnToStart: true,
+      returnDuration: 1,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
+  광화문2: {
+    path: [
+      [45, 66, 1],
+      [39, 54, 1],
+    ],
+    options: {
+      origin: { x: 39, y: 76 },
+      returnToStart: true,
+      returnDuration: 1,
+      defaultDuration: 1,
+      waitBufferSeconds: 1,
+    },
+  },
+  광화문포토존: {
+    path: [[39, 43, 1]],
+    options: {
+      origin: { x: 39, y: 53 },
+      returnToStart: true,
+      returnDuration: 1,
       defaultDuration: 1,
       waitBufferSeconds: 1,
     },
@@ -249,6 +261,7 @@ export function moveCamera(
   const defaultDuration = options.defaultDuration ?? DEFAULT_MOVE_DURATION;
   const waitBufferSeconds = options.waitBufferSeconds ?? DEFAULT_WAIT_BUFFER;
   const restoreMoveSpeed = options.restoreMoveSpeed ?? DEFAULT_MOVE_SPEED;
+  const origin = options.origin ?? { x: player.tileX, y: player.tileY };
 
   const restoreCamera = (): void => {
     player.setCameraTarget("");
@@ -263,8 +276,8 @@ export function moveCamera(
   };
 
   const handleReturn = (): void => {
-    if (options.returnToStart && options.origin) {
-      const { x, y } = options.origin;
+    if (options.returnToStart && origin) {
+      const { x, y } = origin;
       const returnDuration =
         options.returnDuration ??
         options.defaultDuration ??
