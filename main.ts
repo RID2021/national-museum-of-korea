@@ -65,7 +65,10 @@ ScriptApp.onInit.Add(function () {
 ScriptApp.onJoinPlayer.Add(function (player) {
   loadPCButtonGroup(player);
   preparePlayerTag(player);
-  preparePlayerStorage(player, { purchases: {}, fixGame: { fixedKeys: [] } });
+  preparePlayerStorage(player, {
+    purchases: {},
+    fixGame: { fixedKeys: [], gateObjectKeys: [] },
+  });
   resetTileMessageHistory(player);
   const mapName = ScriptMap.name;
   setFinalTitle(player, mapName);

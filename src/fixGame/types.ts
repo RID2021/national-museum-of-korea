@@ -10,6 +10,7 @@ export interface FixTarget {
 
 export interface FixGameStorage {
   fixedKeys: string[];
+  gateObjectKeys: string[];
 }
 
 export type FixGamePlayerStorage = PlayerStorageRecord & {
