@@ -30,6 +30,7 @@ import {
 import {
   handleFixGameJoin,
   handleFixGameObjectInteraction,
+  resetFixGameProgress,
 } from "./src/fixGame";
 import { FIX_GAME_MAP_NAME } from "./src/fixGame/constants";
 import { ADD_ITEM_TILE_NAME, REFRESH_TASK_TILE_NAME } from "./src/constants";
@@ -124,7 +125,7 @@ ScriptApp.onStart.Add(startHorseGame);
 
 ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
   if (ScriptMap.name === FIX_GAME_MAP_NAME) {
-    handleFixGameObjectInteraction(player, key, ScriptMap.name);
+    handleFixGameObjectInteraction(player, key, ScriptMap.name, false);
   }
   // handleHorseTouched(player, key);
 });
@@ -132,7 +133,7 @@ ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
 ScriptApp.onTriggerObject.Add(
   (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
     if (ScriptMap.name === FIX_GAME_MAP_NAME) {
-      handleFixGameObjectInteraction(player, key, ScriptMap.name);
+      handleFixGameObjectInteraction(player, key, ScriptMap.name, true);
     }
   },
 );
@@ -180,6 +181,10 @@ ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {
     if (text === "!인벤리셋") {
       clearInventoryItems(player);
       player.sendUpdated();
+    } else if (text === "!게임리셋") {
+      if (ScriptMap.name === FIX_GAME_MAP_NAME) {
+        resetFixGameProgress(player, ScriptMap.name);
+      }
     } else if (text === "!상점") {
     }
   }

@@ -7,6 +7,7 @@ import {
   FIX_GATE_TILE,
   FIX_TARGETS,
   FIX_TARGET_COUNT,
+  FIX_GAME_MAP_NAME,
   brokenSprite,
   fixedSprite,
   transparentGateSprite,
@@ -257,7 +258,8 @@ export function handleFixGameJoin(
 export function handleFixGameObjectInteraction(
   player: ScriptPlayer,
   key: string,
-  _mapName: string
+  _mapName: string,
+  isInteraction?: boolean
 ): void {
   const { storage, fixGame } = ensureFixGameStorage(player);
 
@@ -277,6 +279,10 @@ export function handleFixGameObjectInteraction(
   });
 
   if (!target) {
+    return;
+  }
+
+  if (!isInteraction) {
     return;
   }
 
@@ -302,4 +308,26 @@ export function handleFixGameObjectInteraction(
   if (isFixGameComplete(updatedFixGame)) {
     removeGateBlocks(player, storage, updatedFixGame);
   }
+}
+
+export function resetFixGameProgress(
+  player: ScriptPlayer,
+  mapName: string
+): void {
+  if (mapName !== FIX_GAME_MAP_NAME) {
+    return;
+  }
+
+  const { storage, fixGame } = ensureFixGameStorage(player);
+  removeGateBlocks(player, storage, fixGame);
+  const resetState: FixGameStorage = { fixedKeys: [], gateObjectKeys: [] };
+
+  storage[FIX_GAME_STORAGE_KEY] = resetState;
+  savePlayerStorage(player, storage, { persist: true });
+
+  FIX_TARGETS.forEach(function (target) {
+    placeTargetForPlayer(player, target, resetState.fixedKeys);
+  });
+
+  placeGateBlocks(player, storage, resetState);
 }
