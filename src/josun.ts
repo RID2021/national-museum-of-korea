@@ -11,5 +11,10 @@ export function setFinalTitle(player: ScriptPlayer, mapName) {
     player.titleColor = ColorType.WHITE;
     player.sendUpdated();
   }
+  if (mapName === "광화문포토존") {
+    player.title = "역사를 기억하는 자";
+    player.titleColor = ColorType.WHITE;
+    player.sendUpdated();
+  }
   return;
 }
