@@ -101,14 +101,14 @@ ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
 // ScriptApp.addOnTileTouched or addOnLocationTouched를 이용해서 특정 맵마다 location이름을 다르게 가져가야함, 그리고 해당 맵에서 trigger 될 주소 사전 세팅해두기.
 
 ScriptApp.onStart.Add(function () {
-  task_button = ScriptApp.addMobileButton(8, 50, 75, function (player) {
-    toggleTaskWidget(ScriptMap.name, player);
-  });
+  // task_button = ScriptApp.addMobileButton(8, 125, 75, function (player) {
+  //   toggleTaskWidget(ScriptMap.name, player);
+  // });
 
-  task_button.image = task_button_image;
-  task_button.sendUpdated();
+  // task_button.image = task_button_image;
+  // task_button.sendUpdated();
 
-  inventory_button = ScriptApp.addMobileButton(8, 125, 75, function (player) {
+  inventory_button = ScriptApp.addMobileButton(8, 50, 75, function (player) {
     debugMessage("mobile button clicked");
     showInventoryWidget(player, {
       template: "mobile",
@@ -156,7 +156,7 @@ function loadPCButtonGroup(player: ScriptPlayer) {
   if (!player.isMobile) {
     const pcButtonGroup = player.showWidget(
       "html/pc_button.html",
-      "sidebar",
+      "topleft",
       250,
       150
     );
