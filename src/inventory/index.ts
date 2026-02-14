@@ -1,23 +1,28 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 
 import {
-  preparePlayerStorage,
-  savePlayerStorage,
-  preparePlayerTag,
-  PlayerTagRecord,
   PlayerStorageRecord,
+  PlayerTagRecord,
+  preparePlayerStorage,
+  preparePlayerTag,
+  savePlayerStorage,
 } from "../utils/player";
 
+import type { EarnedItemConfig, EarnedItemEntry } from "./constants";
+import {
+  earnItemMap,
+  inventoryInteractionMap,
+  inventoryRemoveOnEnterMap,
+} from "./constants";
 import {
   InventoryItem,
-  InventoryState,
   InventorySize,
-  InventoryWidgetMessage,
+  InventoryState,
   InventoryWidgetAlign,
+  InventoryWidgetMessage,
   ShowInventoryOptions,
 } from "./interfaces";
-import { earnItemMap } from "./constants";
-import type { EarnedItemEntry, EarnedItemConfig } from "./constants";
+import { debugMessage } from "../utils/message";
 type PlayerStorageData = PlayerStorageRecord & {
   inventory?: InventoryState;
   [key: string]: unknown;
@@ -51,6 +56,8 @@ interface ResolvedEarnedItem {
   items: NormalizedEarnedItemConfig[];
   mobileMessage: string;
   pcMessage: string;
+  missingMessage: string;
+  prerequisiteItemList: string[];
   removeItemList: string[];
 }
 
@@ -126,9 +133,7 @@ function normalizeRemovalList(list: unknown): string[] {
   return Array.from(
     new Set(
       list
-        .map((entry) =>
-          typeof entry === "string" ? entry.trim() : ""
-        )
+        .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
         .filter(Boolean)
     )
   );
@@ -163,9 +168,7 @@ function normalizeEarnedItemConfig(
   };
 }
 
-function normalizeEarnedItemList(
-  list: unknown
-): NormalizedEarnedItemConfig[] {
+function normalizeEarnedItemList(list: unknown): NormalizedEarnedItemConfig[] {
   if (!Array.isArray(list)) {
     return [];
   }
@@ -173,6 +176,35 @@ function normalizeEarnedItemList(
   return list
     .map((entry) => normalizeEarnedItemConfig(entry))
     .filter(Boolean) as NormalizedEarnedItemConfig[];
+}
+
+function resolveInteraction(
+  interactionId: string
+): ResolvedEarnedItem | undefined {
+  const entry = (
+    inventoryInteractionMap as Record<string, EarnedItemEntry | undefined>
+  )[interactionId];
+
+  if (!entry) {
+    return undefined;
+  }
+
+  const items = normalizeEarnedItemList(entry.earnItemList);
+
+  const mobileMessage =
+    typeof entry.mobileMessage === "string" ? entry.mobileMessage : "";
+  const pcMessage = typeof entry.pcMessage === "string" ? entry.pcMessage : "";
+  const missingMessage =
+    typeof entry.missingMessage === "string" ? entry.missingMessage : "";
+
+  return {
+    items,
+    mobileMessage,
+    pcMessage,
+    missingMessage,
+    prerequisiteItemList: normalizeRemovalList(entry.prerequisiteItemList),
+    removeItemList: normalizeRemovalList(entry.removeItemList),
+  };
 }
 
 function resolveEarnedItem(mapName: string): ResolvedEarnedItem | undefined {
@@ -200,6 +232,9 @@ function resolveEarnedItem(mapName: string): ResolvedEarnedItem | undefined {
     items,
     mobileMessage,
     pcMessage,
+    missingMessage:
+      typeof entry.missingMessage === "string" ? entry.missingMessage : "",
+    prerequisiteItemList: normalizeRemovalList(entry.prerequisiteItemList),
     removeItemList: normalizeRemovalList(entry.removeItemList),
   };
 }
@@ -317,6 +352,13 @@ export function addInventoryItemByMapName(
   mapName: string,
   player: ScriptPlayer
 ): InventoryState {
+  return applyInventoryInteraction(mapName, player);
+}
+
+export function addInventoryItemByEarnItemName(
+  mapName: string,
+  player: ScriptPlayer
+): InventoryState {
   const config = resolveEarnedItem(mapName);
 
   if (!config) {
@@ -324,6 +366,8 @@ export function addInventoryItemByMapName(
   }
 
   const inventory = getInventory(player);
+
+
   let finalState = inventory;
   let addedAny = false;
   let removedAny = false;
@@ -391,6 +435,241 @@ export function addInventoryItemByMapName(
     );
     teardownInventoryWidget(player);
     showInventoryWidget(player, previousOptions);
+  }
+
+  return finalState;
+}
+
+
+export function removeInventoryItemsOnMapEnter(
+  mapName: string,
+  player: ScriptPlayer
+): InventoryState {
+  const itemNames = inventoryRemoveOnEnterMap[mapName];
+  if (!Array.isArray(itemNames) || itemNames.length === 0) {
+    return getInventory(player);
+  }
+
+  const uniqueNames = Array.from(
+    new Set(
+      itemNames
+        .map((name) => (typeof name === "string" ? name.trim() : ""))
+        .filter(Boolean)
+    )
+  );
+  if (uniqueNames.length === 0) {
+    return getInventory(player);
+  }
+
+  const storage = readPlayerStorage(player);
+  const state = ensureStateStructure(
+    storage[STORAGE_KEY],
+    normalizeSize(storage[STORAGE_KEY]?.size)
+  );
+
+  const beforeCount = state.items.length;
+  state.items = state.items.filter((item) => !uniqueNames.includes(item.name));
+
+  if (state.items.length === beforeCount) {
+    return state;
+  }
+
+  persistInventory(player, storage, state);
+
+  const tag = preparePlayerTag(player) as InventoryPlayerTag;
+  if (tag.inventoryWidget) {
+    const previousOptions = cloneShowInventoryOptions(
+      tag.inventoryWidgetOptions
+    );
+    teardownInventoryWidget(player);
+    showInventoryWidget(player, previousOptions);
+  }
+
+  player.sendUpdated();
+  player.save();
+  return state;
+}
+
+export function applyInventoryInteraction(
+  interactionId: string,
+  player: ScriptPlayer
+): InventoryState {
+  const config = resolveInteraction(interactionId);
+
+  if (!config) {
+    return getInventory(player);
+  }
+
+  const inventory = getInventory(player);
+  let finalState = inventory;
+  let addedAny = false;
+  let removedAny = false;
+  const alreadyOwned: string[] = [];
+
+  if (config.prerequisiteItemList.length > 0) {
+    const missingPrerequisites = config.prerequisiteItemList.filter(function (
+      itemName
+    ) {
+      return !finalState.items.some(function (entry) {
+        return entry.name === itemName;
+      });
+    });
+
+    if (missingPrerequisites.length > 0) {
+      const missingText = player.isMobile
+        ? missingPrerequisites.join("\n")
+        : missingPrerequisites.join(", ");
+      const message = player.isMobile
+        ? `${missingText} 을/를 \n 먼저 획득하세요.`
+        : `${missingText} 을/를 먼저 획득하세요.`;
+
+      player.showCustomLabel(
+        message,
+        0xffffff,
+        0x000000,
+        0,
+        player.isMobile ? 65 : 55,
+        0.6,
+        4000,
+        {
+          borderRadius: "8px",
+          padding: "4px",
+        }
+      );
+      player.sendUpdated();
+      player.save();
+      return finalState;
+    }
+  }
+
+  if (config.removeItemList.length > 0) {
+    const missing = config.removeItemList.filter(function (itemName) {
+      return !finalState.items.some(function (entry) {
+        return entry.name === itemName;
+      });
+    });
+
+    if (missing.length > 0) {
+      const overrideMessage =
+        config.missingMessage && config.missingMessage.trim() !== "-"
+          ? config.missingMessage.trim()
+          : "";
+      const missingText = player.isMobile
+        ? missing.join("\n")
+        : missing.join(", ");
+      const message = overrideMessage
+        ? overrideMessage
+        : player.isMobile
+          ? `아이템이 부족합니다.\n${missingText}`
+          : `아이템이 부족합니다: ${missingText}`;
+
+      player.showCustomLabel(
+        message,
+        0xffffff,
+        0x000000,
+        0,
+        player.isMobile ? 65 : 55,
+        0.6,
+        4000,
+        {
+          borderRadius: "8px",
+          padding: "4px",
+        }
+      );
+      player.sendUpdated();
+      player.save();
+      return finalState;
+    }
+  }
+
+  if (config.removeItemList.length > 0) {
+    for (const itemName of config.removeItemList) {
+      const existing = finalState.items.find(
+        (entry) => entry.name === itemName
+      );
+      if (!existing) {
+        continue;
+      }
+      finalState = removeInventoryItem(player, itemName, existing.quantity);
+      removedAny = true;
+    }
+  }
+
+  for (const itemConfig of config.items) {
+    const exists = finalState.items.some(
+      (entry) => entry.name === itemConfig.name
+    );
+    if (exists) {
+      alreadyOwned.push(itemConfig.name);
+      continue;
+    }
+
+    finalState = addInventoryItem(player, {
+      name: itemConfig.name,
+      imageUrl: itemConfig.url,
+      description: itemConfig.description,
+      quantity: itemConfig.quantity,
+    });
+    addedAny = true;
+  }
+
+  const baseMessage = player.isMobile ? config.mobileMessage : config.pcMessage;
+  const hasBaseMessage =
+    typeof baseMessage === "string" && Boolean(baseMessage.trim());
+  const alreadyOwnedLines = alreadyOwned
+    .map(function (name) {
+      return `${name} : 이미 획득한 아이템입니다`;
+    })
+    .join("\n");
+  const hasAlreadyOwnedMessage = Boolean(alreadyOwnedLines.trim());
+  const messageOnly =
+    hasBaseMessage &&
+    config.items.length === 0 &&
+    config.removeItemList.length === 0;
+  const message =
+    hasAlreadyOwnedMessage && !addedAny && !removedAny
+      ? alreadyOwnedLines
+      : hasBaseMessage
+        ? hasAlreadyOwnedMessage
+          ? `${baseMessage}\n${alreadyOwnedLines}`
+          : baseMessage
+        : hasAlreadyOwnedMessage
+          ? alreadyOwnedLines
+          : "";
+
+  if (!addedAny && !removedAny && !messageOnly && !hasAlreadyOwnedMessage) {
+    return finalState;
+  }
+
+  if (message.trim()) {
+    player.showCustomLabel(
+      message,
+      0xffffff,
+      0x000000,
+      0,
+      player.isMobile ? 65 : 55,
+      0.6,
+      4000,
+      {
+        borderRadius: "8px",
+        padding: "4px",
+      }
+    );
+  }
+  if (addedAny || removedAny || message.trim()) {
+    player.sendUpdated();
+    player.save();
+  }
+
+  if (addedAny || removedAny) {
+    const tag = preparePlayerTag(player) as InventoryPlayerTag;
+    if (tag.inventoryWidget) {
+      const previousOptions = cloneShowInventoryOptions(
+        tag.inventoryWidgetOptions
+      );
+      teardownInventoryWidget(player);
+      showInventoryWidget(player, previousOptions);
+    }
   }
 
   return finalState;
@@ -516,7 +795,7 @@ export function showInventoryWidget(
   const align = pickAlign(options?.align);
   const { width, height } = pickDimensions(mode, options);
 
-  const widget = player.showWidget(template, "middle", width, height);
+  const widget = player.showWidget(template, align, width, height);
   tag.inventoryWidget = widget;
   tag.inventoryWidgetOptions = cloneShowInventoryOptions(options);
 

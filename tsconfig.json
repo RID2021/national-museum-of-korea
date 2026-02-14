@@ -3,6 +3,7 @@
 		"target": "ES2015",
 		"module": "ES2015",
 		"moduleResolution": "node",
+		"rootDir": ".",
 		"isolatedModules": true,
 		"removeComments": true,
 		"resolveJsonModule": true,

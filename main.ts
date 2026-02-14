@@ -4,16 +4,21 @@
 
 import "zep-script";
 
-import { KeyCodeType, ScriptPlayer } from "zep-script";
+import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
 
 import {
   addInventoryItemByMapName,
+  addInventoryItemByEarnItemName,
   clearInventoryItems,
   DEFAULT_INVENTORY_SIZE,
   ensureInventory,
   getInventory,
   showInventoryWidget,
 } from "./src/inventory";
+import {
+  handleInventoryInteractionObjectKey,
+  registerInventoryInteractionLocations,
+} from "./src/interactions";
 import {
   handlePortalGateJoin,
   handlePortalGateObjectTouched,
@@ -64,9 +69,12 @@ ScriptApp.onInit.Add(function () {
     debugMessage("T: key Pressed");
     toggleTaskWidget(ScriptMap.name, player);
   });
+  registerInventoryInteractionLocations();
 
   registerConfiguredTileMessages();
 });
+
+
 
 ScriptApp.onJoinPlayer.Add(function (player) {
   loadPCButtonGroup(player);
@@ -79,7 +87,10 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   const mapName = ScriptMap.name;
   setFinalTitle(player, mapName);
   ensureInventory(player, DEFAULT_INVENTORY_SIZE);
-  checkPassport(player);
+  if (mapName == "가평교육원") {
+    checkPassport(player);
+  }
+
   handlePortalGateJoin(player, mapName);
 
   cameraMoveByMapName(player, mapName);
@@ -102,7 +113,7 @@ ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
 
 ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
   debugMessage("아이템 추가 땅 밟음");
-  addInventoryItemByMapName(ScriptMap.name, player);
+  addInventoryItemByEarnItemName(ScriptMap.name, player);
 });
 
 // ScriptApp.addOnTileTouched or addOnLocationTouched를 이용해서 특정 맵마다 location이름을 다르게 가져가야함, 그리고 해당 맵에서 trigger 될 주소 사전 세팅해두기.
@@ -137,6 +148,20 @@ ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
     handleFixGameObjectInteraction(player, key, ScriptMap.name, false);
   }
   // handleHorseTouched(player, key);
+});
+
+ScriptApp.onObjectTouched.Add(function (
+  player: ScriptPlayer,
+  x: number,
+  y: number,
+  tileID: number,
+  obj: any
+) {
+  if (obj !== null) {
+    if (obj.type == ObjectEffectType.INTERACTION_WITH_ZEPSCRIPTS) {
+      handleInventoryInteractionObjectKey(player, obj.param1);
+    }
+  }
 });
 
 

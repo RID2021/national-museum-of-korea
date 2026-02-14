@@ -89,7 +89,6 @@ function teardownTaskWidget(tag: TaskPlayerTag): void {
 }
 
 export function toggleTaskWidget(
-  
   mapName: string,
   player: ScriptPlayer
 ): ScriptWidget | null {
