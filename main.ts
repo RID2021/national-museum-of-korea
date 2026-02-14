@@ -13,6 +13,10 @@ import {
   ensureInventory,
   showInventoryWidget,
 } from "./src/inventory";
+import {
+  handlePortalGateJoin,
+  handlePortalGateObjectTouched,
+} from "./src/portal";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
 import { debugMessage } from "./src/utils/message";
 import { registerConfiguredTileMessages, resetTileMessageHistory } from "./src/utils";
@@ -74,6 +78,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   const mapName = ScriptMap.name;
   setFinalTitle(player, mapName);
   ensureInventory(player, DEFAULT_INVENTORY_SIZE);
+  handlePortalGateJoin(player, mapName);
 
   cameraMoveByMapName(player, mapName);
   if (!player.isMobile) {
@@ -124,11 +129,15 @@ ScriptApp.onStart.Add(function () {
 ScriptApp.onStart.Add(startHorseGame);
 
 ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
+  handlePortalGateObjectTouched(player, key, ScriptMap.name);
+
   if (ScriptMap.name === FIX_GAME_MAP_NAME) {
     handleFixGameObjectInteraction(player, key, ScriptMap.name, false);
   }
   // handleHorseTouched(player, key);
 });
+
+
 
 ScriptApp.onTriggerObject.Add(
   (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
