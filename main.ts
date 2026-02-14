@@ -11,6 +11,7 @@ import {
   clearInventoryItems,
   DEFAULT_INVENTORY_SIZE,
   ensureInventory,
+  getInventory,
   showInventoryWidget,
 } from "./src/inventory";
 import {
@@ -78,6 +79,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   const mapName = ScriptMap.name;
   setFinalTitle(player, mapName);
   ensureInventory(player, DEFAULT_INVENTORY_SIZE);
+  checkPassport(player);
   handlePortalGateJoin(player, mapName);
 
   cameraMoveByMapName(player, mapName);
@@ -183,6 +185,20 @@ function loadPCButtonGroup(player: ScriptPlayer) {
       }
     });
   }
+}
+
+function checkPassport(player: ScriptPlayer) {
+  ensureInventory(player, DEFAULT_INVENTORY_SIZE);
+  const inventory = getInventory(player);
+
+  const passport = inventory.items.find((item) => item.name === "여권");
+  if (passport) {
+    player.spawnAt(49, 76);
+  }
+  else {
+    player.spawnAt(42, 121)
+  }
+  return false;
 }
 
 ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {

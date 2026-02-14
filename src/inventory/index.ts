@@ -516,7 +516,7 @@ export function showInventoryWidget(
   const align = pickAlign(options?.align);
   const { width, height } = pickDimensions(mode, options);
 
-  const widget = player.showWidget(template, align, width, height);
+  const widget = player.showWidget(template, "middle", width, height);
   tag.inventoryWidget = widget;
   tag.inventoryWidgetOptions = cloneShowInventoryOptions(options);
 
