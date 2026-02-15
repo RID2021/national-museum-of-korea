@@ -32,8 +32,8 @@
       }
 
       .shortcut__header {
-        min-height: 86px;
-        padding: 20px 18px 16px;
+        min-height: 72px;
+        padding: 14px 16px 12px;
         background: linear-gradient(180deg, #6cb3ff 0%, var(--shortcut-main-color) 55%, #1862d9 100%);
         border-bottom: 2px solid rgba(255, 255, 255, 0.55);
         display: flex;
@@ -45,7 +45,7 @@
       .shortcut__title {
         margin: 0;
         color: #ffffff;
-        font-size: 34px;
+        font-size: 24px;
         font-weight: 900;
         letter-spacing: -0.02em;
         text-shadow: 0 2px 0 rgba(14, 67, 165, 0.45);
@@ -53,15 +53,15 @@
 
       .shortcut__close {
         position: absolute;
-        right: 16px;
-        top: 14px;
-        width: 52px;
-        height: 52px;
+        right: 14px;
+        top: 10px;
+        width: 44px;
+        height: 44px;
         border: 2px solid rgba(255, 255, 255, 0.5);
         border-radius: 999px;
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.1));
         color: #eff6ff;
-        font-size: 30px;
+        font-size: 24px;
         line-height: 1;
         cursor: pointer;
         box-shadow: 0 4px 10px rgba(16, 62, 156, 0.3);
@@ -70,13 +70,6 @@
       .shortcut__body {
         padding: 16px 12px 12px;
         background: linear-gradient(180deg, #edf3ff 0%, var(--panel-bg) 100%);
-      }
-
-      .shortcut__map {
-        margin: 0 6px 10px;
-        color: #5070a9;
-        font-size: 13px;
-        font-weight: 600;
       }
 
       .shortcut__list {
@@ -161,7 +154,6 @@
         </button>
       </header>
       <div class="shortcut__body">
-        <p class="shortcut__map" data-map-name></p>
         <div class="shortcut__list" data-list></div>
       </div>
     </section>
@@ -176,7 +168,6 @@
         },
       };
 
-      const mapNameElement = document.querySelector("[data-map-name]");
       const listElement = document.querySelector("[data-list]");
       const closeButton = document.querySelector("[data-close]");
 
@@ -215,7 +206,6 @@
       }
 
       function render() {
-        mapNameElement.textContent = `맵: ${state.mapName || "현재 맵"}`;
         listElement.innerHTML = "";
         applyTheme(state.theme);
 
