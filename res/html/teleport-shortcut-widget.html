@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>바로가기</title>
+    <style>
+      :root {
+        --shortcut-main-color: #2f8bff;
+        --shortcut-hover-color: #5cabff;
+        --panel-bg: #e7eefc;
+        font-family: "Noto Sans KR", "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 6px;
+        background: transparent;
+      }
+
+      .shortcut {
+        width: 100%;
+        border-radius: 34px;
+        background: linear-gradient(180deg, #edf4ff 0%, #d6e3fb 100%);
+        border: 3px solid #6ea8ff;
+        box-shadow: 0 10px 30px rgba(7, 47, 110, 0.35), inset 0 0 0 3px rgba(255, 255, 255, 0.45);
+        overflow: hidden;
+      }
+
+      .shortcut__header {
+        min-height: 86px;
+        padding: 20px 18px 16px;
+        background: linear-gradient(180deg, #6cb3ff 0%, var(--shortcut-main-color) 55%, #1862d9 100%);
+        border-bottom: 2px solid rgba(255, 255, 255, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .shortcut__title {
+        margin: 0;
+        color: #ffffff;
+        font-size: 34px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        text-shadow: 0 2px 0 rgba(14, 67, 165, 0.45);
+      }
+
+      .shortcut__close {
+        position: absolute;
+        right: 16px;
+        top: 14px;
+        width: 52px;
+        height: 52px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.1));
+        color: #eff6ff;
+        font-size: 30px;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(16, 62, 156, 0.3);
+      }
+
+      .shortcut__body {
+        padding: 16px 12px 12px;
+        background: linear-gradient(180deg, #edf3ff 0%, var(--panel-bg) 100%);
+      }
+
+      .shortcut__map {
+        margin: 0 6px 10px;
+        color: #5070a9;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .shortcut__list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .shortcut__item {
+        width: 100%;
+        border: 2px solid rgba(126, 177, 255, 0.9);
+        border-radius: 26px;
+        background: linear-gradient(180deg, #6cb3ff 0%, var(--shortcut-main-color) 45%, #2167da 100%);
+        box-shadow: 0 7px 18px rgba(37, 87, 177, 0.28), inset 0 2px 0 rgba(255, 255, 255, 0.48);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: transform 0.12s ease, background 0.12s ease;
+      }
+
+      .shortcut__item:hover {
+        background: linear-gradient(180deg, #86c5ff 0%, var(--shortcut-hover-color) 45%, #337be8 100%);
+        transform: translateY(-1px);
+      }
+
+      .shortcut__item:active {
+        transform: translateY(1px);
+      }
+
+      .shortcut__content {
+        flex: 1;
+        text-align: left;
+        min-width: 0;
+      }
+
+      .shortcut__item-title {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+
+      .shortcut__item-desc {
+        margin: 3px 0 0;
+        font-size: 12px;
+        opacity: 0.96;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .shortcut__arrow {
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1;
+        color: #eef6ff;
+        text-shadow: 0 2px 6px rgba(18, 72, 171, 0.4);
+      }
+
+      .shortcut__empty {
+        margin: 0;
+        border-radius: 20px;
+        border: 2px solid rgba(162, 188, 231, 0.68);
+        background: linear-gradient(180deg, #dfe8f9 0%, #d4deef 100%);
+        color: #5a6f98;
+        font-size: 14px;
+        text-align: center;
+        padding: 22px 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="shortcut">
+      <header class="shortcut__header">
+        <h1 class="shortcut__title">바로가기</h1>
+        <button type="button" class="shortcut__close" data-close aria-label="닫기">
+          ×
+        </button>
+      </header>
+      <div class="shortcut__body">
+        <p class="shortcut__map" data-map-name></p>
+        <div class="shortcut__list" data-list></div>
+      </div>
+    </section>
+
+    <script>
+      const state = {
+        mapName: "",
+        shortcuts: [],
+        theme: {
+          mainColor: "#2f8bff",
+          hoverColor: "#5cabff",
+        },
+      };
+
+      const mapNameElement = document.querySelector("[data-map-name]");
+      const listElement = document.querySelector("[data-list]");
+      const closeButton = document.querySelector("[data-close]");
+
+      function applyTheme(theme) {
+        const mainColor =
+          typeof theme?.mainColor === "string" && theme.mainColor.trim()
+            ? theme.mainColor.trim()
+            : "#2f8bff";
+        const hoverColor =
+          typeof theme?.hoverColor === "string" && theme.hoverColor.trim()
+            ? theme.hoverColor.trim()
+            : "#5cabff";
+
+        document.documentElement.style.setProperty(
+          "--shortcut-main-color",
+          mainColor
+        );
+        document.documentElement.style.setProperty(
+          "--shortcut-hover-color",
+          hoverColor
+        );
+      }
+
+      function closeWidget() {
+        window.parent?.postMessage({ type: "shortcut:close" }, "*");
+      }
+
+      function requestTeleport(shortcutId) {
+        window.parent?.postMessage(
+          {
+            type: "shortcut:teleport",
+            payload: { id: shortcutId },
+          },
+          "*"
+        );
+      }
+
+      function render() {
+        mapNameElement.textContent = `맵: ${state.mapName || "현재 맵"}`;
+        listElement.innerHTML = "";
+        applyTheme(state.theme);
+
+        if (!Array.isArray(state.shortcuts) || state.shortcuts.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "shortcut__empty";
+          empty.textContent = "이 맵에는 등록된 바로가기 좌표가 없습니다.";
+          listElement.appendChild(empty);
+          return;
+        }
+
+        state.shortcuts.forEach((shortcut) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "shortcut__item";
+
+          const content = document.createElement("span");
+          content.className = "shortcut__content";
+
+          const title = document.createElement("p");
+          title.className = "shortcut__item-title";
+          title.textContent = shortcut.label || "이동";
+
+          const desc = document.createElement("p");
+          desc.className = "shortcut__item-desc";
+          desc.textContent =
+            shortcut.description || "선택 시 해당 좌표로 이동합니다.";
+
+          const arrow = document.createElement("span");
+          arrow.className = "shortcut__arrow";
+          arrow.textContent = "›";
+
+          content.appendChild(title);
+          content.appendChild(desc);
+          button.appendChild(content);
+          button.appendChild(arrow);
+          button.addEventListener("click", function () {
+            requestTeleport(shortcut.id);
+          });
+
+          listElement.appendChild(button);
+        });
+      }
+
+      window.addEventListener("message", function (event) {
+        const data = event?.data;
+        if (!data || data.type !== "shortcut:init") {
+          return;
+        }
+
+        const payload = data.payload || {};
+        state.mapName =
+          typeof payload.mapName === "string" ? payload.mapName : "";
+        state.shortcuts = Array.isArray(payload.shortcuts)
+          ? payload.shortcuts
+          : [];
+        state.theme =
+          payload.theme && typeof payload.theme === "object"
+            ? payload.theme
+            : state.theme;
+
+        render();
+      });
+
+      closeButton.addEventListener("click", closeWidget);
+      window.parent?.postMessage({ type: "shortcut:ready" }, "*");
+    </script>
+  </body>
+</html>

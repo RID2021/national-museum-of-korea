@@ -1,0 +1,46 @@
+{
+  "가평교육원": {
+    "theme": {
+      "mainColor": "#2f8bff",
+      "hoverColor": "#5cabff"
+    },
+    "shortcuts": [
+      {
+        "id": "gapyeong-main-entry",
+        "label": "기본 입구",
+        "x": 42,
+        "y": 121,
+        "description": "가평교육원 기본 스폰 지점"
+      },
+      {
+        "id": "gapyeong-passport-entry",
+        "label": "여권 입장",
+        "x": 49,
+        "y": 76,
+        "description": "여권 보유자 전용 스폰 지점"
+      },
+      {
+        "id": "gapyeong-china-portal",
+        "label": "중국 포탈 앞",
+        "x": 42,
+        "y": 36,
+        "description": "중국 맵으로 연결되는 포탈 앞"
+      }
+    ]
+  },
+  "중국": {
+    "theme": {
+      "mainColor": "#2875ff",
+      "hoverColor": "#4d98ff"
+    },
+    "shortcuts": [
+      {
+        "id": "china-portal-entry",
+        "label": "포탈 앞",
+        "x": 94,
+        "y": 19,
+        "description": "금화 포탈 진입 지점"
+      }
+    ]
+  }
+}

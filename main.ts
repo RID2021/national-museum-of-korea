@@ -24,6 +24,7 @@ import {
   handlePortalGateObjectTouched,
 } from "./src/portal";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
+import { toggleTeleportShortcutWidget } from "./src/shortcut";
 import { debugMessage } from "./src/utils/message";
 import { registerConfiguredTileMessages, resetTileMessageHistory } from "./src/utils";
 import { preparePlayerStorage, preparePlayerTag } from "./src/utils/player";
@@ -45,8 +46,8 @@ import {
 import { FIX_GAME_MAP_NAME } from "./src/fixGame/constants";
 import { ADD_ITEM_TILE_NAME, REFRESH_TASK_TILE_NAME } from "./src/constants";
 
-let task_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
-let task_button;
+let shortcut_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
+let shortcut_button;
 
 let inventory_button_image = ScriptApp.loadSpritesheet(
   "images/inventory_button.png"
@@ -68,6 +69,11 @@ ScriptApp.onInit.Add(function () {
   ScriptApp.addOnKeyDown(KeyCodeType.T, function (player) {
     debugMessage("T: key Pressed");
     toggleTaskWidget(ScriptMap.name, player);
+  });
+
+  // register teleport shortcut key
+  ScriptApp.addOnKeyDown(KeyCodeType.G, function (player) {
+    toggleTeleportShortcutWidget(ScriptMap.name, player);
   });
   registerInventoryInteractionLocations();
 
@@ -119,12 +125,12 @@ ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
 // ScriptApp.addOnTileTouched or addOnLocationTouched를 이용해서 특정 맵마다 location이름을 다르게 가져가야함, 그리고 해당 맵에서 trigger 될 주소 사전 세팅해두기.
 
 ScriptApp.onStart.Add(function () {
-  // task_button = ScriptApp.addMobileButton(8, 125, 75, function (player) {
-  //   toggleTaskWidget(ScriptMap.name, player);
-  // });
+  shortcut_button = ScriptApp.addMobileButton(8, 125, 75, function (player) {
+    toggleTeleportShortcutWidget(ScriptMap.name, player);
+  });
 
-  // task_button.image = task_button_image;
-  // task_button.sendUpdated();
+  shortcut_button.image = shortcut_button_image;
+  shortcut_button.sendUpdated();
 
   inventory_button = ScriptApp.addMobileButton(8, 50, 75, function (player) {
     debugMessage("mobile button clicked");
@@ -207,6 +213,9 @@ function loadPCButtonGroup(player: ScriptPlayer) {
           width: player.isMobile ? 355 : 450,
           height: player.isMobile ? 600 : 700,
         });
+      }
+      if (message.openShortcut) {
+        toggleTeleportShortcutWidget(ScriptMap.name, player);
       }
     });
   }

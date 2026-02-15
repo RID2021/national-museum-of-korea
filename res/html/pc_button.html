@@ -10,13 +10,26 @@
       width: 80px;
       cursor: pointer;
     }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      background: rgba(35, 35, 35, 0.92);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 12px;
+      cursor: pointer;
+      min-width: 88px;
+    }
   </style>
 </head>
 
 <body>
-  <div style="display: flex; flex-direction: row; gap: 5px;">
+  <div style="display: flex; flex-direction: row; gap: 5px; align-items: center;">
     <img onclick="openInventory()"
       src="https://legacy-rid.gcdn.ntruss.com/zep-script/history_josun/inventory_icon.png" />
+    <button type="button" onclick="openShortcut()">바로가기(G)</button>
   </div>
   <script>
     function openTask() {
@@ -31,6 +44,14 @@
       window.parent.postMessage(
         {
           openInventory: true,
+        },
+        "*"
+      );
+    }
+    function openShortcut() {
+      window.parent.postMessage(
+        {
+          openShortcut: true,
         },
         "*"
       );
