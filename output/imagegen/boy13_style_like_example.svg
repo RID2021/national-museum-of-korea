@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1536" viewBox="0 0 1024 1536">
+  <defs>
+    <!-- Soft paper/grain texture to mimic the reference's gentle illustration feel -->
+    <filter id="paper" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" seed="7" result="noise"/>
+      <feColorMatrix type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 0.08 0" in="noise" result="grain"/>
+      <feComposite in="grain" in2="SourceGraphic" operator="over"/>
+    </filter>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#2a2f3a" flood-opacity="0.18"/>
+    </filter>
+
+    <style>
+      .line {
+        stroke: #4a3f3a;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- Transparent background (matches the example). -->
+
+  <!-- Height proportions (exact bands):
+       Head: 0-614 (40%), Body: 614-1075 (30%), Legs: 1075-1536 (30%) -->
+
+  <!-- Ground shadow -->
+  <ellipse cx="520" cy="1440" rx="185" ry="42" fill="#1c2230" opacity="0.14"/>
+
+  <g filter="url(#softShadow)">
+    <!-- Character group -->
+    <g filter="url(#paper)">
+      <!-- Head (40%) -->
+      <g>
+        <!-- Slight 3/4 turn like the reference -->
+        <path d="M 320 330
+                 C 320 185, 410 110, 520 110
+                 C 685 110, 780 235, 735 395
+                 C 700 525, 595 600, 480 600
+                 C 375 600, 320 485, 320 330 Z"
+              fill="#f6d6c6" class="line"/>
+
+        <!-- Hair (simple soft cap, teen boy) -->
+        <path d="M 335 320
+                 C 330 185, 430 120, 520 120
+                 C 650 120, 742 215, 720 360
+                 C 675 305, 615 305, 585 330
+                 C 560 270, 505 270, 468 320
+                 C 445 288, 398 295, 350 335
+                 C 340 330, 338 325, 335 320 Z"
+              fill="#2c2d33" class="line"/>
+
+        <!-- Ear (near side only) -->
+        <ellipse cx="312" cy="390" rx="40" ry="56" fill="#f6d6c6" class="line"/>
+
+        <!-- Eyes: small dot-like with gentle lids (reference vibe) -->
+        <path d="M 430 405 C 448 392, 468 392, 486 405" fill="none" class="line" opacity="0.85"/>
+        <path d="M 545 410 C 563 397, 583 397, 601 410" fill="none" class="line" opacity="0.85"/>
+        <circle cx="468" cy="425" r="8" fill="#2b2b2f"/>
+        <circle cx="575" cy="430" r="8" fill="#2b2b2f"/>
+
+        <!-- Brows -->
+        <path d="M 420 370 C 450 355, 480 355, 510 372" fill="none" class="line" opacity="0.55"/>
+        <path d="M 535 375 C 565 360, 595 360, 625 377" fill="none" class="line" opacity="0.55"/>
+
+        <!-- Nose + mouth -->
+        <path d="M 515 448 C 505 460, 505 476, 515 486" fill="none" class="line" opacity="0.50"/>
+        <path d="M 468 520 C 500 542, 530 542, 562 520" fill="none" class="line" opacity="0.85"/>
+
+        <!-- Blush -->
+        <ellipse cx="398" cy="495" rx="40" ry="22" fill="#f2a0aa" opacity="0.22"/>
+        <ellipse cx="618" cy="505" rx="40" ry="22" fill="#f2a0aa" opacity="0.18"/>
+      </g>
+
+      <!-- Body (30%) -->
+      <g>
+        <!-- Hanbok jeogori (jacket): warm off-white with pale trim -->
+        <path d="M 365 675
+                 C 400 635, 460 615, 525 615
+                 C 610 615, 690 650, 715 725
+                 C 740 800, 725 955, 670 1010
+                 C 600 1080, 445 1080, 365 1010
+                 C 315 965, 300 805, 330 720
+                 C 340 695, 350 685, 365 675 Z"
+              fill="#f3eadf" class="line"/>
+
+        <!-- Collar/trim -->
+        <path d="M 420 650
+                 C 470 725, 500 760, 520 770
+                 C 545 755, 575 720, 625 650"
+              fill="none" class="line"/>
+        <path d="M 412 650
+                 C 465 735, 496 778, 520 792
+                 C 548 777, 585 732, 638 650"
+              fill="none" class="line" opacity="0.55"/>
+
+        <!-- Ribbon/strap hint (subtle, like reference's simple details) -->
+        <path d="M 520 780 C 500 805, 480 825, 455 842" fill="none" class="line" opacity="0.45"/>
+        <path d="M 520 780 C 545 805, 565 825, 590 842" fill="none" class="line" opacity="0.45"/>
+
+        <!-- Sleeves + hands -->
+        <path d="M 360 775
+                 C 300 820, 270 900, 300 950
+                 C 320 985, 370 980, 400 945
+                 C 430 910, 430 850, 410 810"
+              fill="#f3eadf" class="line"/>
+        <path d="M 705 790
+                 C 760 845, 780 925, 740 970
+                 C 710 1005, 660 990, 635 955
+                 C 610 920, 615 860, 640 820"
+              fill="#f3eadf" class="line"/>
+
+        <path d="M 383 940
+                 C 370 965, 388 992, 418 990
+                 C 452 988, 470 960, 455 940"
+              fill="#f6d6c6" class="line"/>
+        <path d="M 655 950
+                 C 640 975, 658 1002, 688 1000
+                 C 722 998, 740 970, 725 950"
+              fill="#f6d6c6" class="line"/>
+
+        <!-- Soft shading patches -->
+        <path d="M 380 725
+                 C 430 680, 505 665, 570 675
+                 C 650 688, 690 735, 700 805
+                 C 710 875, 690 950, 640 990
+                 C 580 1035, 460 1035, 400 990
+                 C 350 950, 330 875, 335 805
+                 C 340 760, 355 740, 380 725 Z"
+              fill="#caa892" opacity="0.14"/>
+      </g>
+
+      <!-- Legs (30%) -->
+      <g>
+        <!-- Baji (pants): deep desaturated blue like the reference skirt -->
+        <path d="M 385 1035
+                 C 450 1090, 585 1090, 650 1035
+                 C 705 1095, 720 1230, 690 1345
+                 C 660 1450, 590 1490, 520 1490
+                 C 450 1490, 380 1450, 350 1345
+                 C 320 1230, 335 1095, 385 1035 Z"
+              fill="#51677a" class="line"/>
+
+        <!-- Pant folds -->
+        <path d="M 470 1120 C 445 1210, 445 1320, 470 1410" fill="none" class="line" opacity="0.22"/>
+        <path d="M 565 1125 C 590 1215, 590 1325, 565 1415" fill="none" class="line" opacity="0.20"/>
+
+        <!-- Shoes -->
+        <path d="M 385 1420
+                 C 420 1375, 480 1370, 525 1385
+                 C 570 1400, 590 1430, 575 1460
+                 C 560 1490, 500 1500, 440 1490
+                 C 400 1482, 372 1455, 385 1420 Z"
+              fill="#f5f2ed" class="line"/>
+        <path d="M 650 1425
+                 C 615 1380, 555 1375, 510 1390
+                 C 465 1405, 445 1435, 460 1465
+                 C 475 1495, 535 1505, 595 1495
+                 C 635 1487, 663 1460, 650 1425 Z"
+              fill="#f5f2ed" class="line"/>
+      </g>
+    </g>
+  </g>
+</svg>

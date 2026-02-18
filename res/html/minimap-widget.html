@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>미니맵</title>
+    <style>
+      :root {
+        --minimap-accent: #2f8bff;
+        --minimap-dot: #ff8a3d;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 4px;
+        background: transparent;
+        font-family: "Noto Sans KR", "Segoe UI", sans-serif;
+        overflow: hidden;
+      }
+
+      body {
+        display: flex;
+      }
+
+      .minimap {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 2px solid rgba(18, 48, 94, 0.85);
+        background: linear-gradient(180deg, #1a2540 0%, #0e1629 100%);
+        box-shadow: 0 10px 24px rgba(5, 12, 25, 0.45);
+      }
+
+      .minimap__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 46px;
+        padding: 8px 10px 8px 12px;
+        background: linear-gradient(180deg, #6cb3ff 0%, var(--minimap-accent) 100%);
+      }
+
+      .minimap__title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 800;
+        color: #f4f9ff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      }
+
+      .minimap__close {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .minimap__map {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        background-color: #111826;
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .minimap__map--placeholder {
+        background-image:
+          linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.05) 1px,
+            transparent 1px
+          ),
+          radial-gradient(circle at 50% 35%, #2c405f 0%, #172338 60%, #111826 100%);
+        background-size: 20px 20px, 20px 20px, cover;
+      }
+
+      .minimap__placeholder-label {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        color: #d3e6ff;
+        background: rgba(13, 22, 37, 0.78);
+        border: 1px solid rgba(136, 177, 228, 0.5);
+        pointer-events: none;
+      }
+
+      .minimap__dot {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background: var(--minimap-dot);
+        border: 2px solid rgba(255, 255, 255, 0.95);
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.18), 0 0 14px rgba(255, 138, 61, 0.55);
+        transform: translate(-50%, -50%);
+        transition: left 0.12s linear, top 0.12s linear;
+      }
+
+    </style>
+  </head>
+  <body>
+    <section class="minimap">
+      <header class="minimap__header">
+        <h1 class="minimap__title" data-title>미니맵</h1>
+        <button type="button" class="minimap__close" data-close aria-label="닫기">
+          ×
+        </button>
+      </header>
+      <div class="minimap__map minimap__map--placeholder" data-map>
+        <p class="minimap__placeholder-label" data-placeholder>지도 준비중</p>
+        <span class="minimap__dot" data-dot></span>
+      </div>
+    </section>
+
+    <script>
+      const state = {
+        mapName: "",
+        mapWidth: 1,
+        mapHeight: 1,
+        imageUrl: "",
+        placeholder: true,
+        tileX: 0,
+        tileY: 0,
+        dotColor: "#ff8a3d",
+        accentColor: "#2f8bff",
+      };
+
+      const titleElement = document.querySelector("[data-title]");
+      const mapElement = document.querySelector("[data-map]");
+      const dotElement = document.querySelector("[data-dot]");
+      const closeButton = document.querySelector("[data-close]");
+      const placeholderLabel = document.querySelector("[data-placeholder]");
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function toNumber(value, fallback) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : fallback;
+      }
+
+      function applyTheme() {
+        document.documentElement.style.setProperty(
+          "--minimap-dot",
+          state.dotColor || "#ff8a3d"
+        );
+        document.documentElement.style.setProperty(
+          "--minimap-accent",
+          state.accentColor || "#2f8bff"
+        );
+      }
+
+      function applyMapBackground() {
+        if (state.imageUrl && !state.placeholder) {
+          mapElement.style.backgroundImage = `url("${String(state.imageUrl).replace(/"/g, '\\"')}")`;
+          mapElement.classList.remove("minimap__map--placeholder");
+          placeholderLabel.hidden = true;
+          return;
+        }
+
+        mapElement.style.backgroundImage = "";
+        mapElement.classList.add("minimap__map--placeholder");
+        placeholderLabel.hidden = false;
+      }
+
+      function renderDotPosition() {
+        const width = Math.max(1, Math.floor(toNumber(state.mapWidth, 1)));
+        const height = Math.max(1, Math.floor(toNumber(state.mapHeight, 1)));
+        const x = Math.floor(toNumber(state.tileX, 0));
+        const y = Math.floor(toNumber(state.tileY, 0));
+
+        const normalizedX = clamp(x / Math.max(1, width - 1), 0, 1);
+        const normalizedY = clamp(y / Math.max(1, height - 1), 0, 1);
+
+        dotElement.style.left = `${(normalizedX * 100).toFixed(2)}%`;
+        dotElement.style.top = `${(normalizedY * 100).toFixed(2)}%`;
+      }
+
+      function renderAll() {
+        titleElement.textContent = state.mapName ? `${state.mapName} 미니맵` : "미니맵";
+        applyTheme();
+        applyMapBackground();
+        renderDotPosition();
+      }
+
+      function applyInitPayload(payload) {
+        state.mapName = typeof payload.mapName === "string" ? payload.mapName : "";
+        state.mapWidth = toNumber(payload.mapWidth, 1);
+        state.mapHeight = toNumber(payload.mapHeight, 1);
+        state.imageUrl = typeof payload.imageUrl === "string" ? payload.imageUrl : "";
+        state.placeholder = Boolean(payload.placeholder);
+        state.tileX = toNumber(payload.tileX, 0);
+        state.tileY = toNumber(payload.tileY, 0);
+        state.dotColor = typeof payload.dotColor === "string" ? payload.dotColor : "#ff8a3d";
+        state.accentColor = typeof payload.accentColor === "string" ? payload.accentColor : "#2f8bff";
+      }
+
+      function applyUpdatePayload(payload) {
+        state.tileX = toNumber(payload.tileX, state.tileX);
+        state.tileY = toNumber(payload.tileY, state.tileY);
+      }
+
+      window.addEventListener("message", function (event) {
+        const data = event?.data;
+        if (!data || typeof data !== "object") {
+          return;
+        }
+
+        if (data.type === "minimap:init") {
+          applyInitPayload(data.payload || {});
+          renderAll();
+          return;
+        }
+
+        if (data.type === "minimap:update") {
+          applyUpdatePayload(data.payload || {});
+          renderDotPosition();
+        }
+      });
+
+      closeButton.addEventListener("click", function () {
+        window.parent?.postMessage({ type: "minimap:close" }, "*");
+      });
+
+      window.parent?.postMessage({ type: "minimap:ready" }, "*");
+    </script>
+  </body>
+</html>

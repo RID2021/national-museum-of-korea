@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6fbff"/>
+      <stop offset="1" stop-color="#eef3ff"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#24324a" flood-opacity="0.18"/>
+    </filter>
+    <style>
+      .line { stroke: #1f2a3a; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <!-- Canvas: 1024px tall
+       Proportions (exact by height bands):
+       Head 0-410 (~40%), Body 410-717 (~30%), Legs 717-1024 (~30%) -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Ground shadow -->
+  <ellipse cx="512" cy="965" rx="210" ry="42" fill="#2b3b55" opacity="0.10"/>
+
+  <g filter="url(#softShadow)">
+    <!-- Head (40%) -->
+    <g>
+      <circle cx="512" cy="220" r="210" fill="#ffd6bf" class="line"/>
+      <!-- Hair -->
+      <path d="M 330 220
+               C 350 110, 430 60, 512 60
+               C 645 60, 735 130, 725 250
+               C 690 210, 640 220, 610 240
+               C 580 180, 520 180, 470 230
+               C 430 190, 380 200, 330 220 Z"
+            fill="#2b2f39" class="line"/>
+      <!-- Eyes -->
+      <ellipse cx="440" cy="255" rx="34" ry="44" fill="#ffffff" class="line"/>
+      <ellipse cx="584" cy="255" rx="34" ry="44" fill="#ffffff" class="line"/>
+      <circle cx="452" cy="270" r="14" fill="#1f2a3a"/>
+      <circle cx="572" cy="270" r="14" fill="#1f2a3a"/>
+      <circle cx="446" cy="262" r="5" fill="#ffffff" opacity="0.9"/>
+      <circle cx="566" cy="262" r="5" fill="#ffffff" opacity="0.9"/>
+      <!-- Brows -->
+      <path d="M 402 210 C 430 195, 458 195, 484 210" fill="none" class="line"/>
+      <path d="M 540 210 C 566 195, 594 195, 622 210" fill="none" class="line"/>
+      <!-- Nose + mouth -->
+      <path d="M 512 288 C 502 304, 502 320, 512 334" fill="none" class="line" opacity="0.75"/>
+      <path d="M 468 360 C 496 392, 528 392, 556 360" fill="none" class="line"/>
+      <!-- Cheeks -->
+      <ellipse cx="390" cy="330" rx="44" ry="24" fill="#ff9fb0" opacity="0.25"/>
+      <ellipse cx="634" cy="330" rx="44" ry="24" fill="#ff9fb0" opacity="0.25"/>
+      <!-- Ears -->
+      <ellipse cx="304" cy="260" rx="46" ry="64" fill="#ffd6bf" class="line"/>
+      <ellipse cx="720" cy="260" rx="46" ry="64" fill="#ffd6bf" class="line"/>
+    </g>
+
+    <!-- Body (30%) -->
+    <g>
+      <!-- Torso -->
+      <path d="M 360 440
+               Q 512 380 664 440
+               Q 710 520 690 650
+               Q 512 710 334 650
+               Q 314 520 360 440 Z"
+            fill="#3a78ff" class="line"/>
+      <!-- Shirt highlight -->
+      <path d="M 390 495
+               Q 512 450 634 495
+               Q 660 560 640 615
+               Q 512 650 384 615
+               Q 364 560 390 495 Z"
+            fill="#7aa6ff" opacity="0.35"/>
+      <!-- Collar -->
+      <path d="M 440 430
+               Q 512 475 584 430
+               Q 548 515 512 520
+               Q 476 515 440 430 Z"
+            fill="#ffffff" opacity="0.85" class="line"/>
+      <!-- Arms -->
+      <path d="M 342 520
+               Q 270 560 250 640
+               Q 240 690 280 705
+               Q 330 725 360 680"
+            fill="#ffd6bf" class="line"/>
+      <path d="M 682 520
+               Q 754 560 774 640
+               Q 784 690 744 705
+               Q 694 725 664 680"
+            fill="#ffd6bf" class="line"/>
+      <!-- Sleeve cuffs -->
+      <path d="M 332 620 Q 315 650 330 682" fill="none" class="line" opacity="0.55"/>
+      <path d="M 692 620 Q 709 650 694 682" fill="none" class="line" opacity="0.55"/>
+    </g>
+
+    <!-- Legs (30%) -->
+    <g>
+      <!-- Shorts -->
+      <path d="M 360 660
+               Q 512 710 664 660
+               Q 675 740 640 782
+               Q 512 815 384 782
+               Q 349 740 360 660 Z"
+            fill="#1f2a3a" class="line"/>
+      <!-- Left leg -->
+      <path d="M 420 770
+               Q 390 875 410 965
+               Q 512 990 520 930
+               Q 532 865 510 790 Z"
+            fill="#ffd6bf" class="line"/>
+      <!-- Right leg -->
+      <path d="M 604 770
+               Q 634 875 614 965
+               Q 512 990 504 930
+               Q 492 865 514 790 Z"
+            fill="#ffd6bf" class="line"/>
+      <!-- Shoes -->
+      <path d="M 388 950
+               Q 420 905 505 915
+               Q 540 920 545 955
+               Q 548 985 505 990
+               Q 420 998 388 970 Z"
+            fill="#ffffff" class="line"/>
+      <path d="M 636 950
+               Q 604 905 519 915
+               Q 484 920 479 955
+               Q 476 985 519 990
+               Q 604 998 636 970 Z"
+            fill="#ffffff" class="line"/>
+      <!-- Shoe details -->
+      <path d="M 410 963 Q 455 945 520 955" fill="none" class="line" opacity="0.45"/>
+      <path d="M 614 963 Q 569 945 504 955" fill="none" class="line" opacity="0.45"/>
+    </g>
+  </g>
+</svg>

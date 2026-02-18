@@ -25,6 +25,7 @@ import {
 } from "./src/portal";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
 import { toggleTeleportShortcutWidget } from "./src/shortcut";
+import { destroyMinimapSystem, toggleMinimapWidget } from "./src/minimap";
 import { debugMessage } from "./src/utils/message";
 import { registerConfiguredTileMessages, resetTileMessageHistory } from "./src/utils";
 import { preparePlayerStorage, preparePlayerTag } from "./src/utils/player";
@@ -48,6 +49,8 @@ import { ADD_ITEM_TILE_NAME, REFRESH_TASK_TILE_NAME } from "./src/constants";
 
 let shortcut_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
 let shortcut_button;
+let minimap_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
+let minimap_button;
 
 let inventory_button_image = ScriptApp.loadSpritesheet(
   "images/inventory_button.png"
@@ -74,6 +77,12 @@ ScriptApp.onInit.Add(function () {
   // register teleport shortcut key
   ScriptApp.addOnKeyDown(KeyCodeType.G, function (player) {
     toggleTeleportShortcutWidget(ScriptMap.name, player);
+  });
+
+  // register minimap key
+  ScriptApp.addOnKeyDown(KeyCodeType.M, function (player) {
+    const widget = toggleMinimapWidget(ScriptMap.name, player);
+    player.showCenterLabel(widget ? "미니맵 열림" : "미니맵 닫힘");
   });
   registerInventoryInteractionLocations();
 
@@ -131,6 +140,13 @@ ScriptApp.onStart.Add(function () {
 
   shortcut_button.image = shortcut_button_image;
   shortcut_button.sendUpdated();
+
+  minimap_button = ScriptApp.addMobileButton(8, 200, 75, function (player) {
+    toggleMinimapWidget(ScriptMap.name, player);
+  });
+
+  minimap_button.image = minimap_button_image;
+  minimap_button.sendUpdated();
 
   inventory_button = ScriptApp.addMobileButton(8, 50, 75, function (player) {
     debugMessage("mobile button clicked");
@@ -190,6 +206,7 @@ ScriptApp.onLeavePlayer.Add((player: ScriptPlayer) => {
 // });
 
 ScriptApp.onDestroy.Add(function () {
+  destroyMinimapSystem();
   handleDestroy();
   ScriptMap.clearAllObjects();
 });
@@ -199,7 +216,7 @@ function loadPCButtonGroup(player: ScriptPlayer) {
     const pcButtonGroup = player.showWidget(
       "html/pc_button.html",
       "topleft",
-      250,
+      360,
       150
     );
     pcButtonGroup.onMessage.Add(function (player: ScriptPlayer, message: any) {
@@ -216,6 +233,9 @@ function loadPCButtonGroup(player: ScriptPlayer) {
       }
       if (message.openShortcut) {
         toggleTeleportShortcutWidget(ScriptMap.name, player);
+      }
+      if (message.openMinimap) {
+        toggleMinimapWidget(ScriptMap.name, player);
       }
     });
   }

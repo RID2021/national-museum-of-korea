@@ -1,0 +1,12 @@
+{
+  "가평교육원": {
+    "imageUrl": "https://rid.gcdn.ntruss.com/countries/12341234.png",
+    "dotColor": "#ff7a45",
+    "accentColor": "#2f8bff"
+  },
+  "중국": {
+    "imageUrl": "https://legacy-rid.gcdn.ntruss.com/zep-script/history_josun/2_p.png",
+    "dotColor": "#ffd24a",
+    "accentColor": "#2875ff"
+  }
+}
