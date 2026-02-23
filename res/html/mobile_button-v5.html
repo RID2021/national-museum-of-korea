@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mobile Buttons</title>
+  <style>
+    :root {
+      /* Bottom_Right(anchor=8) 기준 좌표 */
+      --coord-x-main: 18px;
+      --coord-y-top: 135px;
+
+      /* iframe 내부에 표시하기 위한 y 보정 */
+      --y-shift: 0px;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    body {
+      position: relative;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      pointer-events: none;
+    }
+
+    .action-button {
+      position: absolute;
+      border: 0;
+      border-radius: 10px;
+      background: rgba(35, 35, 35, 0.92);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 10px;
+      cursor: pointer;
+      min-width: 96px;
+      white-space: nowrap;
+      pointer-events: auto;
+    }
+
+    .btn-inventory {
+      right: var(--coord-x-main);
+      bottom: calc(var(--coord-y-top) + var(--y-shift));
+    }
+  </style>
+</head>
+
+<body>
+  <button type="button" class="action-button btn-inventory" onclick="openInventory()">인벤토리(I)</button>
+  <script>
+    function openInventory() {
+      window.parent.postMessage(
+        {
+          openInventory: true,
+        },
+        "*"
+      );
+    }
+  </script>
+</body>
+
+</html>

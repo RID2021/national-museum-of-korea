@@ -13,13 +13,13 @@ export const portalGateMap = {
   ],
   "중국": [
     {
-      portalX: 94,
-      portalY: 19,
+      portalX: 84,
+      portalY: 26,
       portalSize: 2,
       requiredItems: [
-        "금화1",
-        "금화2",
-        "금화3",
+        "용의 머리",
+        "용의 몸통",
+        "용의 꼬리",
       ],
     },
   ]

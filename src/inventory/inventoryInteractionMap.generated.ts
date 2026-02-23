@@ -6,34 +6,34 @@ export const inventoryInteractionMap = {
   "gold_1": {
     earnItemList: [
       {
-        name: "금화1",
+        name: "용의 머리",
         url: "https://rid.gcdn.ntruss.com/countries/gold_A.png",
       },
     ],
-    mobileMessage: "금화 1개를 획득하였습니다.",
-    pcMessage: "금화 1개를 획득하였습니다.",
+    mobileMessage: "용의 머리를 획득하였습니다.",
+    pcMessage: "용의 머리를 획득하였습니다.",
     missingMessage: "",
   },
   "gold_2": {
     earnItemList: [
       {
-        name: "금화2",
+        name: "용의 몸통",
         url: "https://rid.gcdn.ntruss.com/countries/gold_B.png",
       },
     ],
-    mobileMessage: "금화 1개를 획득하였습니다.",
-    pcMessage: "금화 1개를 획득하였습니다.",
+    mobileMessage: "용의 몸통를 획득하였습니다.",
+    pcMessage: "용의 몸통를 획득하였습니다.",
     missingMessage: "",
   },
   "gold_3": {
     earnItemList: [
       {
-        name: "금화3",
+        name: "용의 꼬리",
         url: "https://rid.gcdn.ntruss.com/countries/gold_C.png",
       },
     ],
-    mobileMessage: "금화 1개를 획득하였습니다.",
-    pcMessage: "금화 1개를 획득하였습니다.",
+    mobileMessage: "용의 꼬리를 획득하였습니다.",
+    pcMessage: "용의 꼬리를 획득하였습니다.",
     missingMessage: "",
     prerequisiteItemList: [
     ],

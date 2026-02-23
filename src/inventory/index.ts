@@ -36,13 +36,13 @@ export const DEFAULT_INVENTORY_SIZE: InventorySize = Object.freeze({
 });
 
 const DEFAULT_WIDGET_DIMENSIONS = Object.freeze({
-  desktop: { width: 620, height: 760 },
-  mobile: { width: 460, height: 820 },
+  desktop: { width: 372, height: 456 },
+  mobile: { width: 276, height: 492 },
 });
 
 const TEMPLATE_BY_DEVICE = Object.freeze({
-  desktop: "html/inventory-desktop.html",
-  mobile: "html/inventory-mobile.html",
+  desktop: "html/inventory-desktop-v3.html",
+  mobile: "html/inventory-mobile-v3.html",
 });
 
 interface NormalizedEarnedItemConfig {
@@ -800,10 +800,20 @@ export function showInventoryWidget(
   tag.inventoryWidgetOptions = cloneShowInventoryOptions(options);
 
   widget.onMessage.Add(function (_sender, data) {
+    let message: unknown = data;
+
+    if (typeof message === "string") {
+      try {
+        message = JSON.parse(message);
+      } catch (_error) {
+        return;
+      }
+    }
+
     if (
-      data &&
-      typeof data === "object" &&
-      (data as { type?: string }).type === "inventory:close"
+      message &&
+      typeof message === "object" &&
+      (message as { type?: string }).type === "inventory:close"
     ) {
       teardownInventoryWidget(player);
     }

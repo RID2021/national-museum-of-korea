@@ -6,8 +6,8 @@ import { preparePlayerTag, type PlayerTagRecord } from "../utils/player";
 const MINIMAP_WIDGET_TEMPLATE = "html/minimap-widget.html";
 
 const MINIMAP_WIDGET_DIMENSIONS = Object.freeze({
-  desktop: { width: 430, height: 760 },
-  mobile: { width: 340, height: 620 },
+  desktop: { width: 301, height: 532 },
+  mobile: { width: 238, height: 434 },
 });
 
 const MINIMAP_UPDATE_INTERVAL_MS = 250;
@@ -273,7 +273,7 @@ function loadMinimapWidget(
 
   const widget = player.showWidget(
     MINIMAP_WIDGET_TEMPLATE,
-    "topright",
+    "middle",
     width,
     height
   );

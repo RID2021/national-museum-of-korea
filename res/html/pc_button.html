@@ -6,11 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Document</title>
   <style>
-    img {
-      width: 80px;
-      cursor: pointer;
-    }
-
     button {
       border: 0;
       border-radius: 10px;
@@ -27,10 +22,7 @@
 
 <body>
   <div style="display: flex; flex-direction: row; gap: 5px; align-items: center;">
-    <img onclick="openInventory()"
-      src="https://legacy-rid.gcdn.ntruss.com/zep-script/history_josun/inventory_icon.png" />
-    <button type="button" onclick="openShortcut()">바로가기(G)</button>
-    <button type="button" onclick="openMinimap()">미니맵(M)</button>
+    <button type="button" onclick="openInventory()">인벤토리(I)</button>
   </div>
   <script>
     function openTask() {
@@ -45,22 +37,6 @@
       window.parent.postMessage(
         {
           openInventory: true,
-        },
-        "*"
-      );
-    }
-    function openShortcut() {
-      window.parent.postMessage(
-        {
-          openShortcut: true,
-        },
-        "*"
-      );
-    }
-    function openMinimap() {
-      window.parent.postMessage(
-        {
-          openMinimap: true,
         },
         "*"
       );

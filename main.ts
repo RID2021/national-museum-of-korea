@@ -24,8 +24,7 @@ import {
   handlePortalGateObjectTouched,
 } from "./src/portal";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
-import { toggleTeleportShortcutWidget } from "./src/shortcut";
-import { destroyMinimapSystem, toggleMinimapWidget } from "./src/minimap";
+import { destroyMinimapSystem } from "./src/minimap";
 import { debugMessage } from "./src/utils/message";
 import { registerConfiguredTileMessages, resetTileMessageHistory } from "./src/utils";
 import { preparePlayerStorage, preparePlayerTag } from "./src/utils/player";
@@ -47,42 +46,11 @@ import {
 import { FIX_GAME_MAP_NAME } from "./src/fixGame/constants";
 import { ADD_ITEM_TILE_NAME, REFRESH_TASK_TILE_NAME } from "./src/constants";
 
-let shortcut_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
-let shortcut_button;
-let minimap_button_image = ScriptApp.loadSpritesheet("images/mission_button.png");
-let minimap_button;
-
-let inventory_button_image = ScriptApp.loadSpritesheet(
-  "images/inventory_button.png"
-);
-let inventory_button;
-
 ScriptApp.onInit.Add(function () {
-  // register inventory key
-  ScriptApp.addOnKeyDown(KeyCodeType.I, function (player) {
-    showInventoryWidget(player, {
-      template: "mobile",
-      align: player.isMobile ? "topleft" : "middleleft",
-      width: player.isMobile ? 355 : 450,
-      height: player.isMobile ? 600 : 700,
-    });
-  });
-
   // register task key
   ScriptApp.addOnKeyDown(KeyCodeType.T, function (player) {
     debugMessage("T: key Pressed");
     toggleTaskWidget(ScriptMap.name, player);
-  });
-
-  // register teleport shortcut key
-  ScriptApp.addOnKeyDown(KeyCodeType.G, function (player) {
-    toggleTeleportShortcutWidget(ScriptMap.name, player);
-  });
-
-  // register minimap key
-  ScriptApp.addOnKeyDown(KeyCodeType.M, function (player) {
-    const widget = toggleMinimapWidget(ScriptMap.name, player);
-    player.showCenterLabel(widget ? "미니맵 열림" : "미니맵 닫힘");
   });
   registerInventoryInteractionLocations();
 
@@ -134,32 +102,6 @@ ScriptApp.addOnLocationEnter(ADD_ITEM_TILE_NAME, function (player) {
 // ScriptApp.addOnTileTouched or addOnLocationTouched를 이용해서 특정 맵마다 location이름을 다르게 가져가야함, 그리고 해당 맵에서 trigger 될 주소 사전 세팅해두기.
 
 ScriptApp.onStart.Add(function () {
-  shortcut_button = ScriptApp.addMobileButton(8, 125, 75, function (player) {
-    toggleTeleportShortcutWidget(ScriptMap.name, player);
-  });
-
-  shortcut_button.image = shortcut_button_image;
-  shortcut_button.sendUpdated();
-
-  minimap_button = ScriptApp.addMobileButton(8, 200, 75, function (player) {
-    toggleMinimapWidget(ScriptMap.name, player);
-  });
-
-  minimap_button.image = minimap_button_image;
-  minimap_button.sendUpdated();
-
-  inventory_button = ScriptApp.addMobileButton(8, 50, 75, function (player) {
-    debugMessage("mobile button clicked");
-    showInventoryWidget(player, {
-      template: "mobile",
-      align: player.isMobile ? "topleft" : "middleleft",
-      width: player.isMobile ? 355 : 450,
-      height: player.isMobile ? 600 : 700,
-    });
-  });
-
-  inventory_button.image = inventory_button_image;
-  inventory_button.sendUpdated();
 });
 ScriptApp.onStart.Add(startHorseGame);
 
@@ -180,8 +122,9 @@ ScriptApp.onObjectTouched.Add(function (
   obj: any
 ) {
   if (obj !== null) {
-    if (obj.type == ObjectEffectType.INTERACTION_WITH_ZEPSCRIPTS) {
-      handleInventoryInteractionObjectKey(player, obj.param1);
+    const handledByParam = handleInventoryInteractionObjectKey(player, obj.param1);
+    if (!handledByParam) {
+      handleInventoryInteractionObjectKey(player, obj.key);
     }
   }
 });
@@ -190,6 +133,23 @@ ScriptApp.onObjectTouched.Add(function (
 
 ScriptApp.onTriggerObject.Add(
   (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
+    const handledByKey = handleInventoryInteractionObjectKey(player, key);
+    if (!handledByKey) {
+      const targetObject = ScriptMap.getObjectWithKey(key) as
+        | { param1?: string; key?: string }
+        | null;
+
+      if (targetObject) {
+        const handledByParam = handleInventoryInteractionObjectKey(
+          player,
+          targetObject.param1 ?? ""
+        );
+        if (!handledByParam && typeof targetObject.key === "string") {
+          handleInventoryInteractionObjectKey(player, targetObject.key);
+        }
+      }
+    }
+
     if (ScriptMap.name === FIX_GAME_MAP_NAME) {
       handleFixGameObjectInteraction(player, key, ScriptMap.name, true);
     }
@@ -212,33 +172,33 @@ ScriptApp.onDestroy.Add(function () {
 });
 
 function loadPCButtonGroup(player: ScriptPlayer) {
-  if (!player.isMobile) {
-    const pcButtonGroup = player.showWidget(
-      "html/pc_button.html",
-      "topleft",
-      360,
-      150
-    );
-    pcButtonGroup.onMessage.Add(function (player: ScriptPlayer, message: any) {
-      if (message.openTask) {
-        toggleTaskWidget(ScriptMap.name, player);
-      }
-      if (message.openInventory) {
-        showInventoryWidget(player, {
-          template: "mobile",
-          align: player.isMobile ? "topleft" : "middleleft",
-          width: player.isMobile ? 355 : 450,
-          height: player.isMobile ? 600 : 700,
-        });
-      }
-      if (message.openShortcut) {
-        toggleTeleportShortcutWidget(ScriptMap.name, player);
-      }
-      if (message.openMinimap) {
-        toggleMinimapWidget(ScriptMap.name, player);
-      }
-    });
-  }
+  const widgetPath = player.isMobile
+    ? "html/mobile_button-v5.html"
+    : "html/pc_button.html";
+  const widgetAlign = player.isMobile ? "bottomright" : "topleft";
+  const widgetWidth = player.isMobile ? 400 : 360;
+  const widgetHeight = player.isMobile ? 190 : 150;
+
+  const buttonGroup = player.showWidget(
+    widgetPath,
+    widgetAlign,
+    widgetWidth,
+    widgetHeight
+  );
+
+  buttonGroup.onMessage.Add(function (player: ScriptPlayer, message: any) {
+    if (message.openTask) {
+      toggleTaskWidget(ScriptMap.name, player);
+    }
+    if (message.openInventory) {
+      showInventoryWidget(player, {
+        template: "mobile",
+        align: "middle",
+        width: player.isMobile ? 214 : 270,
+        height: player.isMobile ? 360 : 420,
+      });
+    }
+  });
 }
 
 function checkPassport(player: ScriptPlayer) {

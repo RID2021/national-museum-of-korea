@@ -6,15 +6,16 @@
   <title>Inventory</title>
   <style>
     :root {
-      --panel-bg: linear-gradient(180deg, #25201f 0%, #181413 100%);
-      --panel-border: rgba(224, 174, 126, 0.38);
-      --slot-bg: linear-gradient(180deg, #4b4440 0%, #36302d 100%);
-      --slot-border: rgba(229, 187, 147, 0.34);
-      --text-main: #f8e7cf;
-      --text-muted: #d8bd97;
-      --accent: #f0bf80;
-      --button-bg: linear-gradient(180deg, #8f6746 0%, #6e4d35 100%);
-      --button-bg-disabled: linear-gradient(180deg, #5b5048 0%, #4c443e 100%);
+      --warm-base: #ffeeb0;
+      --panel-bg: linear-gradient(180deg, #fff8dc 0%, var(--warm-base) 62%, #f7dd92 100%);
+      --panel-border: rgba(190, 150, 67, 0.62);
+      --slot-bg: linear-gradient(180deg, #fffcef 0%, #fff2c7 100%);
+      --slot-border: rgba(194, 152, 66, 0.55);
+      --text-main: #4f3e1f;
+      --text-muted: #78602f;
+      --accent: #d7a83c;
+      --button-bg: linear-gradient(180deg, #ffe18b 0%, #efc25b 100%);
+      --button-bg-disabled: linear-gradient(180deg, #efe2b9 0%, #dbc790 100%);
     }
 
     * {
@@ -33,7 +34,7 @@
     }
 
     body {
-      background: rgba(12, 10, 8, 0.86);
+      background: rgba(108, 85, 33, 0.25);
       padding: 12px;
     }
 
@@ -48,7 +49,7 @@
       border-radius: 18px;
       border: 1px solid var(--panel-border);
       background: var(--panel-bg);
-      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.38);
+      box-shadow: 0 16px 30px rgba(99, 72, 23, 0.3);
       display: grid;
       grid-template-rows: 62px 1fr 78px;
       overflow: hidden;
@@ -59,8 +60,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+      border-bottom: 1px solid rgba(122, 95, 38, 0.22);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0));
     }
 
     .inventory__title {
@@ -80,13 +81,30 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      z-index: 3;
+      border: 1px solid rgba(138, 104, 36, 0.36);
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.12);
-      color: #fff2df;
+      background: rgba(255, 255, 255, 0.72);
+      color: #6f5120;
       font-size: 26px;
       line-height: 1;
       cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .inventory__close-hitbox {
+      position: absolute;
+      top: 4px;
+      right: 0;
+      width: 56px;
+      height: 56px;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      z-index: 2;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .inventory__grid {
@@ -104,7 +122,7 @@
       border: 1px solid var(--slot-border);
       border-radius: 12px;
       background: var(--slot-bg);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -5px 10px rgba(0, 0, 0, 0.3);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -5px 10px rgba(153, 120, 51, 0.16);
       padding: 8px;
       display: flex;
       flex-direction: column;
@@ -157,9 +175,9 @@
       height: 20px;
       padding: 0 6px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(15, 12, 10, 0.8);
-      color: #f4d6ad;
+      border: 1px solid rgba(163, 127, 52, 0.45);
+      background: rgba(255, 234, 176, 0.96);
+      color: #6f4f1d;
       font-size: 12px;
       font-weight: 700;
       line-height: 18px;
@@ -173,14 +191,14 @@
       transform: translate(-50%, 8px);
       width: min(230px, 65vw);
       border-radius: 10px;
-      border: 1px solid rgba(255, 206, 150, 0.4);
-      background: rgba(20, 16, 12, 0.95);
+      border: 1px solid rgba(176, 131, 46, 0.45);
+      background: rgba(255, 246, 220, 0.98);
       padding: 10px;
-      color: #ffebd4;
+      color: #4f3e1f;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.18s ease, transform 0.18s ease;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 10px 24px rgba(120, 88, 28, 0.28);
       z-index: 8;
     }
 
@@ -205,25 +223,25 @@
       margin: 0;
       font-size: 12px;
       line-height: 1.45;
-      color: rgba(255, 235, 212, 0.86);
+      color: rgba(79, 62, 31, 0.88);
     }
 
     .inventory__footer {
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: 1px solid rgba(122, 95, 38, 0.2);
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
       gap: 10px;
       padding: 12px 14px;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.2));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(204, 162, 73, 0.12));
     }
 
     .inventory__nav {
       height: 46px;
-      border: 1px solid rgba(255, 237, 214, 0.3);
+      border: 1px solid rgba(161, 124, 48, 0.45);
       border-radius: 10px;
       background: var(--button-bg);
-      color: #fff1db;
+      color: #5a4016;
       font-size: 24px;
       font-weight: 700;
       cursor: pointer;
@@ -232,8 +250,8 @@
     .inventory__nav:disabled {
       cursor: default;
       background: var(--button-bg-disabled);
-      color: rgba(255, 255, 255, 0.45);
-      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(94, 73, 38, 0.52);
+      border-color: rgba(120, 93, 38, 0.25);
     }
 
     .inventory__page {
@@ -251,6 +269,7 @@
     <div class="inventory__panel">
       <header class="inventory__header">
         <h1 class="inventory__title">인벤토리</h1>
+        <button type="button" class="inventory__close-hitbox" data-close-hit aria-label="닫기"></button>
         <button type="button" class="inventory__close" data-close aria-label="닫기">×</button>
       </header>
 
@@ -277,6 +296,7 @@
     const grid = document.querySelector('[data-grid]');
     const prevButton = document.querySelector('[data-prev]');
     const closeButton = document.querySelector('[data-close]');
+    const closeHitboxButton = document.querySelector('[data-close-hit]');
     const nextButton = document.querySelector('[data-next]');
     const pageLabel = document.querySelector('[data-page]');
 
@@ -427,19 +447,35 @@
     }
 
     function requestClose() {
+      window.parent?.postMessage({ type: 'inventory:close' }, '*');
       if (typeof window.ZEPWidget !== 'undefined' && typeof window.ZEPWidget.close === 'function') {
         window.ZEPWidget.close();
-        return;
       }
-
-      window.parent?.postMessage({ type: 'inventory:close' }, '*');
     }
 
     prevButton?.addEventListener('click', function () {
       movePage(-1);
     });
 
-    closeButton?.addEventListener('click', requestClose);
+    closeButton?.addEventListener('click', function (event) {
+      event.preventDefault();
+      requestClose();
+    });
+
+    closeButton?.addEventListener('touchend', function (event) {
+      event.preventDefault();
+      requestClose();
+    }, { passive: false });
+
+    closeHitboxButton?.addEventListener('click', function (event) {
+      event.preventDefault();
+      requestClose();
+    });
+
+    closeHitboxButton?.addEventListener('touchend', function (event) {
+      event.preventDefault();
+      requestClose();
+    }, { passive: false });
 
     nextButton?.addEventListener('click', function () {
       movePage(1);

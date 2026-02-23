@@ -4,6 +4,10 @@ import { applyInventoryInteraction } from "../inventory";
 import { inventoryInteractionMap } from "../inventory/constants";
 
 export const INVENTORY_INTERACTION_PREFIX = "inv:";
+const INVENTORY_INTERACTION_PREFIX_ALIASES = [
+  INVENTORY_INTERACTION_PREFIX,
+  "nv:",
+] as const;
 
 function normalizeInteractionId(raw: string): string | null {
   const normalized = raw.trim();
@@ -15,17 +19,38 @@ function parseInteractionIdFromKey(key: string): string | null {
     return null;
   }
 
-  if (!key.startsWith(INVENTORY_INTERACTION_PREFIX)) {
+  const normalizedKey = key.trim();
+  if (!normalizedKey) {
     return null;
   }
 
-  const remainder = key.slice(INVENTORY_INTERACTION_PREFIX.length);
-  const [id] = remainder.split("|");
-  return normalizeInteractionId(id ?? "");
+  for (const prefix of INVENTORY_INTERACTION_PREFIX_ALIASES) {
+    if (!normalizedKey.startsWith(prefix)) {
+      continue;
+    }
+
+    const remainder = normalizedKey.slice(prefix.length);
+    const [id] = remainder.split("|");
+    return normalizeInteractionId(id ?? "");
+  }
+
+  const [rawId] = normalizedKey.split("|");
+  const normalizedId = normalizeInteractionId(rawId ?? "");
+  if (!normalizedId) {
+    return null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(inventoryInteractionMap, normalizedId)) {
+    return normalizedId;
+  }
+
+  return null;
 }
 
 function getLocationNamesForInteractionId(interactionId: string): string[] {
-  return [`${INVENTORY_INTERACTION_PREFIX}${interactionId}`];
+  return INVENTORY_INTERACTION_PREFIX_ALIASES.map(function (prefix) {
+    return `${prefix}${interactionId}`;
+  });
 }
 
 export function registerInventoryInteractionLocations(): void {
@@ -47,11 +72,12 @@ export function registerInventoryInteractionLocations(): void {
 export function handleInventoryInteractionObjectKey(
   player: ScriptPlayer,
   key: string
-): void {
+): boolean {
   const interactionId = parseInteractionIdFromKey(key);
   if (!interactionId) {
-    return;
+    return false;
   }
 
   applyInventoryInteraction(interactionId, player);
+  return true;
 }
