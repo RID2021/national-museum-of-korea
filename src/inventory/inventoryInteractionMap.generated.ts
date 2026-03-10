@@ -38,4 +38,37 @@ export const inventoryInteractionMap = {
     prerequisiteItemList: [
     ],
   },
+  "gold_4": {
+    earnItemList: [
+      {
+        name: "코끼리조각",
+        url: "https://rid.gcdn.ntruss.com/countries/gold_D.png",
+      },
+    ],
+    mobileMessage: "코끼리조각을 획득하였습니다.",
+    pcMessage: "코끼리조각을 획득하였습니다.",
+    missingMessage: "",
+  },
+  "gold_5": {
+    earnItemList: [
+      {
+        name: "표범조각",
+        url: "https://rid.gcdn.ntruss.com/countries/gold_E.png",
+      },
+    ],
+    mobileMessage: "표범조각을 획득하였습니다.",
+    pcMessage: "표범조각을 획득하였습니다.",
+    missingMessage: "",
+  },
+  "gold_6": {
+    earnItemList: [
+      {
+        name: "사자조각",
+        url: "https://rid.gcdn.ntruss.com/countries/gold_F.png",
+      },
+    ],
+    mobileMessage: "사자조각을 획득하였습니다.",
+    pcMessage: "사자조각을 획득하였습니다.",
+    missingMessage: "",
+  },
 } as const;

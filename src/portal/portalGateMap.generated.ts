@@ -22,5 +22,17 @@ export const portalGateMap = {
         "용의 꼬리",
       ],
     },
-  ]
+  ],
+  "남아프리카공화국": [
+    {
+      portalX: 83,
+      portalY: 30,
+      portalSize: 2,
+      requiredItems: [
+        "표범조각",
+        "사자조각",
+        "코끼리조각",
+      ],
+    },
+  ],
 } as const;

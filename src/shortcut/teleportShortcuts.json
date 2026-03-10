@@ -25,6 +25,18 @@
         "x": 42,
         "y": 36,
         "description": "중국 맵으로 연결되는 포탈 앞"
+      },
+      {
+        "id": "gapyeong-china-space",
+        "label": "중국",
+        "url": "https://zep.us/play/lpZPbq",
+        "description": "중국 공간 링크"
+      },
+      {
+        "id": "gapyeong-south-africa-space",
+        "label": "남아프리카공화국",
+        "url": "https://zep.us/play/gGpdrb",
+        "description": "남아프리카공화국 공간 링크"
       }
     ]
   },

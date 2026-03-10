@@ -196,6 +196,37 @@
         );
       }
 
+      function normalizeExternalUrl(raw) {
+        if (typeof raw !== "string") {
+          return "";
+        }
+
+        const trimmed = raw.trim();
+        if (!/^https?:\/\//i.test(trimmed)) {
+          return "";
+        }
+
+        return trimmed;
+      }
+
+      function openExternalShortcut(url) {
+        const targetUrl = normalizeExternalUrl(url);
+        if (!targetUrl) {
+          return false;
+        }
+
+        const popup = window.open(targetUrl, "_blank", "noopener,noreferrer");
+        if (!popup) {
+          const anchor = document.createElement("a");
+          anchor.href = targetUrl;
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          anchor.click();
+        }
+
+        return true;
+      }
+
       function render() {
         listElement.innerHTML = "";
         applyTheme(state.theme);
@@ -209,6 +240,7 @@
         }
 
         state.shortcuts.forEach((shortcut) => {
+          const externalUrl = normalizeExternalUrl(shortcut?.url);
           const button = document.createElement("button");
           button.type = "button";
           button.className = "shortcut__item";
@@ -222,12 +254,19 @@
 
           const arrow = document.createElement("span");
           arrow.className = "shortcut__arrow";
-          arrow.textContent = "›";
+          arrow.textContent = externalUrl ? "↗" : "›";
 
           content.appendChild(title);
           button.appendChild(content);
           button.appendChild(arrow);
           button.addEventListener("click", function () {
+            if (externalUrl) {
+              if (openExternalShortcut(externalUrl)) {
+                closeWidget();
+              }
+              return;
+            }
+
             requestTeleport(shortcut.id);
           });
 

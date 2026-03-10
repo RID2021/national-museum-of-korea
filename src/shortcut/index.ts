@@ -14,9 +14,10 @@ const TELEPORT_WIDGET_DIMENSIONS = Object.freeze({
 interface TeleportShortcut {
   id: string;
   label: string;
-  x: number;
-  y: number;
   description: string;
+  x?: number;
+  y?: number;
+  url?: string;
 }
 
 interface ShortcutTheme {
@@ -45,6 +46,7 @@ interface ShortcutWidgetOutgoingMessage {
       id: string;
       label: string;
       description: string;
+      url?: string;
     }>;
   };
 }
@@ -64,12 +66,13 @@ function normalizeShortcut(entry: unknown): TeleportShortcut | null {
     return null;
   }
 
-  const { id, label, x, y, description } = entry as {
+  const { id, label, x, y, description, url } = entry as {
     id?: unknown;
     label?: unknown;
     x?: unknown;
     y?: unknown;
     description?: unknown;
+    url?: unknown;
   };
 
   if (typeof id !== "string" || !id.trim()) {
@@ -80,16 +83,48 @@ function normalizeShortcut(entry: unknown): TeleportShortcut | null {
     return null;
   }
 
-  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+  const normalizedUrl =
+    typeof url === "string" && /^https?:\/\//i.test(url.trim())
+      ? url.trim()
+      : "";
+  const hasPosition = Number.isFinite(x) && Number.isFinite(y);
+
+  if (!hasPosition && !normalizedUrl) {
+    return null;
+  }
+
+  const normalized: TeleportShortcut = {
+    id: id.trim(),
+    label: label.trim(),
+    description: typeof description === "string" ? description : "",
+  };
+
+  if (hasPosition) {
+    normalized.x = Math.floor(x as number);
+    normalized.y = Math.floor(y as number);
+  }
+
+  if (normalizedUrl) {
+    normalized.url = normalizedUrl;
+  }
+
+  return normalized;
+}
+
+function hasTeleportCoordinates(shortcut: TeleportShortcut): boolean {
+  return Number.isFinite(shortcut.x) && Number.isFinite(shortcut.y);
+}
+
+function getTeleportTarget(
+  shortcut: TeleportShortcut
+): { x: number; y: number } | null {
+  if (!hasTeleportCoordinates(shortcut)) {
     return null;
   }
 
   return {
-    id: id.trim(),
-    label: label.trim(),
-    x: Math.floor(x as number),
-    y: Math.floor(y as number),
-    description: typeof description === "string" ? description : "",
+    x: Math.floor(shortcut.x as number),
+    y: Math.floor(shortcut.y as number),
   };
 }
 
@@ -189,6 +224,7 @@ function sendInitMessage(
         id: shortcut.id,
         label: shortcut.label,
         description: shortcut.description,
+        url: shortcut.url,
       })),
     },
   };
@@ -223,7 +259,17 @@ function handleTeleportRequest(
     return;
   }
 
-  player.spawnAt(target.x, target.y);
+  const teleportTarget = getTeleportTarget(target);
+  if (!teleportTarget) {
+    debugMessage({
+      type: "shortcut:missing-position",
+      mapName,
+      shortcutId,
+    });
+    return;
+  }
+
+  player.spawnAt(teleportTarget.x, teleportTarget.y);
   player.showCenterLabel(`${target.label} 위치로 이동했습니다.`);
   player.sendUpdated();
 }
