@@ -16,6 +16,110 @@
       --accent: #d7a83c;
       --button-bg: linear-gradient(180deg, #ffe18b 0%, #efc25b 100%);
       --button-bg-disabled: linear-gradient(180deg, #efe2b9 0%, #dbc790 100%);
+      --inventory-body-padding: 9px;
+      --inventory-panel-max-width: 540px;
+      --inventory-header-height: 62px;
+      --inventory-footer-height: 62px;
+      --inventory-content-pad-top: 6px;
+      --inventory-content-pad-x: 13px;
+      --inventory-content-pad-bottom: 8px;
+      --inventory-title-size: 21px;
+      --inventory-close-size: 37px;
+      --inventory-close-top: 10px;
+      --inventory-close-right: 6px;
+      --inventory-close-font-size: 24px;
+      --inventory-footer-pad-top: 7px;
+      --inventory-footer-pad-x: 13px;
+      --inventory-footer-pad-bottom: 9px;
+      --inventory-footer-gap: 13px;
+      --inventory-nav-height: 39px;
+      --inventory-nav-min-width: 112px;
+      --inventory-nav-pad-x: 13px;
+      --inventory-nav-font-size: 18px;
+      --inventory-page-font-size: 14px;
+      --inventory-page-min-width: 44px;
+      --inventory-image-width: 68%;
+      --inventory-slot-pad-y: 6px;
+      --inventory-slot-pad-x: 6px;
+      --inventory-slot-gap: 4px;
+      --inventory-name-size: 11px;
+      --inventory-name-line-height: 1.2;
+      --inventory-grid-gap: 10;
+      --inventory-slot-min: 57;
+      --inventory-rail-ratio: 0.94;
+      --inventory-grid-min-width: calc(var(--inventory-slot-min) * 3 + var(--inventory-grid-gap) * 2);
+      --inventory-grid-min-height: calc(var(--inventory-slot-min) * 3 + var(--inventory-grid-gap) * 2);
+      --inventory-footer-min-width: calc(var(--inventory-nav-min-width) * 2 + var(--inventory-page-min-width) + var(--inventory-footer-gap) * 2);
+    }
+
+    @media (max-width: 1024px) {
+      :root {
+        --inventory-panel-max-width: 388px;
+        --inventory-header-height: 55px;
+        --inventory-footer-height: 53px;
+        --inventory-content-pad-top: 5px;
+        --inventory-content-pad-x: 10px;
+        --inventory-content-pad-bottom: 6px;
+        --inventory-title-size: 18px;
+        --inventory-close-size: 33px;
+        --inventory-close-top: 8px;
+        --inventory-close-right: 5px;
+        --inventory-close-font-size: 22px;
+        --inventory-footer-pad-top: 6px;
+        --inventory-footer-pad-x: 10px;
+        --inventory-footer-pad-bottom: 7px;
+        --inventory-footer-gap: 9px;
+        --inventory-nav-height: 35px;
+        --inventory-nav-min-width: 92px;
+        --inventory-nav-pad-x: 10px;
+        --inventory-nav-font-size: 16px;
+        --inventory-page-font-size: 12px;
+        --inventory-page-min-width: 38px;
+        --inventory-image-width: 66%;
+        --inventory-slot-pad-y: 5px;
+        --inventory-slot-pad-x: 6px;
+        --inventory-slot-gap: 3px;
+        --inventory-name-size: 10px;
+        --inventory-name-line-height: 1.2;
+        --inventory-grid-gap: 8;
+        --inventory-slot-min: 47;
+        --inventory-rail-ratio: 0.955;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --inventory-panel-max-width: 360px;
+        --inventory-header-height: 54px;
+        --inventory-footer-height: 52px;
+        --inventory-content-pad-top: 5px;
+        --inventory-content-pad-x: 10px;
+        --inventory-content-pad-bottom: 6px;
+        --inventory-title-size: 17px;
+        --inventory-close-size: 32px;
+        --inventory-close-top: 8px;
+        --inventory-close-right: 5px;
+        --inventory-close-font-size: 22px;
+        --inventory-footer-pad-top: 6px;
+        --inventory-footer-pad-x: 10px;
+        --inventory-footer-pad-bottom: 7px;
+        --inventory-footer-gap: 8px;
+        --inventory-nav-height: 34px;
+        --inventory-nav-min-width: 88px;
+        --inventory-nav-pad-x: 10px;
+        --inventory-nav-font-size: 16px;
+        --inventory-page-font-size: 11px;
+        --inventory-page-min-width: 38px;
+        --inventory-image-width: 64%;
+        --inventory-slot-pad-y: 5px;
+        --inventory-slot-pad-x: 5px;
+        --inventory-slot-gap: 3px;
+        --inventory-name-size: 10px;
+        --inventory-name-line-height: 1.2;
+        --inventory-grid-gap: 8;
+        --inventory-slot-min: 46;
+        --inventory-rail-ratio: 0.97;
+      }
     }
 
     * {
@@ -35,23 +139,30 @@
     }
 
     body {
-      padding: 8px;
+      padding: var(--inventory-body-padding);
     }
 
     .inventory {
       width: 100%;
       height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
     }
 
     .inventory__panel {
-      width: 100%;
+      width: min(100%, var(--inventory-panel-max-width));
       height: 100%;
+      margin: 0 auto;
       border-radius: 16px;
       border: 1px solid var(--panel-border);
       background: var(--panel-bg);
       box-shadow: 0 14px 24px rgba(99, 72, 23, 0.28);
       display: grid;
-      grid-template-rows: 56px 1fr 68px;
+      grid-template-rows:
+        var(--inventory-header-height)
+        minmax(0, 1fr)
+        var(--inventory-footer-height);
       overflow: hidden;
     }
 
@@ -66,17 +177,17 @@
 
     .inventory__title {
       margin: 0;
-      font-size: 18px;
+      font-size: var(--inventory-title-size);
       letter-spacing: 0.02em;
       color: var(--text-main);
     }
 
     .inventory__close {
       position: absolute;
-      top: 10px;
-      right: 6px;
-      width: 34px;
-      height: 34px;
+      top: var(--inventory-close-top);
+      right: var(--inventory-close-right);
+      width: var(--inventory-close-size);
+      height: var(--inventory-close-size);
       padding: 0;
       display: flex;
       align-items: center;
@@ -86,7 +197,7 @@
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.72);
       color: #6f5120;
-      font-size: 24px;
+      font-size: var(--inventory-close-font-size);
       line-height: 1;
       cursor: pointer;
       touch-action: manipulation;
@@ -107,30 +218,76 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    .inventory__grid {
-      padding: 12px;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      grid-template-rows: repeat(4, minmax(0, 1fr));
-      gap: 10px;
+    .inventory__content {
       min-height: 0;
+      padding:
+        var(--inventory-content-pad-top)
+        var(--inventory-content-pad-x)
+        var(--inventory-content-pad-bottom);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inventory__content-rail {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      height: 100%;
+      min-height: 0;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .inventory__grid-stage {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .inventory__grid {
+      --grid-gap: 10px;
+      --slot-size: 90px;
+      display: grid;
+      grid-template-columns: repeat(3, var(--slot-size));
+      grid-template-rows: repeat(3, var(--slot-size));
+      gap: var(--grid-gap);
+      justify-content: center;
+      align-content: center;
     }
 
     .inventory__slot {
       position: relative;
-      min-width: 0;
+      width: var(--slot-size);
+      height: var(--slot-size);
       border: 1px solid var(--slot-border);
       border-radius: 12px;
       background: var(--slot-bg);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -4px 8px rgba(153, 120, 51, 0.16);
-      padding: 6px;
+      padding: var(--inventory-slot-pad-y) var(--inventory-slot-pad-x);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: default;
+      color: var(--text-main);
+    }
+
+    .inventory__slot-content {
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      cursor: default;
-      color: var(--text-main);
+      gap: var(--inventory-slot-gap);
+      padding: 0;
+      overflow: hidden;
     }
 
     .inventory__slot--filled {
@@ -147,24 +304,34 @@
     }
 
     .inventory__image {
-      width: 68%;
+      width: var(--inventory-image-width);
+      max-width: 100%;
+      max-height: calc(
+        100% -
+        (var(--inventory-name-size) * var(--inventory-name-line-height)) -
+        var(--inventory-slot-gap)
+      );
       aspect-ratio: 1 / 1;
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       border-radius: 8px;
+      flex: 0 1 auto;
     }
 
     .inventory__name {
       margin: 0;
       width: 100%;
       text-align: center;
-      font-size: 10px;
+      font-size: var(--inventory-name-size);
+      line-height: var(--inventory-name-line-height);
+      min-height: calc(var(--inventory-name-size) * var(--inventory-name-line-height));
       font-weight: 600;
       color: var(--text-main);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      flex: 0 0 auto;
     }
 
     .inventory__qty {
@@ -187,20 +354,37 @@
     .inventory__footer {
       border-top: 1px solid rgba(122, 95, 38, 0.2);
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
+      justify-items: center;
+      padding:
+        var(--inventory-footer-pad-top)
+        var(--inventory-footer-pad-x)
+        var(--inventory-footer-pad-bottom);
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(204, 162, 73, 0.12));
     }
 
+    .inventory__footer-inner {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--inventory-footer-gap);
+    }
+
     .inventory__nav {
-      height: 42px;
+      height: var(--inventory-nav-height);
+      min-height: var(--inventory-nav-height);
+      min-width: var(--inventory-nav-min-width);
+      flex: 0 0 auto;
+      padding: 0 var(--inventory-nav-pad-x);
       border: 1px solid rgba(161, 124, 48, 0.45);
       border-radius: 10px;
       background: var(--button-bg);
       color: #5a4016;
-      font-size: 22px;
+      font-size: var(--inventory-nav-font-size);
       font-weight: 700;
       cursor: pointer;
     }
@@ -214,11 +398,12 @@
 
     .inventory__page {
       margin: 0;
-      min-width: 56px;
+      min-width: var(--inventory-page-min-width);
       text-align: center;
-      font-size: 12px;
+      font-size: var(--inventory-page-font-size);
       color: var(--text-muted);
       font-weight: 600;
+      white-space: nowrap;
     }
   </style>
 </head>
@@ -231,32 +416,109 @@
         <button type="button" class="inventory__close" data-close aria-label="닫기">×</button>
       </header>
 
-      <div class="inventory__grid" data-grid></div>
+      <div class="inventory__content">
+        <div class="inventory__content-rail" data-content-rail>
+          <div class="inventory__grid-stage" data-grid-stage>
+            <div class="inventory__grid" data-grid></div>
+          </div>
+        </div>
+      </div>
 
       <footer class="inventory__footer">
-        <button type="button" class="inventory__nav" data-prev aria-label="이전">이전</button>
-        <p class="inventory__page" data-page>1 / 1</p>
-        <button type="button" class="inventory__nav" data-next aria-label="다음">다음</button>
+        <div class="inventory__footer-inner" data-footer-inner>
+          <button type="button" class="inventory__nav" data-prev aria-label="이전">이전</button>
+          <p class="inventory__page" data-page>1 / 1</p>
+          <button type="button" class="inventory__nav" data-next aria-label="다음">다음</button>
+        </div>
       </footer>
     </div>
   </section>
 
   <script>
-    const PAGE_SIZE = 12;
+    const PAGE_SIZE = 9;
     const GRID_COLS = 3;
-    const GRID_ROWS = 4;
+    const GRID_ROWS = 3;
+    const GRID_GAP = 10;
+    const MIN_SLOT_SIZE = 56;
+    const CONTENT_WIDTH_RATIO = 0.94;
+    const GRID_HORIZONTAL_BUFFER = 2;
 
     const state = {
       items: [],
       pageIndex: 0,
     };
 
+    const contentArea = document.querySelector('.inventory__content');
+    const footerArea = document.querySelector('.inventory__footer');
+    const contentRail = document.querySelector('[data-content-rail]');
+    const footerInner = document.querySelector('[data-footer-inner]');
+    const gridStage = document.querySelector('[data-grid-stage]');
     const grid = document.querySelector('[data-grid]');
     const prevButton = document.querySelector('[data-prev]');
     const closeButton = document.querySelector('[data-close]');
     const closeHitboxButton = document.querySelector('[data-close-hit]');
     const nextButton = document.querySelector('[data-next]');
     const pageLabel = document.querySelector('[data-page]');
+
+    function readLayoutNumber(variableName, fallback) {
+      const computed = getComputedStyle(document.documentElement);
+      const rawValue = computed.getPropertyValue(variableName).trim();
+      const parsed = Number.parseFloat(rawValue);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function updateGridSizing() {
+      if (!grid || !gridStage || !contentRail || !footerInner) {
+        return;
+      }
+
+      const gridGap = readLayoutNumber('--inventory-grid-gap', GRID_GAP);
+      const minSlotSize = readLayoutNumber('--inventory-slot-min', MIN_SLOT_SIZE);
+      const rawRailRatio = readLayoutNumber('--inventory-rail-ratio', CONTENT_WIDTH_RATIO);
+      const railRatio = Math.min(1, Math.max(0.7, rawRailRatio));
+      const navMinWidth = readLayoutNumber('--inventory-nav-min-width', 88);
+      const pageMinWidth = readLayoutNumber('--inventory-page-min-width', 38);
+      const footerGap = readLayoutNumber('--inventory-footer-gap', gridGap);
+
+      const contentHostWidth = contentArea?.clientWidth ?? gridStage.clientWidth;
+      const footerHostWidth = footerArea?.clientWidth ?? contentHostWidth;
+      const hostWidth = Math.floor(Math.min(contentHostWidth, footerHostWidth));
+      const hostHeight = contentArea?.clientHeight ?? gridStage.clientHeight;
+      if (hostWidth <= 0 || hostHeight <= 0) {
+        return;
+      }
+
+      const fallbackGridMinWidth = minSlotSize * GRID_COLS + gridGap * (GRID_COLS - 1);
+      const fallbackFooterMinWidth = navMinWidth * 2 + pageMinWidth + footerGap * 2;
+      const minGridWidth = readLayoutNumber('--inventory-grid-min-width', fallbackGridMinWidth);
+      const minFooterWidth = readLayoutNumber('--inventory-footer-min-width', fallbackFooterMinWidth);
+      const requiredMinWidth = Math.max(minGridWidth, minFooterWidth);
+      const targetRailWidth = Math.floor(hostWidth * railRatio);
+      const railWidth = Math.min(hostWidth, Math.max(requiredMinWidth, targetRailWidth));
+
+      contentRail.style.width = '100%';
+      footerInner.style.width = '100%';
+      contentRail.style.maxWidth = `${railWidth}px`;
+      footerInner.style.maxWidth = `${railWidth}px`;
+
+      const usableWidth = Math.min(contentRail.clientWidth, railWidth);
+      const usableHeight = gridStage.clientHeight;
+      if (usableWidth <= 0 || usableHeight <= 0) {
+        return;
+      }
+
+      const widthBased =
+        (usableWidth - gridGap * (GRID_COLS - 1) - GRID_HORIZONTAL_BUFFER) / GRID_COLS;
+      const heightBased = (usableHeight - gridGap * (GRID_ROWS - 1)) / GRID_ROWS;
+      if (!Number.isFinite(widthBased) || !Number.isFinite(heightBased)) {
+        return;
+      }
+      const fitSize = Math.floor(Math.min(widthBased, heightBased));
+      const slotSize = Number.isFinite(fitSize) && fitSize > 0 ? fitSize : 1;
+
+      grid.style.setProperty('--grid-gap', `${gridGap}px`);
+      grid.style.setProperty('--slot-size', `${slotSize}px`);
+    }
 
     function toCssUrl(value) {
       const sanitized = String(value).replace(/"/g, '\\"');
@@ -308,6 +570,8 @@
 
         if (item) {
           slot.classList.add('inventory__slot--filled');
+          const content = document.createElement('div');
+          content.className = 'inventory__slot-content';
 
           const image = document.createElement('div');
           image.className = 'inventory__image';
@@ -317,8 +581,9 @@
           name.className = 'inventory__name';
           name.textContent = item.name;
 
-          slot.appendChild(image);
-          slot.appendChild(name);
+          content.appendChild(image);
+          content.appendChild(name);
+          slot.appendChild(content);
 
           if (item.quantity && item.quantity > 1) {
             const qty = document.createElement('span');
@@ -334,6 +599,7 @@
         grid.appendChild(slot);
       });
 
+      updateGridSizing();
       updatePager();
     }
 
@@ -422,9 +688,25 @@
       movePage(1);
     });
 
+    window.addEventListener('resize', updateGridSizing);
+    window.addEventListener('orientationchange', updateGridSizing);
     window.addEventListener('message', handleMessage);
 
+    if (typeof ResizeObserver !== 'undefined') {
+      const layoutObserver = new ResizeObserver(updateGridSizing);
+      if (contentArea) {
+        layoutObserver.observe(contentArea);
+      }
+      if (footerArea) {
+        layoutObserver.observe(footerArea);
+      }
+      if (gridStage) {
+        layoutObserver.observe(gridStage);
+      }
+    }
+
     renderSlots();
+    updateGridSizing();
   </script>
 </body>
 </html>
