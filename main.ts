@@ -23,6 +23,7 @@ import {
   handlePortalGateJoin,
   handlePortalGateObjectTouched,
 } from "./src/portal";
+import { handleSlideshowObjectKey } from "./src/slideshow";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
 import { destroyMinimapSystem } from "./src/minimap";
 import { debugMessage } from "./src/utils/message";
@@ -106,6 +107,7 @@ ScriptApp.onStart.Add(function () {
 ScriptApp.onStart.Add(startHorseGame);
 
 ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
+  handleSlideshowObjectKey(player, key);
   handlePortalGateObjectTouched(player, key, ScriptMap.name);
 
   if (ScriptMap.name === FIX_GAME_MAP_NAME) {
@@ -122,8 +124,10 @@ ScriptApp.onObjectTouched.Add(function (
   obj: any
 ) {
   if (obj !== null) {
+    handleSlideshowObjectKey(player, obj.param1);
     const handledByParam = handleInventoryInteractionObjectKey(player, obj.param1);
     if (!handledByParam) {
+      handleSlideshowObjectKey(player, obj.key);
       handleInventoryInteractionObjectKey(player, obj.key);
     }
   }
@@ -133,6 +137,7 @@ ScriptApp.onObjectTouched.Add(function (
 
 ScriptApp.onTriggerObject.Add(
   (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
+    handleSlideshowObjectKey(player, key);
     const handledByKey = handleInventoryInteractionObjectKey(player, key);
     if (!handledByKey) {
       const targetObject = ScriptMap.getObjectWithKey(key) as
@@ -140,11 +145,13 @@ ScriptApp.onTriggerObject.Add(
         | null;
 
       if (targetObject) {
+        handleSlideshowObjectKey(player, targetObject.param1 ?? "");
         const handledByParam = handleInventoryInteractionObjectKey(
           player,
           targetObject.param1 ?? ""
         );
         if (!handledByParam && typeof targetObject.key === "string") {
+          handleSlideshowObjectKey(player, targetObject.key);
           handleInventoryInteractionObjectKey(player, targetObject.key);
         }
       }

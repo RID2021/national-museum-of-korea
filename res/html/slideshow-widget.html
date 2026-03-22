@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Slideshow Widget</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        box-sizing: border-box;
+        padding: 14px;
+        background: transparent;
+        font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      }
+
+      .panel {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(20, 24, 31, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28);
+      }
+
+      .viewer {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 0;
+        border-radius: 14px;
+        padding: 0;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+          rgba(8, 10, 14, 0.9);
+        cursor: pointer;
+      }
+
+      .viewer:disabled {
+        cursor: default;
+      }
+
+      #slide-image {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      .message {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.66);
+        color: #ffffff;
+        font-size: 16px;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .message[hidden] {
+        display: none;
+      }
+
+      .caption {
+        box-sizing: border-box;
+        min-height: 90px;
+        max-height: 90px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #181818;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(24, 24, 24, 0.08);
+      }
+
+      .caption-text {
+        max-height: calc(1.5em * 2);
+        overflow: hidden;
+        line-height: 1.5;
+        font-size: 17px;
+        font-weight: 500;
+        white-space: pre-line;
+        word-break: keep-all;
+      }
+
+      .caption-text__accent {
+        color: #ff8a2a;
+        font-weight: 700;
+      }
+
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .controls-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .button {
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .button:disabled {
+        opacity: 0.38;
+        cursor: default;
+      }
+
+      .button-close {
+        background: #cf4d4d;
+      }
+
+      .counter {
+        min-width: 70px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="panel">
+      <button id="viewer" class="viewer" type="button">
+        <img id="slide-image" alt="슬라이드 이미지" />
+        <div id="empty-message" class="message" hidden>표시할 사진이 없습니다.</div>
+        <div id="error-message" class="message" hidden>이미지를 불러오지 못했습니다.</div>
+      </button>
+      <div class="caption">
+        <div id="caption-text" class="caption-text"></div>
+      </div>
+      <div class="controls">
+        <div class="controls-group">
+          <button id="prev-button" class="button" type="button">이전</button>
+          <div id="counter" class="counter">0 / 0</div>
+          <button id="next-button" class="button" type="button">다음</button>
+        </div>
+        <button id="close-button" class="button button-close" type="button">닫기</button>
+      </div>
+    </div>
+    <script>
+      (function () {
+        const viewerElement = document.getElementById("viewer");
+        const imageElement = document.getElementById("slide-image");
+        const emptyMessageElement = document.getElementById("empty-message");
+        const errorMessageElement = document.getElementById("error-message");
+        const captionTextElement = document.getElementById("caption-text");
+        const prevButton = document.getElementById("prev-button");
+        const nextButton = document.getElementById("next-button");
+        const counterElement = document.getElementById("counter");
+        const closeButton = document.getElementById("close-button");
+
+        const TYPING_INTERVAL_MS = 35;
+
+        let slides = [];
+        let currentIndex = 0;
+        let typingTimer = null;
+        let isTyping = false;
+        let currentTokens = [];
+
+        function normalizeSlide(entry) {
+          if (!entry || typeof entry !== "object") {
+            return null;
+          }
+
+          const imageUrl =
+            typeof entry.imageUrl === "string" ? entry.imageUrl.trim() : "";
+          const text = typeof entry.text === "string" ? entry.text : "";
+
+          return {
+            imageUrl,
+            text,
+          };
+        }
+
+        function clampIndex(index) {
+          if (!slides.length) {
+            return 0;
+          }
+
+          return Math.min(Math.max(index, 0), slides.length - 1);
+        }
+
+        function clearTypingTimer() {
+          if (typingTimer !== null) {
+            window.clearInterval(typingTimer);
+            typingTimer = null;
+          }
+        }
+
+        function appendTextToken(fragment, text, highlighted) {
+          if (!text) {
+            return;
+          }
+
+          const span = document.createElement("span");
+          span.textContent = text;
+
+          if (highlighted) {
+            span.className = "caption-text__accent";
+          }
+
+          fragment.appendChild(span);
+        }
+
+        function tokenizeRichText(value) {
+          const tokens = [];
+          const pattern = /\[\[orange:([\s\S]*?)\]\]/g;
+          let cursor = 0;
+
+          function pushPlainText(text, highlighted) {
+            for (const character of text) {
+              if (character === "\n") {
+                tokens.push({ type: "linebreak" });
+              } else {
+                tokens.push({
+                  type: "text",
+                  value: character,
+                  highlighted,
+                });
+              }
+            }
+          }
+
+          let match;
+          while ((match = pattern.exec(value)) !== null) {
+            if (match.index > cursor) {
+              pushPlainText(value.slice(cursor, match.index), false);
+            }
+
+            pushPlainText(match[1] || "", true);
+            cursor = pattern.lastIndex;
+          }
+
+          if (cursor < value.length) {
+            pushPlainText(value.slice(cursor), false);
+          }
+
+          return tokens;
+        }
+
+        function renderTokens(tokens, visibleCount) {
+          const fragment = document.createDocumentFragment();
+          let rendered = 0;
+          let currentText = "";
+          let currentHighlight = false;
+
+          function flushCurrentText() {
+            appendTextToken(fragment, currentText, currentHighlight);
+            currentText = "";
+          }
+
+          for (const token of tokens) {
+            if (rendered >= visibleCount) {
+              break;
+            }
+
+            if (token.type === "linebreak") {
+              flushCurrentText();
+              fragment.appendChild(document.createElement("br"));
+              rendered += 1;
+              continue;
+            }
+
+            if (!currentText) {
+              currentHighlight = token.highlighted;
+            }
+
+            if (currentText && currentHighlight !== token.highlighted) {
+              flushCurrentText();
+              currentHighlight = token.highlighted;
+            }
+
+            currentText += token.value;
+            rendered += 1;
+          }
+
+          flushCurrentText();
+          captionTextElement.replaceChildren(fragment);
+        }
+
+        function updateControls() {
+          const total = slides.length;
+          const hasSlides = total > 0;
+
+          prevButton.disabled = !hasSlides || currentIndex <= 0;
+          nextButton.disabled = !hasSlides || currentIndex >= total - 1;
+          viewerElement.disabled = !hasSlides;
+          counterElement.textContent = hasSlides
+            ? String(currentIndex + 1) + " / " + String(total)
+            : "0 / 0";
+        }
+
+        function finishTyping() {
+          clearTypingTimer();
+          renderTokens(currentTokens, currentTokens.length);
+          isTyping = false;
+        }
+
+        function startTyping() {
+          clearTypingTimer();
+
+          const currentSlide = slides[currentIndex];
+          const fullText = currentSlide ? currentSlide.text : "";
+          currentTokens = tokenizeRichText(fullText);
+          captionTextElement.replaceChildren();
+
+          if (!currentTokens.length) {
+            isTyping = false;
+            return;
+          }
+
+          let cursor = 0;
+          isTyping = true;
+
+          typingTimer = window.setInterval(function () {
+            cursor += 1;
+            renderTokens(currentTokens, cursor);
+
+            if (cursor >= currentTokens.length) {
+              finishTyping();
+            }
+          }, TYPING_INTERVAL_MS);
+        }
+
+        function renderCurrentSlide() {
+          const total = slides.length;
+          const hasSlides = total > 0;
+          const currentSlide = hasSlides ? slides[currentIndex] : null;
+          const imageUrl = currentSlide ? currentSlide.imageUrl : "";
+
+          emptyMessageElement.hidden = hasSlides;
+          errorMessageElement.hidden = true;
+
+          if (imageUrl) {
+            imageElement.hidden = false;
+            imageElement.src = imageUrl;
+          } else {
+            imageElement.hidden = true;
+            imageElement.removeAttribute("src");
+          }
+
+          updateControls();
+          startTyping();
+        }
+
+        function moveTo(index) {
+          if (!slides.length) {
+            return;
+          }
+
+          currentIndex = clampIndex(index);
+          renderCurrentSlide();
+        }
+
+        function closeWidget() {
+          clearTypingTimer();
+          window.parent?.postMessage({ type: "slideshow:close" }, "*");
+        }
+
+        function handleViewerClick() {
+          if (!slides.length) {
+            return;
+          }
+
+          if (isTyping) {
+            finishTyping();
+            return;
+          }
+
+          if (currentIndex >= slides.length - 1) {
+            closeWidget();
+            return;
+          }
+
+          moveTo(currentIndex + 1);
+        }
+
+        function applyPayload(payload) {
+          const nextSlides = Array.isArray(payload?.slides)
+            ? payload.slides
+                .map(function (entry) {
+                  return normalizeSlide(entry);
+                })
+                .filter(Boolean)
+            : [];
+          const nextIndex = Number.isFinite(payload?.startIndex)
+            ? Math.floor(payload.startIndex)
+            : 0;
+
+          slides = nextSlides;
+          currentIndex = clampIndex(nextIndex);
+          renderCurrentSlide();
+        }
+
+        function handleMessage(event) {
+          const data = event?.data;
+          if (!data || data.type !== "slideshow:init") {
+            return;
+          }
+
+          applyPayload(data.payload || {});
+        }
+
+        prevButton.addEventListener("click", function () {
+          moveTo(currentIndex - 1);
+        });
+
+        nextButton.addEventListener("click", function () {
+          moveTo(currentIndex + 1);
+        });
+
+        closeButton.addEventListener("click", function () {
+          closeWidget();
+        });
+
+        viewerElement.addEventListener("click", function () {
+          handleViewerClick();
+        });
+
+        imageElement.addEventListener("error", function () {
+          errorMessageElement.hidden = false;
+        });
+
+        window.addEventListener("message", handleMessage);
+        window.addEventListener("beforeunload", function () {
+          clearTypingTimer();
+        });
+
+        window.parent?.postMessage({ type: "slideshow:ready" }, "*");
+        renderCurrentSlide();
+      })();
+    </script>
+  </body>
+</html>
