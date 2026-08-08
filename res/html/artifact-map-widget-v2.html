@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Muryeong Artifact Trade Map</title>
+    <style>
+      :root {
+        --mission-panel: #f7fbf8;
+        --mission-border: #cadfd0;
+        --mission-text: #26342e;
+        --mission-muted: #64756b;
+        --mission-accent: #278266;
+        --mission-accent-strong: #17634c;
+        --mission-danger: #bb4d49;
+        --mission-sky: #cfeefa;
+        --mission-grass: #d9ead6;
+        --mission-sun: #f7c95f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        background: transparent;
+        color: var(--mission-text);
+        font-family: "Pretendard", "Noto Sans KR", sans-serif;
+        letter-spacing: 0;
+      }
+
+      button {
+        font: inherit;
+        letter-spacing: 0;
+      }
+
+      .stage {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+      }
+
+      .mission {
+        width: min(100%, 900px);
+        max-height: 100%;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow: hidden;
+        border: 1px solid var(--mission-border);
+        border-radius: 18px;
+        background: var(--mission-panel);
+        box-shadow: 0 18px 34px rgba(39, 68, 53, 0.16);
+        padding: 18px;
+      }
+
+      .mission__header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .mission__title {
+        margin: 0;
+        color: var(--mission-accent-strong);
+        font-size: 24px;
+        font-weight: 800;
+        line-height: 1.2;
+        word-break: keep-all;
+      }
+
+      .mission__progress {
+        min-width: 52px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #e1f2ec;
+        color: var(--mission-accent-strong);
+        font-size: 13px;
+        font-weight: 800;
+        padding: 0 10px;
+      }
+
+      .mission__close {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: #dce9df;
+        color: #2f4539;
+        font-size: 20px;
+        font-weight: 800;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .mission__close:hover {
+        background: #cddfd3;
+      }
+
+      .mission__text {
+        margin: -4px 0 0;
+        color: var(--mission-muted);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.45;
+        word-break: keep-all;
+      }
+
+      .mission__body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 210px;
+        gap: 14px;
+      }
+
+      .scene {
+        position: relative;
+        min-height: 0;
+        aspect-ratio: var(--image-aspect, 1000 / 625);
+        width: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        border: 1px solid #b7d2bf;
+        border-radius: 12px;
+        background: var(--mission-sky);
+        touch-action: none;
+        user-select: none;
+      }
+
+      .scene__art {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .scene__image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        object-position: center;
+      }
+
+      .scene__image[hidden],
+      .scene__art[hidden] {
+        display: none;
+      }
+
+      .scene__fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7fbf8;
+        color: #64756b;
+        font-size: 16px;
+        font-weight: 800;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .drop-zone {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        cursor: default;
+        z-index: 3;
+      }
+
+      .drop-zone::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 8px;
+        display: none;
+      }
+
+      .drop-zone--hover {
+        border-color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 0 4px rgba(39, 130, 102, 0.22);
+      }
+
+      .drop-zone--filled {
+        border-style: solid;
+        border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .drop-zone--filled::after {
+        opacity: 0;
+      }
+
+      .drop-zone--bad {
+        animation: zone-bad 0.28s ease;
+        border-color: var(--mission-danger);
+      }
+
+      @keyframes zone-bad {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+
+        35% {
+          transform: translateX(-4px);
+        }
+
+        70% {
+          transform: translateX(4px);
+        }
+      }
+
+      .placed-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+      }
+
+      .placed-token,
+      .drag-token {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(39, 92, 70, 0.22);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 20px rgba(39, 68, 53, 0.16);
+        font-size: 30px;
+        line-height: 1;
+        overflow: hidden;
+        padding: 4px;
+      }
+
+      .placed-token {
+        width: var(--placed-w, 9%);
+        height: var(--placed-h, 9%);
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+      }
+
+      .drag-token {
+        width: 72px;
+        height: 72px;
+      }
+
+      .placed-token img,
+      .drag-token img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+
+      .placed-token {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        transform: translate(-50%, -50%);
+      }
+
+      .placed-token::after {
+        content: none;
+        display: none;
+      }
+
+      .drag-token {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 1000;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(1.04);
+      }
+
+      .tray {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        align-content: start;
+        gap: 10px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .piece {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: 62px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        border: 1px solid #c9dbd0;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #26342e;
+        cursor: grab;
+        padding: 7px 10px;
+        text-align: left;
+        touch-action: none;
+        user-select: none;
+      }
+
+      .piece:hover {
+        border-color: #83af96;
+        transform: translateY(-1px);
+      }
+
+      .piece:disabled {
+        opacity: 0.42;
+        cursor: default;
+        transform: none;
+      }
+
+      .piece__icon {
+        width: 58px;
+        height: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #fff8e7;
+        border: 1px solid rgba(116, 88, 43, 0.16);
+        font-size: 26px;
+        line-height: 1;
+        overflow: hidden;
+        padding: 3px;
+      }
+
+      .piece__icon img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+      }
+
+      .piece__label {
+        min-width: 0;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.25;
+        word-break: keep-all;
+      }
+
+      .feedback {
+        min-height: 24px;
+        color: var(--mission-muted);
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.35;
+        word-break: keep-all;
+      }
+
+      .feedback--ok {
+        color: var(--mission-accent-strong);
+      }
+
+      .feedback--bad {
+        color: var(--mission-danger);
+      }
+
+      .scene--complete .drop-zone {
+        opacity: 0;
+      }
+
+      @media (max-width: 640px) {
+        .stage {
+          padding: 8px;
+        }
+
+        .mission {
+          gap: 9px;
+          border-radius: 16px;
+          padding: 12px;
+        }
+
+        .mission__header {
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          gap: 8px;
+        }
+
+        .mission__title {
+          font-size: 20px;
+        }
+
+        .mission__progress {
+          min-width: 46px;
+          height: 24px;
+          font-size: 12px;
+          padding: 0 8px;
+        }
+
+        .mission__close {
+          width: 28px;
+          height: 28px;
+          font-size: 18px;
+        }
+
+        .mission__text {
+          font-size: 13px;
+        }
+
+        .mission__body {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(0, 1fr) auto;
+          gap: 10px;
+        }
+
+        .tray {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+          overflow: visible;
+          padding-right: 0;
+        }
+
+        .piece {
+          min-height: 68px;
+          grid-template-columns: 1fr;
+          justify-items: center;
+          gap: 4px;
+          padding: 6px;
+          text-align: center;
+        }
+
+        .piece__icon {
+          width: 44px;
+          height: 44px;
+          border-radius: 9px;
+          font-size: 22px;
+        }
+
+        .piece__label {
+          font-size: 12px;
+          line-height: 1.15;
+        }
+
+        .placed-token {
+          border-radius: 10px;
+          font-size: 24px;
+        }
+
+        .drag-token {
+          width: 54px;
+          height: 54px;
+          border-radius: 10px;
+          font-size: 26px;
+        }
+
+        .feedback {
+          min-height: 20px;
+          font-size: 13px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <section class="mission" aria-live="polite">
+        <div class="mission__header">
+          <h1 class="mission__title" data-title>부장품 교류 지도</h1>
+          <div class="mission__progress" data-progress>0/3</div>
+          <button type="button" class="mission__close" data-close aria-label="닫기">×</button>
+        </div>
+        <p class="mission__text" data-mission-text>부장품을 알맞은 지역으로 끌어다 놓으세요.</p>
+        <div class="mission__body">
+          <div class="scene" data-scene>
+            <img class="scene__image" data-scene-image hidden alt="" />
+            <div class="scene__art scene__fallback" data-scene-fallback hidden>
+              지도 이미지를 불러오는 중입니다.
+            </div>
+            <div class="placed-layer" data-placed-layer></div>
+          </div>
+          <div class="tray" data-tray aria-label="배치할 아이콘"></div>
+        </div>
+        <div class="feedback" data-feedback>부장품을 선택해 알맞은 교류 지역 위로 끌어 보세요.</div>
+        <audio data-success-audio preload="auto" src="../item_acquired.mp3"></audio>
+      </section>
+    </div>
+
+    <script>
+      (function () {
+        const titleElement = document.querySelector("[data-title]");
+        const missionTextElement = document.querySelector("[data-mission-text]");
+        const progressElement = document.querySelector("[data-progress]");
+        const closeButton = document.querySelector("[data-close]");
+        const sceneElement = document.querySelector("[data-scene]");
+        const sceneImageElement = document.querySelector("[data-scene-image]");
+        const sceneFallbackElement = document.querySelector("[data-scene-fallback]");
+        const trayElement = document.querySelector("[data-tray]");
+        const placedLayerElement = document.querySelector("[data-placed-layer]");
+        const feedbackElement = document.querySelector("[data-feedback]");
+        const successAudioElement = document.querySelector("[data-success-audio]");
+
+        let items = [];
+        let targets = [];
+        let placedItemIds = new Set();
+        let activeDrag = null;
+        let completing = false;
+        let successMessage = "그렇다. 잘 짝지었구나.";
+        let initialFeedback = "부장품을 선택해 알맞은 교류 지역 위로 끌어 보세요.";
+        let wrongMessage =
+          "진묘수: 그 자리가 아니다. 물건의 재료와 만들어진 지역을 다시 떠올려 보아라. 힌트를 다시 확인하고 알맞은 지역으로 옮겨 보거라.";
+        let imageConfig = {
+          url: "images/muryeong-trade-map.png",
+          width: 1448,
+          height: 1086,
+          alt: "무령왕릉 부장품 교류 지도",
+        };
+        let soundUrl = "item_acquired.mp3";
+        const defaultPayload = {
+          title: "부장품 교류 지도",
+          missionText: "부장품을 알맞은 지역으로 끌어다 놓으세요.",
+          successMessage: "그렇다. 잘 짝지었구나.",
+          initialFeedback: "부장품을 선택해 알맞은 교류 지역 위로 끌어 보세요.",
+          wrongMessage:
+            "진묘수: 그 자리가 아니다. 물건의 재료와 만들어진 지역을 다시 떠올려 보아라. 힌트를 다시 확인하고 알맞은 지역으로 옮겨 보거라.",
+          alreadyCompleted: false,
+          image: {
+            url: "images/muryeong-trade-map.png",
+            width: 1448,
+            height: 1086,
+            alt: "무령왕릉 부장품 교류 지도",
+          },
+          soundUrl: "item_acquired.mp3",
+          items: [
+            {
+              id: "bronze-mirror",
+              icon: "銅",
+              imageUrl: "images/artifacts/bronze-mirror.png",
+              label: "청동거울",
+              placedHeight: 128,
+              placedWidth: 128,
+              targetId: "china-southern",
+            },
+            {
+              id: "pine-coffin",
+              icon: "松",
+              imageUrl: "images/artifacts/pine-coffin.png",
+              label: "금송 목관 조각",
+              placedHeight: 88,
+              placedWidth: 98,
+              targetId: "japan",
+            },
+            {
+              id: "ebony-pillow",
+              icon: "枕",
+              imageUrl: "images/artifacts/ebony-pillow.png",
+              label: "흑단 두침",
+              placedHeight: 94,
+              placedWidth: 122,
+              targetId: "southeast-asia",
+            },
+          ],
+          targets: [
+            {
+              id: "china-southern",
+              label: "중국 남조",
+              placeX: 319,
+              placeY: 384,
+              x: 240,
+              y: 292,
+              width: 158,
+              height: 170,
+            },
+            {
+              id: "japan",
+              label: "일본",
+              placeX: 1134,
+              placeY: 372,
+              x: 1058,
+              y: 292,
+              width: 165,
+              height: 140,
+            },
+            {
+              id: "southeast-asia",
+              label: "동남아",
+              placeX: 826,
+              placeY: 787,
+              x: 742,
+              y: 686,
+              width: 160,
+              height: 150,
+            },
+          ],
+        };
+
+        function sanitizeText(value, fallback) {
+          return typeof value === "string" && value.trim() ? value.trim() : fallback;
+        }
+
+        function sanitizeNumber(value, fallback) {
+          const numberValue = Number(value);
+          return Number.isFinite(numberValue) ? numberValue : fallback;
+        }
+
+        function sanitizePositiveNumber(value, fallback) {
+          const numberValue = sanitizeNumber(value, fallback);
+          return numberValue > 0 ? numberValue : fallback;
+        }
+
+        function getAppAssetUrl(fileName) {
+          try {
+            const url = new URL(window.location.href);
+            const appHashId = url.searchParams.get("appHashId");
+            const appUpdatedAt = url.searchParams.get("appUpdatedAt");
+
+            if (appHashId) {
+              const params = new URLSearchParams({
+                appHashId,
+                fileName,
+              });
+
+              if (appUpdatedAt) {
+                params.set("appUpdatedAt", appUpdatedAt);
+              }
+
+              return `${url.origin}/spaces/app/file?${params.toString()}`;
+            }
+          } catch (_error) {
+            // Local previews can use the relative fallback below.
+          }
+
+          return `../${fileName}`;
+        }
+
+        function resolveAssetUrl(nextUrl) {
+          const rawUrl = sanitizeText(nextUrl, "");
+          if (!rawUrl) {
+            return "";
+          }
+
+          if (/^(?:https?:|data:|blob:|\/)/i.test(rawUrl)) {
+            return rawUrl;
+          }
+
+          const fileName = rawUrl.replace(/^(?:\.\.?\/)+/, "");
+          return getAppAssetUrl(fileName);
+        }
+
+        function pxToPercent(value, size) {
+          if (!size) {
+            return "0%";
+          }
+
+          return `${(value / size) * 100}%`;
+        }
+
+        function getTargetCenter(target) {
+          return {
+            x: target.x + target.width / 2,
+            y: target.y + target.height / 2,
+          };
+        }
+
+        function setElementHidden(element, hidden) {
+          if (!element) {
+            return;
+          }
+
+          if (hidden) {
+            element.setAttribute("hidden", "");
+            return;
+          }
+
+          element.removeAttribute("hidden");
+        }
+
+        function applySceneImage(nextImageConfig) {
+          const rawUrl = sanitizeText(nextImageConfig?.url, imageConfig.url);
+          imageConfig = {
+            url: resolveAssetUrl(rawUrl),
+            width: sanitizePositiveNumber(nextImageConfig?.width, 1000),
+            height: sanitizePositiveNumber(nextImageConfig?.height, 625),
+            alt: sanitizeText(nextImageConfig?.alt, "무령왕릉 부장품 교류 지도"),
+          };
+
+          sceneElement.style.setProperty(
+            "--image-aspect",
+            `${imageConfig.width} / ${imageConfig.height}`
+          );
+
+          if (imageConfig.url) {
+            setElementHidden(sceneFallbackElement, true);
+            setElementHidden(sceneImageElement, true);
+            sceneImageElement.onerror = function () {
+              setElementHidden(sceneImageElement, true);
+              setElementHidden(sceneFallbackElement, false);
+              sceneFallbackElement.textContent =
+                "지도 이미지를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.";
+            };
+            sceneImageElement.onload = function () {
+              setElementHidden(sceneImageElement, false);
+              setElementHidden(sceneFallbackElement, true);
+            };
+            sceneImageElement.src = imageConfig.url;
+            sceneImageElement.alt = imageConfig.alt;
+            return;
+          }
+
+          setElementHidden(sceneImageElement, true);
+          sceneImageElement.removeAttribute("src");
+          sceneImageElement.alt = "";
+          setElementHidden(sceneFallbackElement, false);
+        }
+
+        function applySoundUrl(nextSoundUrl) {
+          soundUrl = resolveAssetUrl(sanitizeText(nextSoundUrl, "item_acquired.mp3"));
+          if (successAudioElement) {
+            successAudioElement.src = soundUrl;
+            successAudioElement.load();
+          }
+        }
+
+        function playSuccessSound() {
+          if (!successAudioElement || !soundUrl) {
+            return;
+          }
+
+          try {
+            successAudioElement.pause();
+            successAudioElement.currentTime = 0;
+            const playResult = successAudioElement.play();
+            if (playResult && typeof playResult.catch === "function") {
+              playResult.catch(function () {});
+            }
+          } catch (_error) {
+            // ZEP will also play the item sound through the script bridge.
+          }
+        }
+
+        function setFeedback(message, mode) {
+          feedbackElement.textContent = message;
+          feedbackElement.className = "feedback";
+          if (mode === "ok") {
+            feedbackElement.classList.add("feedback--ok");
+          }
+          if (mode === "bad") {
+            feedbackElement.classList.add("feedback--bad");
+          }
+        }
+
+        function updateProgress() {
+          progressElement.textContent = `${placedItemIds.size}/${items.length}`;
+        }
+
+        function getItem(itemId) {
+          return items.find(function (item) {
+            return item.id === itemId;
+          }) || null;
+        }
+
+        function appendItemVisual(element, item) {
+          element.replaceChildren();
+
+          if (item.imageUrl) {
+            const image = document.createElement("img");
+            image.src = item.imageUrl;
+            image.alt = "";
+            image.draggable = false;
+            image.onerror = function () {
+              image.remove();
+              element.textContent = item.icon || item.label.slice(0, 1);
+            };
+            element.appendChild(image);
+            return;
+          }
+
+          element.textContent = item.icon || item.label.slice(0, 1);
+        }
+
+        function renderTargets() {
+          const existingZones = sceneElement.querySelectorAll("[data-zone]");
+          for (const zone of existingZones) {
+            zone.remove();
+          }
+
+          for (const target of targets) {
+            const zone = document.createElement("button");
+            zone.type = "button";
+            zone.className = "drop-zone";
+            zone.dataset.zone = target.id;
+            zone.title = target.label;
+            zone.setAttribute("aria-label", target.label);
+            zone.style.setProperty("--x", pxToPercent(target.x, imageConfig.width));
+            zone.style.setProperty("--y", pxToPercent(target.y, imageConfig.height));
+            zone.style.setProperty("--w", pxToPercent(target.width, imageConfig.width));
+            zone.style.setProperty("--h", pxToPercent(target.height, imageConfig.height));
+            sceneElement.appendChild(zone);
+          }
+        }
+
+        function renderPieces() {
+          trayElement.replaceChildren();
+
+          for (const item of items) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "piece";
+            button.dataset.item = item.id;
+            button.setAttribute("aria-label", item.label);
+
+            const icon = document.createElement("span");
+            icon.className = "piece__icon";
+            appendItemVisual(icon, item);
+
+            const label = document.createElement("span");
+            label.className = "piece__label";
+            label.textContent = item.label;
+
+            button.append(icon, label);
+            button.addEventListener("pointerdown", startDrag);
+            trayElement.appendChild(button);
+          }
+        }
+
+        function makeDragToken(item) {
+          const token = document.createElement("div");
+          token.className = "drag-token";
+          appendItemVisual(token, item);
+          document.body.appendChild(token);
+          return token;
+        }
+
+        function moveDragToken(clientX, clientY) {
+          if (!activeDrag) {
+            return;
+          }
+
+          activeDrag.token.style.left = `${clientX}px`;
+          activeDrag.token.style.top = `${clientY}px`;
+        }
+
+        function setHoverTarget(targetId) {
+          const zones = sceneElement.querySelectorAll("[data-zone]");
+          for (const zone of zones) {
+            zone.classList.toggle("drop-zone--hover", zone.dataset.zone === targetId);
+          }
+        }
+
+        function clearHoverTarget() {
+          setHoverTarget("");
+        }
+
+        function findTargetAtPoint(clientX, clientY) {
+          const rect = sceneElement.getBoundingClientRect();
+          if (
+            clientX < rect.left ||
+            clientX > rect.right ||
+            clientY < rect.top ||
+            clientY > rect.bottom
+          ) {
+            return null;
+          }
+
+          const imageX = ((clientX - rect.left) / rect.width) * imageConfig.width;
+          const imageY = ((clientY - rect.top) / rect.height) * imageConfig.height;
+
+          for (const target of targets) {
+            const withinX = imageX >= target.x && imageX <= target.x + target.width;
+            const withinY = imageY >= target.y && imageY <= target.y + target.height;
+            if (withinX && withinY) {
+              return target;
+            }
+          }
+
+          return null;
+        }
+
+        function markZone(targetId, className) {
+          const zone = sceneElement.querySelector(`[data-zone="${targetId}"]`);
+          if (!zone) {
+            return;
+          }
+
+          zone.classList.add(className);
+          if (className === "drop-zone--bad") {
+            window.setTimeout(function () {
+              zone.classList.remove(className);
+            }, 320);
+          }
+        }
+
+        function placeItem(item, target) {
+          if (placedItemIds.has(item.id)) {
+            return;
+          }
+
+          placedItemIds.add(item.id);
+          const center = getTargetPlacementCenter(target);
+          const token = document.createElement("div");
+          token.className = "placed-token";
+          token.title = `${item.label} - ${target.label}`;
+          appendItemVisual(token, item);
+          token.style.setProperty("--x", pxToPercent(center.x, imageConfig.width));
+          token.style.setProperty("--y", pxToPercent(center.y, imageConfig.height));
+          token.style.setProperty(
+            "--placed-w",
+            pxToPercent(item.placedWidth || 132, imageConfig.width)
+          );
+          token.style.setProperty(
+            "--placed-h",
+            pxToPercent(item.placedHeight || 132, imageConfig.height)
+          );
+          placedLayerElement.appendChild(token);
+
+          const sourceButton = trayElement.querySelector(`[data-item="${item.id}"]`);
+          if (sourceButton) {
+            sourceButton.disabled = true;
+          }
+
+          markZone(target.id, "drop-zone--filled");
+          updateProgress();
+          setFeedback(`${item.label}이(가) ${target.label}에 연결되었습니다.`, "ok");
+          playSuccessSound();
+          window.parent?.postMessage(
+            {
+              type: "mission-game:placed",
+              payload: { itemId: item.id },
+            },
+            "*"
+          );
+
+          if (placedItemIds.size >= items.length) {
+            completeMission();
+          }
+        }
+
+        function attemptDrop(item, target) {
+          if (!target) {
+            setFeedback("알맞은 위치 위에 놓아 주세요.", "bad");
+            return;
+          }
+
+          if (target.id !== item.targetId) {
+            markZone(target.id, "drop-zone--bad");
+            setFeedback(wrongMessage, "bad");
+            return;
+          }
+
+          placeItem(item, target);
+        }
+
+        function getTargetPlacementCenter(target) {
+          const fallback = getTargetCenter(target);
+          const placeX = Number(target?.placeX);
+          const placeY = Number(target?.placeY);
+          return {
+            x: Number.isFinite(placeX) ? placeX : fallback.x,
+            y: Number.isFinite(placeY) ? placeY : fallback.y,
+          };
+        }
+
+        function startDrag(event) {
+          const itemId = event.currentTarget?.dataset?.item || "";
+          const item = getItem(itemId);
+          if (!item || completing || placedItemIds.has(item.id)) {
+            return;
+          }
+
+          event.preventDefault();
+          const token = makeDragToken(item);
+          activeDrag = {
+            item,
+            token,
+          };
+          moveDragToken(event.clientX, event.clientY);
+          document.addEventListener("pointermove", handlePointerMove);
+          document.addEventListener("pointerup", handlePointerUp);
+          setFeedback(`${item.label}을(를) 배치할 위치로 이동하세요.`, "");
+        }
+
+        function handlePointerMove(event) {
+          if (!activeDrag) {
+            return;
+          }
+
+          event.preventDefault();
+          moveDragToken(event.clientX, event.clientY);
+          const target = findTargetAtPoint(event.clientX, event.clientY);
+          setHoverTarget(target ? target.id : "");
+        }
+
+        function handlePointerUp(event) {
+          if (!activeDrag) {
+            return;
+          }
+
+          event.preventDefault();
+          const drag = activeDrag;
+          const target = findTargetAtPoint(event.clientX, event.clientY);
+          drag.token.remove();
+          activeDrag = null;
+          clearHoverTarget();
+          document.removeEventListener("pointermove", handlePointerMove);
+          document.removeEventListener("pointerup", handlePointerUp);
+          attemptDrop(drag.item, target);
+        }
+
+        function completeMission() {
+          if (completing) {
+            return;
+          }
+
+          completing = true;
+          sceneElement.classList.add("scene--complete");
+          setFeedback(successMessage, "ok");
+          window.parent?.postMessage({ type: "mission-game:complete" }, "*");
+        }
+
+        function resetMissionState() {
+          completing = false;
+          placedItemIds = new Set();
+          placedLayerElement.replaceChildren();
+          sceneElement.classList.remove("scene--complete");
+          clearHoverTarget();
+          updateProgress();
+        }
+
+        function applyPayload(payload) {
+          const rawItems = Array.isArray(payload?.items) ? payload.items : [];
+          const rawTargets = Array.isArray(payload?.targets) ? payload.targets : [];
+          items = rawItems
+            .map(function (item) {
+              const id = sanitizeText(item?.id, "");
+              const icon = sanitizeText(item?.icon, "");
+              const imageUrl = resolveAssetUrl(item?.imageUrl);
+              const label = sanitizeText(item?.label, "");
+              const placedHeight = sanitizePositiveNumber(item?.placedHeight, 132);
+              const placedWidth = sanitizePositiveNumber(item?.placedWidth, 132);
+              const targetId = sanitizeText(item?.targetId, "");
+              return id && (icon || imageUrl) && label && targetId
+                ? { id, icon, imageUrl, label, placedHeight, placedWidth, targetId }
+                : null;
+            })
+            .filter(Boolean);
+          targets = rawTargets
+            .map(function (target) {
+              const id = sanitizeText(target?.id, "");
+              const label = sanitizeText(target?.label, "");
+              const radius = sanitizeNumber(target?.radius, 0);
+              const hasRectSize =
+                Number.isFinite(Number(target?.width)) &&
+                Number.isFinite(Number(target?.height));
+              const width = hasRectSize
+                ? sanitizePositiveNumber(target?.width, 80)
+                : Math.max(40, radius * 2);
+              const height = hasRectSize
+                ? sanitizePositiveNumber(target?.height, 80)
+                : Math.max(40, radius * 2);
+              const x = hasRectSize
+                ? sanitizeNumber(target?.x, 0)
+                : sanitizeNumber(target?.x, 50) - width / 2;
+              const y = hasRectSize
+                ? sanitizeNumber(target?.y, 0)
+                : sanitizeNumber(target?.y, 50) - height / 2;
+              const placeX = sanitizeNumber(target?.placeX, x + width / 2);
+              const placeY = sanitizeNumber(target?.placeY, y + height / 2);
+              return id
+                ? {
+                    id,
+                    label,
+                    placeX,
+                    placeY,
+                    x,
+                    y,
+                    width,
+                    height,
+                  }
+                : null;
+            })
+            .filter(Boolean);
+
+          titleElement.textContent = sanitizeText(payload?.title, "부장품 교류 지도");
+          missionTextElement.textContent = sanitizeText(
+            payload?.missionText,
+            "부장품을 알맞은 지역으로 끌어다 놓으세요."
+          );
+          successMessage = sanitizeText(
+            payload?.successMessage,
+            "그렇다. 잘 짝지었구나."
+          );
+          initialFeedback = sanitizeText(
+            payload?.initialFeedback,
+            "부장품을 선택해 알맞은 교류 지역 위로 끌어 보세요."
+          );
+          wrongMessage = sanitizeText(
+            payload?.wrongMessage,
+            "진묘수: 그 자리가 아니다. 물건의 재료와 만들어진 지역을 다시 떠올려 보아라. 힌트를 다시 확인하고 알맞은 지역으로 옮겨 보거라."
+          );
+          applySceneImage(payload?.image);
+          applySoundUrl(payload?.soundUrl);
+
+          renderTargets();
+          renderPieces();
+          resetMissionState();
+          setFeedback(
+            payload?.alreadyCompleted
+              ? "이미 완료한 미션입니다. 다시 배치해 볼 수 있어요."
+              : initialFeedback,
+            ""
+          );
+        }
+
+        function handleMessage(event) {
+          const data = event?.data;
+          if (!data || data.type !== "mission-game:init") {
+            return;
+          }
+
+          applyPayload(data.payload || {});
+        }
+
+        closeButton.addEventListener("click", function () {
+          window.parent?.postMessage({ type: "mission-game:close" }, "*");
+        });
+
+        window.addEventListener("message", handleMessage);
+        if (window.parent === window) {
+          applyPayload(defaultPayload);
+        }
+        window.parent?.postMessage({ type: "mission-game:ready" }, "*");
+      })();
+    </script>
+  </body>
+</html>

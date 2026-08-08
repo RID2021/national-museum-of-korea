@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - heading "서울시교육청 역사교육자료센터 (고분 체험)" [level=1] [ref=e4]
+      - paragraph [ref=e5]: 메타버스 플랫폼 ZEP으로 제작한 서울시교육청 역사교육자료센터 (고분 체험) 공간을 둘러보세요. 현실 공간처럼 돌아다니며 구경하고 소통할 수 있습니다. 누구나 쉽게 만들고 경험할 수 있는 메타버스, ZEP으로 초대합니다.
+      - img "Thumbnails of 서울시교육청 역사교육자료센터 (고분 체험)" [ref=e6]
+    - generic [ref=e7]:
+      - img "Loading logo" [ref=e9]
+      - generic [ref=e11]:
+        - img [ref=e12]
+        - img [ref=e15]
+    - generic [ref=e19]:
+      - complementary [ref=e20]:
+        - generic [ref=e21]:
+          - button [ref=e23] [cursor=pointer]:
+            - img [ref=e24]
+          - button [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+          - separator [ref=e30]
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - button [ref=e39] [cursor=pointer]:
+              - img [ref=e40]
+            - button [ref=e44] [cursor=pointer]:
+              - img [ref=e45]
+            - button [ref=e50] [cursor=pointer]:
+              - img [ref=e51]
+          - generic [ref=e54]:
+            - button "Profile Avatar" [ref=e56] [cursor=pointer]:
+              - img "Profile Avatar" [ref=e59]
+            - generic [ref=e60]:
+              - text: 로그인 후 아바타를 꾸며보세요
+              - img [ref=e61] [cursor=pointer]
+      - main [ref=e63]
+  - alert [ref=e66]

@@ -1,6 +1,17 @@
 // portalX와 Y는 좌상단 기준으로 PortalSize 만큼 확장한다. N x N 크기로₩
 
 export const portalGateMap = {
+  "시간 광장": [
+    {
+      portalX: 87,
+      portalY: 54,
+      portalSize: 3,
+      requiredItems: [
+        "사후 세계 가방",
+      ],
+      missingMessage: "시간 할아버지에게 사후 세계 가방을 받은 뒤 이동하세요.",
+    },
+  ],
   "가평교육원": [
     {
       portalX: 42,

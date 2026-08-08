@@ -49,6 +49,4 @@ cat <<EOF > "$FLAG_FILE"
 export const DEBUG_FLAG = ${ZEP_DEBUG:-true};
 EOF
 
-npm run build
-npm run archive
 npm run deploy

@@ -11,4 +11,3 @@ export interface PortalGateEntry {
 
 export const portalGateMap: Record<string, PortalGateEntry[]> =
   generatedPortalGateMap as unknown as Record<string, PortalGateEntry[]>;
-

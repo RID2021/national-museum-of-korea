@@ -311,8 +311,50 @@
         .replace(/'/g, '&#39;');
     }
 
+    function getAppAssetUrl(fileName) {
+      try {
+        const url = new URL(window.location.href);
+        const appHashId = url.searchParams.get('appHashId');
+        const appUpdatedAt = url.searchParams.get('appUpdatedAt');
+
+        if (appHashId) {
+          const params = new URLSearchParams({
+            appHashId,
+            fileName,
+          });
+
+          if (appUpdatedAt) {
+            params.set('appUpdatedAt', appUpdatedAt);
+          }
+
+          return `${url.origin}/spaces/app/file?${params.toString()}`;
+        }
+      } catch (_error) {
+        // Local previews can use the relative fallback below.
+      }
+
+      return `../${fileName}`;
+    }
+
+    function resolveAssetUrl(value) {
+      const raw = String(value || '').trim();
+      if (!raw) {
+        return '';
+      }
+      if (/^(?:https?:|data:|blob:)/i.test(raw)) {
+        return raw;
+      }
+
+      const fileName = raw
+        .replace(/^(\.\.\/)+/, '')
+        .replace(/^(\.\/)+/, '')
+        .replace(/^\/+/, '');
+
+      return getAppAssetUrl(fileName);
+    }
+
     function toCssUrl(value) {
-      const sanitized = String(value).replace(/"/g, '\\"');
+      const sanitized = resolveAssetUrl(value).replace(/"/g, '\\"');
       return `url("${sanitized}")`;
     }
 
@@ -360,11 +402,12 @@
 
         if (item) {
           slot.classList.add('inventory__slot--filled');
+          const imageUrl = item.imageUrl ? resolveAssetUrl(item.imageUrl) : '';
 
           const image = document.createElement('div');
           image.className = 'inventory__image';
-          if (item.imageUrl) {
-            image.style.backgroundImage = toCssUrl(item.imageUrl);
+          if (imageUrl) {
+            image.style.backgroundImage = toCssUrl(imageUrl);
           }
 
           const name = document.createElement('p');
@@ -384,7 +427,7 @@
           const tooltip = document.createElement('aside');
           tooltip.className = 'inventory__tooltip';
           tooltip.innerHTML = `
-            ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" />` : ''}
+            ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" />` : ''}
             <h3 class="inventory__tooltip-title">${escapeHtml(item.name)}</h3>
             <p class="inventory__tooltip-desc">${escapeHtml(item.description || '설명이 없습니다.')}</p>
           `;

@@ -2,12 +2,14 @@ import type { ScriptPlayer } from "zep-script";
 
 import { applyInventoryInteraction } from "../inventory";
 import { inventoryInteractionMap } from "../inventory/constants";
+import { findNearbyLocationName } from "../utils/location";
 
 export const INVENTORY_INTERACTION_PREFIX = "inv:";
 const INVENTORY_INTERACTION_PREFIX_ALIASES = [
   INVENTORY_INTERACTION_PREFIX,
   "nv:",
 ] as const;
+const registeredInventoryLocationNames = new Set<string>();
 
 function normalizeInteractionId(raw: string): string | null {
   const normalized = raw.trim();
@@ -62,11 +64,35 @@ export function registerInventoryInteractionLocations(): void {
     }
 
     getLocationNamesForInteractionId(id).forEach(function (locationName) {
+      if (registeredInventoryLocationNames.has(locationName)) {
+        return;
+      }
+
+      registeredInventoryLocationNames.add(locationName);
       ScriptApp.addOnLocationEnter(locationName, function (player: ScriptPlayer) {
+        applyInventoryInteraction(id, player);
+      });
+      ScriptApp.addOnLocationTouched(locationName, function (player: ScriptPlayer) {
         applyInventoryInteraction(id, player);
       });
     });
   });
+}
+
+export function handleNearbyInventoryInteractionLocation(
+  player: ScriptPlayer,
+  radius = 1
+): boolean {
+  const locationName = findNearbyLocationName(
+    player,
+    registeredInventoryLocationNames,
+    radius
+  );
+  if (!locationName) {
+    return false;
+  }
+
+  return handleInventoryInteractionObjectKey(player, locationName);
 }
 
 export function handleInventoryInteractionObjectKey(

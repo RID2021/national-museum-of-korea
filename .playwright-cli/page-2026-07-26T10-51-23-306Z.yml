@@ -1,0 +1,36 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "부장품 교류 지도" [level=1] [ref=e5]
+    - generic [ref=e6]: 1/3
+    - button "닫기" [ref=e7] [cursor=pointer]: ×
+  - paragraph [ref=e8]: 부장품을 알맞은 지역으로 끌어다 놓으세요.
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - img "무령왕릉 부장품 교류 지도" [ref=e11]:
+        - img "무령왕릉 부장품 교류 지도" [ref=e12]:
+          - generic [ref=e28]:
+            - generic [ref=e30]: 중국 남조
+            - generic [ref=e31]: 양나라 문화권
+          - generic [ref=e32]:
+            - generic [ref=e34]: 일본
+            - generic [ref=e35]: 왜 · 열도 남부
+          - generic [ref=e36]:
+            - generic [ref=e38]: 동남아
+            - generic [ref=e39]: 남쪽 바다 교역권
+          - generic [ref=e40]:
+            - generic [ref=e42]: 백제
+            - generic [ref=e43]: 무령왕릉
+          - generic [ref=e44]: 부장품이 알려 주는 백제의 바닷길
+      - generic:
+        - generic "청동거울 - 중국 남조": 銅 ✓
+      - button "중국 남조" [ref=e45]
+      - button "일본" [ref=e46]
+      - button "동남아" [ref=e47]
+    - generic "배치할 아이콘" [ref=e48]:
+      - button "청동거울" [disabled] [ref=e49]:
+        - generic [ref=e50]: 銅
+      - button "금송 목관 조각" [ref=e52]:
+        - generic [ref=e53]: 松
+      - button "흑단 두침" [ref=e55]:
+        - generic [ref=e56]: 枕
+  - generic [ref=e58]: 청동거울이(가) 중국 남조에 연결되었습니다.

@@ -2,3 +2,7 @@ dist
 node_modules
 res/main.js
 *.zepapp.zip
+.env
+.env.*
+!.env.example
+!.env.cdn.example

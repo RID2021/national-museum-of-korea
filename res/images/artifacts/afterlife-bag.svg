@@ -1,0 +1,27 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bagBody" x1="58" y1="78" x2="198" y2="218" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9C36B"/>
+      <stop offset="0.52" stop-color="#B67A35"/>
+      <stop offset="1" stop-color="#70471F"/>
+    </linearGradient>
+    <linearGradient id="cloth" x1="65" y1="32" x2="190" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF0B5"/>
+      <stop offset="1" stop-color="#D39A44"/>
+    </linearGradient>
+    <filter id="shadow" x="31" y="25" width="194" height="209" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#2F2112" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <rect width="256" height="256" rx="52" fill="#FFFCEF"/>
+  <g filter="url(#shadow)">
+    <path d="M81 86C83 56 101 38 128 38C155 38 173 56 175 86" stroke="#6F4C24" stroke-width="14" stroke-linecap="round"/>
+    <path d="M76 78C95 63 160 63 180 78C166 96 91 96 76 78Z" fill="url(#cloth)" stroke="#7B5227" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M58 104C58 90.745 68.745 80 82 80H174C187.255 80 198 90.745 198 104V194C198 207.255 187.255 218 174 218H82C68.745 218 58 207.255 58 194V104Z" fill="url(#bagBody)" stroke="#5C371A" stroke-width="7"/>
+    <path d="M58 122C86 139 171 139 198 122" stroke="#F3D186" stroke-width="7" stroke-linecap="round"/>
+    <path d="M89 111L101 132M167 111L155 132" stroke="#5C371A" stroke-width="7" stroke-linecap="round"/>
+    <path d="M101 145C117 157 139 157 155 145" stroke="#F6D47D" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="128" cy="166" r="24" fill="#FFF2B8" stroke="#69451F" stroke-width="6"/>
+    <path d="M128 151V181M113 166H143" stroke="#7B5227" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

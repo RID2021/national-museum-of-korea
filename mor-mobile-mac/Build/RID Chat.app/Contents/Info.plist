@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>ko</string>
+  <key>CFBundleDisplayName</key>
+  <string>RID Chat</string>
+  <key>CFBundleExecutable</key>
+  <string>RID Chat</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.rid.chat.mobilemac</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>RID Chat</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0.10</string>
+  <key>CFBundleVersion</key>
+  <string>10</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>13.0</string>
+  <key>NSCameraUsageDescription</key>
+  <string>프로필 사진과 첨부 이미지를 선택하거나 촬영할 때 사용합니다.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>첨부 기능에서 필요한 경우에만 사용합니다.</string>
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>프로필 사진과 첨부 이미지를 선택할 때 사용합니다.</string>
+</dict>
+</plist>

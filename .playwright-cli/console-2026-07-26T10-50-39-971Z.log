@@ -1,0 +1,3 @@
+[      34ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:4199/spaces/app/file?appHashId=local-test&fileName=images%2Fmuryeong-trade-map.svg&appUpdatedAt=1:0
+[      58ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:4199/spaces/app/file?appHashId=local-test&fileName=item_acquired.mp3&appUpdatedAt=1:0
+[      62ms] [ERROR] Failed to load resource: the server responded with a status of 404 (File not found) @ http://127.0.0.1:4199/favicon.ico:0

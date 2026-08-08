@@ -53,26 +53,11 @@ module.exports = {
     },
 
     optimization: {
-        minimize: false,
+        minimize: true,
         chunkIds: "natural",
         runtimeChunk: false,
 
-        splitChunks: {
-            chunks: "all",
-            minSize: 50 * 1024,
-            maxSize: 128 * 1024,
-            automaticNameDelimiter: "-",
-            cacheGroups: {
-                default: false,
-                vendors: false,
-                local: {
-                    test: /[\\/]libs[\\/]/,
-                    chunks: "all",
-                    priority: 10,
-                    reuseExistingChunk: true,
-                },
-            },
-        },
+        splitChunks: false,
     },
 
     plugins: [

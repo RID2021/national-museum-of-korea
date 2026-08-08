@@ -1,0 +1,35 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - heading "게임을 불러오는 중입니다." [level=1] [ref=f1e6]
+      - button "닫기" [ref=f1e7] [cursor=pointer]: ×
+    - generic [ref=f1e8]:
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]: 목표
+        - generic [ref=f1e12]: "-"
+      - generic [ref=f1e14]:
+        - generic [ref=f1e15]: 현재
+        - generic [ref=f1e16]: "-"
+      - generic [ref=f1e18]:
+        - generic [ref=f1e19]: 남은 시간
+        - generic [ref=f1e20]: "-"
+    - generic [ref=f1e21]:
+      - generic [ref=f1e22]:
+        - generic [ref=f1e23]:
+          - generic [ref=f1e24]: 弓 타이밍
+          - generic [ref=f1e28]:
+            - text: 진한
+            - text: 구간
+        - text: ↑
+        - generic:
+          - generic: 사슴
+        - generic:
+          - button "활시위를 당겨 발사하기" [ref=f1e29]
+          - text: ↕
+        - generic:
+          - generic:
+            - generic: 활시위를 당겨 진한 구간에서 놓으세요.
+      - generic [ref=f1e31]:
+        - heading "준비" [level=2] [ref=f1e32]
+        - paragraph [ref=f1e33]: 시작 버튼을 누르면 게임이 시작됩니다.
+        - button "시작" [ref=f1e35] [cursor=pointer]

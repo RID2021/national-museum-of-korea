@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mission NPC Dialogue</title>
+    <style>
+      :root {
+        --dialogue-accent: #66a97b;
+        --dialogue-name: #2d6d45;
+        --dialogue-panel: #f8fbf8;
+        --dialogue-text: #4b463f;
+        --dialogue-border: #dde7df;
+        color-scheme: light;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      button,
+      [role="button"] {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        overflow: hidden;
+        background: transparent;
+        font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      }
+
+      button,
+      .stage,
+      .dialogue,
+      .dialogue__panel,
+      .dialogue__quiz,
+      .dialogue__quiz-choice,
+      .dialogue__advance,
+      .dialogue__previous,
+      .dialogue__close {
+        touch-action: manipulation;
+      }
+
+      .stage {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 12px 24px 72px;
+      }
+
+      .dialogue {
+        position: relative;
+        width: 100%;
+        max-width: 900px;
+      }
+
+      .dialogue__panel {
+        position: relative;
+        min-height: 184px;
+        padding: 22px 82px 34px 22px;
+        border-radius: 24px;
+        background: var(--dialogue-panel);
+        border: 1px solid var(--dialogue-border);
+        box-shadow:
+          0 10px 24px rgba(53, 74, 61, 0.08),
+          inset 0 1px 0 #ffffff;
+        transition: opacity 0.18s ease;
+      }
+
+      .dialogue__panel--choice-active {
+        opacity: 0.7;
+      }
+
+      .dialogue__panel::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.92);
+        pointer-events: none;
+      }
+
+      .dialogue__panel--with-image {
+        min-height: 0;
+        padding-bottom: 60px;
+      }
+
+      .dialogue__main {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .dialogue__profile {
+        position: relative;
+        width: 82px;
+        height: 82px;
+        flex: 0 0 auto;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 3px solid #6f8f75;
+        background: #ffffff;
+        box-shadow:
+          0 0 0 3px #ffffff,
+          0 0 0 6px #d2ddd4,
+          0 8px 18px rgba(61, 82, 69, 0.14);
+      }
+
+      .dialogue__profile::after {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.96);
+        pointer-events: none;
+      }
+
+      .dialogue__profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .dialogue__profile-fallback {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 50% 30%, #fff6db 0%, #f1cd73 100%);
+        color: #7b5918;
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .dialogue__content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .dialogue__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .dialogue__name {
+        color: var(--dialogue-name);
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        line-height: 1.2;
+      }
+
+      .dialogue__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 23px;
+        min-width: 40px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: #e5f3e7;
+        color: #76a184;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+
+      .dialogue__counter {
+        color: #8aa192;
+        font-size: 12px;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .dialogue__text-wrap {
+        min-height: 70px;
+        padding-right: 64px;
+      }
+
+      .dialogue__panel--with-image .dialogue__text-wrap {
+        min-height: 52px;
+      }
+
+      .dialogue__content-image-wrap {
+        margin: 2px auto 10px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 0;
+        background: transparent;
+        width: 100%;
+        max-width: 532px;
+      }
+
+      .dialogue__content-image {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .dialogue__content-image-wrap[hidden],
+      .dialogue__content-image[hidden] {
+        display: none;
+      }
+
+      .dialogue__text {
+        color: var(--dialogue-text);
+        font-size: 21px;
+        line-height: 1.54;
+        font-weight: 600;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+      }
+
+      .dialogue__text-highlight--orange {
+        color: #f08a24;
+      }
+
+      .dialogue__text:empty::after {
+        content: "\00a0";
+      }
+
+      .dialogue__text-wrap[hidden],
+      .dialogue__quiz[hidden],
+      .dialogue__quiz-feedback[hidden] {
+        display: none;
+      }
+
+      .dialogue__panel--with-quiz {
+        padding-bottom: 34px;
+      }
+
+      .dialogue__quiz {
+        position: absolute;
+        left: clamp(96px, 13%, 150px);
+        right: clamp(62px, 7%, 96px);
+        bottom: calc(100% - 118px);
+        z-index: 20;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        text-align: left;
+      }
+
+      .dialogue__quiz-label {
+        display: none;
+      }
+
+      .dialogue__quiz-question {
+        display: none;
+      }
+
+      .dialogue__quiz-choices {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+      }
+
+      .dialogue__quiz-choice {
+        position: relative;
+        width: 100%;
+        min-width: 0;
+        min-height: 76px;
+        height: auto;
+        display: flex;
+        align-items: center;
+        padding: 15px 32px 15px 46px;
+        border: 2px solid rgba(219, 211, 159, 0.86);
+        border-radius: 24px;
+        background: #fffde4;
+        color: #6b6a54;
+        font-size: 24px;
+        font-weight: 900;
+        line-height: 1.28;
+        text-align: left;
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+        cursor: pointer;
+        transition:
+          transform 0.14s ease,
+          background 0.14s ease;
+      }
+
+      .dialogue__quiz-choice::before {
+        content: "";
+        position: absolute;
+        left: -34px;
+        top: 50%;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #ffffff 0 48%, transparent 49%),
+          linear-gradient(45deg, #ffd743 0 54%, #f1ad25 55% 100%);
+        border: 3px solid #fff7c8;
+        opacity: 0;
+        transform: translateY(-50%) rotate(45deg) scale(0.82);
+        transition:
+          opacity 0.14s ease,
+          transform 0.14s ease;
+      }
+
+      .dialogue__quiz-choice:hover,
+      .dialogue__quiz-choice:focus-visible,
+      .dialogue__quiz-choice--selected {
+        background: #fff889;
+        color: #5a573b;
+        transform: translateY(-2px);
+        outline: none;
+      }
+
+      .dialogue__quiz-choice:hover::before,
+      .dialogue__quiz-choice:focus-visible::before,
+      .dialogue__quiz-choice--selected::before {
+        opacity: 1;
+        transform: translateY(-50%) rotate(45deg) scale(1);
+      }
+
+      .dialogue__quiz-choice--wrong {
+        border-color: #d66c63;
+        background: #fff0ee;
+        color: #a9433b;
+      }
+
+      .dialogue__quiz-choice--correct {
+        border-color: var(--dialogue-accent);
+        background: #edf7ef;
+        color: var(--dialogue-name);
+      }
+
+      .dialogue__quiz-choice:disabled {
+        cursor: default;
+      }
+
+      .dialogue__quiz-feedback {
+        margin-top: 10px;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.4;
+        white-space: pre-line;
+      }
+
+      .dialogue__quiz-feedback--wrong {
+        color: #b54d45;
+      }
+
+      .dialogue__quiz-feedback--correct {
+        color: var(--dialogue-name);
+      }
+
+      .dialogue__close {
+        position: absolute;
+        right: 14px;
+        top: 14px;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #c7d4c9;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #ffffff 0%, #edf4ef 100%);
+        color: #7c9183;
+        font-size: 19px;
+        font-weight: 800;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow:
+          0 5px 12px rgba(66, 87, 74, 0.12),
+          inset 0 1px 0 #ffffff,
+          inset 0 -1px 0 rgba(177, 196, 181, 0.5);
+        transition:
+          transform 0.14s ease,
+          filter 0.14s ease;
+      }
+
+      .dialogue__close:hover {
+        filter: brightness(0.98);
+        transform: translateY(-1px);
+      }
+
+      .dialogue__close:active {
+        transform: translateY(1px);
+      }
+
+      .dialogue__advance {
+        position: absolute;
+        right: 18px;
+        bottom: 16px;
+        width: 54px;
+        height: 40px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0;
+        background: linear-gradient(180deg, #7ab98b 0%, var(--dialogue-accent) 100%);
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(93, 154, 112, 0.24);
+        transition:
+          transform 0.16s ease,
+          filter 0.16s ease;
+      }
+
+      .dialogue__previous {
+        position: absolute;
+        left: 18px;
+        bottom: 16px;
+        width: 54px;
+        height: 40px;
+        border: 1px solid #c7d4c9;
+        border-radius: 999px;
+        padding: 0;
+        background: linear-gradient(180deg, #ffffff 0%, #edf4ef 100%);
+        cursor: pointer;
+        box-shadow: 0 7px 16px rgba(66, 87, 74, 0.12);
+        transition:
+          transform 0.16s ease,
+          filter 0.16s ease,
+          opacity 0.16s ease;
+      }
+
+      .dialogue__previous::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0;
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: 11px solid #7c9183;
+        transform: translate(-65%, -50%);
+      }
+
+      .dialogue__previous:hover:not(:disabled) {
+        filter: brightness(0.98);
+        transform: translateY(-1px);
+      }
+
+      .dialogue__previous:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+
+      .dialogue__previous:disabled {
+        opacity: 0.34;
+        cursor: default;
+      }
+
+      .dialogue__auto-control {
+        position: absolute;
+        left: 50%;
+        bottom: 17px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: #72877a;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1;
+        cursor: pointer;
+        user-select: none;
+        transform: translateX(-50%);
+      }
+
+      .dialogue__auto-control[hidden] {
+        display: none;
+      }
+
+      .dialogue__auto-checkbox {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        accent-color: var(--dialogue-accent);
+        cursor: pointer;
+      }
+
+      .dialogue__advance::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0;
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-left: 11px solid #ffffff;
+        transform: translate(-35%, -50%);
+      }
+
+      .dialogue__advance:hover {
+        filter: brightness(1.04);
+      }
+
+      .dialogue__advance:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+        animation: none;
+      }
+
+      .dialogue__advance--typing {
+        filter: saturate(0.82) brightness(1.02);
+      }
+
+      .dialogue__advance--ready {
+        animation: dialogue-bounce 0.9s ease-in-out infinite;
+      }
+
+      @keyframes dialogue-bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+
+        50% {
+          transform: translateY(2px);
+        }
+      }
+
+      .dialogue__profile[hidden],
+      .dialogue__profile-image[hidden],
+      .dialogue__profile-fallback[hidden],
+      .dialogue__name[hidden],
+      .dialogue__badge[hidden] {
+        display: none;
+      }
+
+      .dialogue__panel--speakerless {
+        min-height: 170px;
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .dialogue__panel--speakerless .dialogue__main {
+        position: absolute;
+        inset: 0 22px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .dialogue__panel--speakerless.dialogue__panel--with-image .dialogue__main {
+        bottom: 44px;
+      }
+
+      .dialogue__panel--speakerless.dialogue__panel--with-quiz .dialogue__main {
+        bottom: 60px;
+      }
+
+      .dialogue__panel--speakerless .dialogue__content {
+        width: 100%;
+        flex: 0 1 auto;
+      }
+
+      .dialogue__panel--speakerless .dialogue__header {
+        min-height: 0;
+        margin-bottom: 12px;
+        padding: 0;
+        justify-content: center;
+      }
+
+      .dialogue__panel--speakerless .dialogue__text-wrap {
+        min-height: 0;
+        padding: 0;
+      }
+
+      .dialogue__panel--speakerless .dialogue__text {
+        text-align: center !important;
+      }
+
+      .dialogue__panel--speakerless.dialogue__panel--with-quiz {
+        min-height: 240px;
+      }
+
+      .dialogue__panel--speakerless.dialogue__panel--with-quiz.dialogue__panel--quiz-feedback {
+        min-height: 320px;
+      }
+
+      .dialogue__panel--speakerless.dialogue__panel--with-image {
+        min-height: 390px;
+      }
+
+      .dialogue__panel--speakerless-medium {
+        min-height: 210px;
+      }
+
+      .dialogue__panel--speakerless-long {
+        min-height: 270px;
+      }
+
+      .dialogue__media {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: transparent;
+      }
+
+      .dialogue__media[hidden] {
+        display: none;
+      }
+
+      .dialogue__media-card {
+        position: relative;
+        width: min(860px, 94vw);
+        border-radius: 18px;
+        background: #fffcef;
+        border: 2px solid rgba(213, 194, 146, 0.9);
+        box-shadow: 0 18px 44px rgba(15, 18, 15, 0.28);
+        overflow: hidden;
+      }
+
+      .dialogue__media-title {
+        padding: 14px 58px 12px 18px;
+        color: #294435;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1.25;
+        text-align: center;
+      }
+
+      .dialogue__media-video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #fffcef;
+        object-fit: cover;
+        pointer-events: none;
+      }
+
+      .dialogue__media-close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 999px;
+        background: #315843;
+        color: #fffcef;
+        font-size: 26px;
+        font-weight: 900;
+        line-height: 1;
+        cursor: pointer;
+        display: none;
+      }
+
+      @media (max-width: 640px) {
+        .stage {
+          align-items: center;
+          justify-content: center;
+          padding: 8px 6px;
+        }
+
+        .dialogue {
+          max-width: 100%;
+          margin: 0 auto;
+        }
+
+        .dialogue__panel {
+          min-height: 206px;
+          padding: 16px 46px 48px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dialogue__panel--with-image {
+          min-height: 0;
+          padding-bottom: 48px;
+        }
+
+        .dialogue__panel--with-quiz {
+          min-height: 206px;
+          padding: 16px 46px 48px;
+        }
+
+        .dialogue__quiz {
+          inset: 0;
+          z-index: 24;
+          display: block;
+          padding: 0 8px;
+          margin: 0;
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+          text-align: center;
+        }
+
+        .dialogue__quiz:not([hidden]) {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        .dialogue__panel--choice-active {
+          opacity: 0;
+          visibility: hidden;
+        }
+
+        .dialogue__quiz-choices {
+          gap: 8px;
+        }
+
+        .dialogue__quiz-choice {
+          min-height: 54px;
+          padding: 10px 16px 10px 30px;
+          border-radius: 16px;
+          font-size: 16px;
+          line-height: 1.25;
+        }
+
+        .dialogue__quiz-choice::before {
+          left: -24px;
+          width: 32px;
+          height: 32px;
+          border-radius: 9px;
+        }
+
+        .dialogue__main {
+          gap: 10px;
+        }
+
+        .dialogue__main {
+          display: block;
+          width: 100%;
+        }
+
+        .dialogue__profile {
+          position: absolute;
+          left: 14px;
+          top: 14px;
+        }
+
+        .dialogue__profile {
+          width: 50px;
+          height: 50px;
+        }
+
+        .dialogue__name {
+          font-size: 18px;
+        }
+
+        .dialogue__header {
+          width: 100%;
+          justify-content: center;
+          text-align: center;
+          padding: 0 42px;
+        }
+
+        .dialogue__header {
+          min-height: 50px;
+        }
+
+        .dialogue__content {
+          width: 100%;
+          min-height: 126px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+
+        .dialogue__panel--speakerless .dialogue__header {
+          min-height: 0;
+          margin-bottom: 8px;
+          padding: 0;
+        }
+
+        .dialogue__panel--speakerless {
+          min-height: 176px;
+        }
+
+        .dialogue__panel--speakerless .dialogue__main {
+          inset: 0 14px 34px;
+        }
+
+        .dialogue__panel--speakerless.dialogue__panel--with-image .dialogue__main {
+          bottom: 42px;
+        }
+
+        .dialogue__panel--speakerless.dialogue__panel--with-quiz .dialogue__main {
+          bottom: 48px;
+        }
+
+        .dialogue__panel--speakerless.dialogue__panel--with-quiz {
+          min-height: 250px;
+        }
+
+        .dialogue__panel--speakerless.dialogue__panel--with-quiz.dialogue__panel--quiz-feedback {
+          min-height: 380px;
+        }
+
+        .dialogue__panel--speakerless.dialogue__panel--with-image {
+          min-height: 272px;
+        }
+
+        .dialogue__panel--speakerless-medium {
+          min-height: 190px;
+        }
+
+        .dialogue__panel--speakerless-long {
+          min-height: 300px;
+        }
+
+        .dialogue__media {
+          padding: 10px;
+        }
+
+        .dialogue__media-card {
+          width: 96vw;
+          border-radius: 14px;
+        }
+
+        .dialogue__media-title {
+          padding: 10px 48px 9px 14px;
+          font-size: 16px;
+        }
+
+        .dialogue__badge {
+          height: 20px;
+          min-width: 34px;
+          padding: 0 7px;
+          font-size: 10px;
+        }
+
+        .dialogue__text-wrap {
+          flex: 1;
+          min-height: 54px;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+
+        .dialogue__panel--speakerless .dialogue__text-wrap {
+          padding: 0;
+        }
+
+        .dialogue__panel--with-image .dialogue__text-wrap {
+          min-height: 54px;
+        }
+
+        .dialogue__content-image-wrap {
+          margin: 2px auto 10px;
+          border-radius: 10px;
+          width: 100%;
+          max-width: 68%;
+        }
+
+        .dialogue__content-image {
+          height: 100%;
+        }
+
+        .dialogue__text {
+          width: 100%;
+          font-size: 15px;
+          line-height: 1.5;
+          text-align: center !important;
+          text-wrap: pretty;
+        }
+
+        .dialogue__quiz {
+          margin-top: 0;
+        }
+
+        .dialogue__quiz-question {
+          margin-top: 8px;
+          font-size: 15px;
+          line-height: 1.45;
+          text-wrap: balance;
+        }
+
+        .dialogue__quiz-choices {
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .dialogue__quiz-choice {
+          width: 92px;
+          height: 38px;
+          font-size: 17px;
+        }
+
+        .dialogue__quiz-feedback {
+          margin-top: 8px;
+          font-size: 12px;
+        }
+
+        .dialogue__panel--with-quiz {
+          min-height: 206px;
+          padding-top: 16px;
+        }
+
+        .dialogue__quiz {
+          inset: 0;
+          margin-top: 0;
+        }
+
+        .dialogue__quiz-choices {
+          gap: 7px;
+          margin-top: 0;
+        }
+
+        .dialogue__quiz-choice {
+          width: 100%;
+          min-height: 48px;
+          height: auto;
+          justify-content: flex-start;
+          padding: 9px 14px 9px 34px;
+          font-size: 16px;
+          line-height: 1.3;
+          text-align: left;
+          white-space: normal;
+        }
+
+        .dialogue__quiz-choice::before {
+          left: -12px;
+          width: 24px;
+          height: 24px;
+          border-width: 2px;
+          border-radius: 7px;
+        }
+
+        .dialogue__close {
+          right: 10px;
+          top: 10px;
+          width: 28px;
+          height: 28px;
+          font-size: 16px;
+        }
+
+        .dialogue__advance {
+          right: 12px;
+          bottom: 12px;
+          width: 42px;
+          height: 30px;
+        }
+
+        .dialogue__previous {
+          left: 12px;
+          bottom: 12px;
+          width: 42px;
+          height: 30px;
+        }
+
+        .dialogue__previous::before {
+          border-top-width: 6px;
+          border-bottom-width: 6px;
+          border-right-width: 8px;
+        }
+
+        .dialogue__auto-control {
+          bottom: 13px;
+          gap: 5px;
+          font-size: 11px;
+        }
+
+        .dialogue__auto-checkbox {
+          width: 15px;
+          height: 15px;
+        }
+
+        .dialogue__advance::before {
+          border-top-width: 6px;
+          border-bottom-width: 6px;
+          border-left-width: 8px;
+        }
+      }
+
+      @media (max-width: 420px), (max-height: 520px) {
+        .stage {
+          align-items: center;
+          justify-content: center;
+          padding: 8px 6px;
+        }
+
+        .dialogue {
+          max-width: calc(100vw - 12px);
+        }
+
+        .dialogue__panel {
+          min-height: 206px;
+          padding: 14px 44px 46px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .dialogue__panel::before {
+          inset: 6px;
+          border-radius: 12px;
+        }
+
+        .dialogue__main {
+          display: block;
+        }
+
+        .dialogue__profile {
+          left: 12px;
+          top: 12px;
+          width: 58px;
+          height: 58px;
+        }
+
+        .dialogue__header {
+          min-height: 58px;
+          justify-content: center;
+          text-align: center;
+          padding: 0 38px;
+        }
+
+        .dialogue__content {
+          width: 100%;
+          min-height: 134px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+        }
+
+        .dialogue__name {
+          font-size: 18px;
+          line-height: 1.14;
+        }
+
+        .dialogue__badge {
+          height: 18px;
+          min-width: 30px;
+          font-size: 9px;
+        }
+
+        .dialogue__counter {
+          font-size: 11px;
+        }
+
+        .dialogue__text {
+          font-size: 14px;
+          line-height: 1.45;
+          text-align: center !important;
+        }
+
+        .dialogue__text-wrap {
+          min-height: 66px;
+          width: 100%;
+          padding: 0;
+        }
+
+        .dialogue__panel--speakerless .dialogue__text-wrap {
+          padding: 0;
+        }
+
+        .dialogue__panel--speakerless {
+          min-height: 150px;
+        }
+
+        .dialogue__panel--with-quiz {
+          min-height: 206px;
+          padding-top: 14px;
+        }
+
+        .dialogue__quiz {
+          inset: 0;
+          padding: 0 8px;
+          margin-top: 0;
+        }
+
+        .dialogue__quiz-question {
+          margin-top: 6px;
+          font-size: 13px;
+          line-height: 1.35;
+        }
+
+        .dialogue__quiz-choices {
+          gap: 6px;
+          margin-top: 0;
+        }
+
+        .dialogue__quiz-choice {
+          width: 100%;
+          min-height: 42px;
+          height: auto;
+          justify-content: flex-start;
+          padding: 8px 10px 8px 30px;
+          border-radius: 12px;
+          font-size: 14px;
+          line-height: 1.28;
+          text-align: left;
+          white-space: normal;
+        }
+
+        .dialogue__quiz-choice::before {
+          left: -10px;
+          width: 22px;
+          height: 22px;
+          border-width: 2px;
+          border-radius: 7px;
+        }
+
+        .dialogue__close {
+          right: 9px;
+          top: 9px;
+          width: 28px;
+          height: 28px;
+          font-size: 16px;
+        }
+
+        .dialogue__advance,
+        .dialogue__previous {
+          bottom: 10px;
+          width: 38px;
+          height: 28px;
+        }
+
+        .dialogue__advance {
+          right: 10px;
+        }
+
+        .dialogue__previous {
+          left: 10px;
+        }
+
+        .dialogue__auto-control {
+          bottom: 11px;
+          gap: 4px;
+          font-size: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <section class="dialogue" data-dialogue>
+        <article class="dialogue__panel">
+          <button type="button" class="dialogue__close" data-close aria-label="닫기">
+            ×
+          </button>
+          <div class="dialogue__main">
+            <div class="dialogue__profile" data-profile>
+              <img class="dialogue__profile-image" data-profile-image alt="" hidden />
+              <div class="dialogue__profile-fallback" data-profile-fallback>NP</div>
+            </div>
+            <div class="dialogue__content">
+              <div class="dialogue__header">
+                <div class="dialogue__name" data-speaker>NPC</div>
+                <div class="dialogue__badge">NPC</div>
+                <div class="dialogue__counter" data-counter>1/1</div>
+              </div>
+              <div class="dialogue__content-image-wrap" data-content-image-wrap hidden>
+                <img class="dialogue__content-image" data-content-image alt="" hidden />
+              </div>
+              <div class="dialogue__text-wrap">
+                <div class="dialogue__text" data-text>대사를 불러오는 중입니다.</div>
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="dialogue__advance dialogue__advance--typing"
+            data-advance
+            aria-label="다음 대화"
+          ></button>
+          <button
+            type="button"
+            class="dialogue__previous"
+            data-previous
+            aria-label="이전 대화"
+            disabled
+          ></button>
+          <label class="dialogue__auto-control" data-auto-control>
+            <input
+              type="checkbox"
+              class="dialogue__auto-checkbox"
+              data-auto-checkbox
+            />
+            <span>자동 대화</span>
+          </label>
+        </article>
+        <div class="dialogue__quiz" data-quiz hidden>
+          <div class="dialogue__quiz-label" data-quiz-label>선택</div>
+          <div class="dialogue__quiz-question" data-quiz-question></div>
+          <div class="dialogue__quiz-choices" data-quiz-choices></div>
+          <div class="dialogue__quiz-feedback" data-quiz-feedback hidden></div>
+        </div>
+      </section>
+    </div>
+    <aside class="dialogue__media" data-media hidden>
+      <div class="dialogue__media-card">
+        <button
+          type="button"
+          class="dialogue__media-close"
+          data-media-close
+          aria-label="연출 닫기"
+        >
+          ×
+        </button>
+        <div class="dialogue__media-title" data-media-title>청동거울 완성</div>
+        <video
+          class="dialogue__media-video"
+          data-media-video
+          autoplay
+          playsinline
+          muted
+          preload="auto"
+          disablepictureinpicture
+          controlslist="nodownload noplaybackrate noremoteplayback nofullscreen"
+        ></video>
+      </div>
+    </aside>
+
+    <script>
+      (function () {
+        const TYPING_INTERVAL_MS = 28;
+        const AUTO_ADVANCE_DELAY_MS = 2000;
+        const CHOICE_REVEAL_DELAY_MS = 2000;
+        const INLINE_MARKUP_PATTERN = /\[\[([a-z]+):([\s\S]*?)\]\]/gi;
+        const INLINE_TEXT_CLASS_BY_MARKER = {
+          orange: "dialogue__text-highlight--orange",
+        };
+
+        const panelElement = document.querySelector(".dialogue__panel");
+        const speakerElement = document.querySelector("[data-speaker]");
+        const speakerBadgeElement = document.querySelector(".dialogue__badge");
+        const counterElement = document.querySelector("[data-counter]");
+        const textWrapElement = document.querySelector(".dialogue__text-wrap");
+        const textElement = document.querySelector("[data-text]");
+        const profileElement = document.querySelector("[data-profile]");
+        const profileImageElement = document.querySelector("[data-profile-image]");
+        const profileFallbackElement = document.querySelector("[data-profile-fallback]");
+        const contentImageWrapElement = document.querySelector("[data-content-image-wrap]");
+        const contentImageElement = document.querySelector("[data-content-image]");
+        const advanceButton = document.querySelector("[data-advance]");
+        const previousButton = document.querySelector("[data-previous]");
+        const closeButton = document.querySelector("[data-close]");
+        const autoControlElement = document.querySelector("[data-auto-control]");
+        const autoCheckboxElement = document.querySelector("[data-auto-checkbox]");
+        const quizElement = document.querySelector("[data-quiz]");
+        const quizLabelElement = document.querySelector("[data-quiz-label]");
+        const quizQuestionElement = document.querySelector("[data-quiz-question]");
+        const quizChoicesElement = document.querySelector("[data-quiz-choices]");
+        const quizFeedbackElement = document.querySelector("[data-quiz-feedback]");
+        const mediaElement = document.querySelector("[data-media]");
+        const mediaTitleElement = document.querySelector("[data-media-title]");
+        const mediaVideoElement = document.querySelector("[data-media-video]");
+        const mediaCloseButton = document.querySelector("[data-media-close]");
+        const embeddedMediaUrls = {};
+
+        let typingTimer = null;
+        let autoAdvanceTimer = null;
+        let choiceRevealTimer = null;
+        let isTyping = false;
+        let currentTokens = [];
+        let stopsAutoAdvance = false;
+        let activeQuiz = null;
+        let activeQuizLineIndex = 0;
+        let currentMissionPayload = null;
+        let currentMissionLines = ["대사를 불러오는 중입니다."];
+        let currentMissionChoices = [];
+        let currentMissionSpeakerLines = [];
+        let currentMissionSpeakerlessLineTexts = [];
+        let currentMissionMediaOverlay = null;
+        let currentMissionLineIndex = 0;
+        let repeatMissionPayloadAfterChoice = null;
+        let activeMediaLineIndex = 0;
+        const playedMediaKeys = {};
+        const quizStateByLine = {};
+        const PRESS_EVENT_OPTIONS = { passive: false };
+
+        function bindPress(element, handler) {
+          if (!element) {
+            return;
+          }
+
+          let lastTouchPressAt = 0;
+
+          element.addEventListener(
+            "touchend",
+            function (event) {
+              if (event?.cancelable !== false) {
+                event?.preventDefault?.();
+              }
+
+              event?.stopPropagation?.();
+              lastTouchPressAt = Date.now();
+              handler(event);
+            },
+            PRESS_EVENT_OPTIONS
+          );
+
+          element.addEventListener("click", function (event) {
+            if (Date.now() - lastTouchPressAt < 650) {
+              event?.preventDefault?.();
+              event?.stopPropagation?.();
+              return;
+            }
+
+            event?.stopPropagation?.();
+            handler(event);
+          });
+        }
+
+        function sanitizeText(value, fallback) {
+          return typeof value === "string" && value.trim()
+            ? value.trim()
+            : fallback;
+        }
+
+        function normalizeLines(lines) {
+          if (!Array.isArray(lines) || lines.length === 0) {
+            return ["대사를 불러오는 중입니다."];
+          }
+
+          const normalizedLines = lines
+            .map(function (line) {
+              return typeof line === "string" && line.trim()
+                ? line.trim()
+                : "";
+            })
+            .filter(Boolean);
+
+          return normalizedLines.length
+            ? normalizedLines
+            : ["대사를 불러오는 중입니다."];
+        }
+
+        function normalizeSpeakerLines(lines) {
+          if (!Array.isArray(lines) || lines.length === 0) {
+            return [];
+          }
+
+          return lines
+            .map(function (line) {
+              const text = sanitizeText(line?.text, "");
+              if (!text) {
+                return null;
+              }
+
+              return {
+                profileImageUrl: sanitizeText(line?.profileImageUrl, ""),
+                speakerName: sanitizeText(line?.speakerName, ""),
+                speakerless: line?.speakerless === true,
+                text,
+              };
+            })
+            .filter(Boolean);
+        }
+
+        function normalizeChoices(choices) {
+          if (!Array.isArray(choices) || choices.length === 0) {
+            return [];
+          }
+
+          return choices
+            .map(function (choice, choiceIndex) {
+              const label = sanitizeText(choice?.label, "");
+              const id = sanitizeText(choice?.id, `choice-${choiceIndex + 1}`);
+              const lines = normalizeLines(choice?.lines).filter(function (line) {
+                return line !== "대사를 불러오는 중입니다.";
+              });
+              const speakerlessLineTexts = normalizeTextList(
+                choice?.speakerlessLineTexts
+              );
+              const missionId = sanitizeText(choice?.missionId, "");
+              const stepId = sanitizeText(choice?.stepId, "");
+              const repeatOnComplete = choice?.repeatOnComplete === true;
+
+              return label
+                ? {
+                    id,
+                    label,
+                    lines,
+                    speakerlessLineTexts,
+                    missionId,
+                    stepId,
+                    repeatOnComplete,
+                  }
+                : null;
+            })
+            .filter(Boolean);
+        }
+
+        function normalizeTextList(values) {
+          if (!Array.isArray(values) || values.length === 0) {
+            return [];
+          }
+
+          return values
+            .map(function (value) {
+              return typeof value === "string" && value.trim()
+                ? value.trim()
+                : "";
+            })
+            .filter(Boolean);
+        }
+
+        function mergeSpeakerlessLineTexts(values) {
+          normalizeTextList(values).forEach(function (lineText) {
+            if (currentMissionSpeakerlessLineTexts.indexOf(lineText) === -1) {
+              currentMissionSpeakerlessLineTexts.push(lineText);
+            }
+          });
+        }
+
+        function getFallbackMissionChoices(payload) {
+          const npcId = sanitizeText(payload?.npcId, "");
+          const sceneId = sanitizeText(payload?.sceneId, "");
+
+          if (npcId !== "time-grandfather" || sceneId !== "intro") {
+            return [];
+          }
+
+          return [
+            {
+              id: "what-is-tomb",
+              label: "고분이 뭐예요?",
+              lines: [
+                "고분은 옛날 사람들이 만든 아주 큰 무덤이야.",
+                "죽어서도 살던 대로 지내길 바라며 지었단다.",
+                "자, 이 '사후 세계 가방'을 네게 주마. 허허.",
+                "무덤마다 함께 묻고 싶은 물건을 하나씩 담으렴.",
+                "그리고 곰곰이 생각해 보렴. 왜 그 물건일까?",
+                "자, 첫 번째 문이 열렸다. 잘 다녀오너라, 허허.",
+                "열린문을 찾아 이동해주세요.",
+              ],
+              speakerlessLineTexts: ["열린문을 찾아 이동해주세요."],
+            },
+            {
+              id: "start-now",
+              label: "바로 출발할게요!",
+              lines: [
+                "무덤 속 그림과 물건에 옛이야기가 숨어 있지.",
+                "자, 이 '사후 세계 가방'을 네게 주마. 허허.",
+                "무덤마다 함께 묻고 싶은 물건을 하나씩 담으렴.",
+                "그리고 곰곰이 생각해 보렴. 왜 그 물건일까?",
+                "자, 첫 번째 문이 열렸다. 잘 다녀오너라, 허허.",
+                "열린문을 찾아 이동해주세요.",
+              ],
+              speakerlessLineTexts: ["열린문을 찾아 이동해주세요."],
+            },
+          ];
+        }
+
+        function removeFallbackClosingLine(lines, choices) {
+          if (!choices.length || !Array.isArray(lines) || lines.length === 0) {
+            return lines;
+          }
+
+          const closingLine = "무덤 속 그림과 물건에 옛이야기가 숨어 있지.";
+          const lastLine = lines[lines.length - 1];
+
+          if (lastLine === closingLine) {
+            return lines.slice(0, -1);
+          }
+
+          return lines;
+        }
+
+        function isMissionChoicePoint() {
+          return (
+            currentMissionChoices.length > 0 &&
+            currentMissionLineIndex >= currentMissionLines.length - 1
+          );
+        }
+
+        function normalizeOpaqueColor(value, fallback) {
+          const normalized = sanitizeText(value, fallback);
+          const rgbaMatch = normalized.match(/^rgba\((.+)\)$/i);
+
+          if (!rgbaMatch) {
+            return normalized;
+          }
+
+          const channels = rgbaMatch[1]
+            .split(",")
+            .slice(0, 3)
+            .map(function (channel) {
+              return channel.trim();
+            });
+
+          if (channels.length !== 3) {
+            return fallback;
+          }
+
+          return `rgb(${channels.join(", ")})`;
+        }
+
+        function clearTypingTimer() {
+          if (typingTimer !== null) {
+            window.clearInterval(typingTimer);
+            typingTimer = null;
+          }
+        }
+
+        function clearAutoAdvanceTimer() {
+          if (autoAdvanceTimer !== null) {
+            window.clearTimeout(autoAdvanceTimer);
+            autoAdvanceTimer = null;
+          }
+        }
+
+        function clearChoiceRevealTimer() {
+          if (choiceRevealTimer !== null) {
+            window.clearTimeout(choiceRevealTimer);
+            choiceRevealTimer = null;
+          }
+        }
+
+        function scheduleAutoAdvance() {
+          clearAutoAdvanceTimer();
+
+          if (
+            isTyping ||
+            !autoCheckboxElement.checked ||
+            stopsAutoAdvance ||
+            isMissionChoicePoint()
+          ) {
+            return;
+          }
+
+          autoAdvanceTimer = window.setTimeout(function () {
+            autoAdvanceTimer = null;
+            handleAdvanceAction();
+          }, AUTO_ADVANCE_DELAY_MS);
+        }
+
+        function scheduleFinalLineAutoComplete() {
+          clearAutoAdvanceTimer();
+
+          const delayMs = Number(currentMissionPayload?.autoCompleteFinalLineDelayMs);
+          if (
+            isTyping ||
+            !Number.isFinite(delayMs) ||
+            delayMs <= 0 ||
+            isMissionChoicePoint() ||
+            currentMissionLineIndex < currentMissionLines.length - 1
+          ) {
+            return false;
+          }
+
+          autoAdvanceTimer = window.setTimeout(function () {
+            autoAdvanceTimer = null;
+            handleAdvanceAction();
+          }, delayMs);
+          return true;
+        }
+
+        function appendTextTokens(tokens, value, className) {
+          Array.from(String(value || "")).forEach(function (character) {
+            if (character === "\n") {
+              tokens.push({ type: "break" });
+              return;
+            }
+
+            tokens.push({
+              type: "text",
+              value: character,
+              className: className || "",
+            });
+          });
+        }
+
+        function tokenizeText(value) {
+          const source = String(value || "");
+          const tokens = [];
+          let cursor = 0;
+          let match;
+
+          INLINE_MARKUP_PATTERN.lastIndex = 0;
+          match = INLINE_MARKUP_PATTERN.exec(source);
+
+          while (match) {
+            appendTextTokens(tokens, source.slice(cursor, match.index), "");
+
+            const marker = String(match[1] || "").toLowerCase();
+            const className = INLINE_TEXT_CLASS_BY_MARKER[marker];
+
+            if (!className) {
+              appendTextTokens(tokens, match[0], "");
+            } else {
+              appendTextTokens(tokens, match[2], className);
+            }
+
+            cursor = match.index + match[0].length;
+            match = INLINE_MARKUP_PATTERN.exec(source);
+          }
+
+          appendTextTokens(tokens, source.slice(cursor), "");
+          return tokens;
+        }
+
+        function appendBufferedText(fragment, text, className) {
+          if (!text) {
+            return;
+          }
+
+          if (!className) {
+            fragment.appendChild(document.createTextNode(text));
+            return;
+          }
+
+          const span = document.createElement("span");
+          span.className = className;
+          span.textContent = text;
+          fragment.appendChild(span);
+        }
+
+        function renderTokens(tokens, visibleCount) {
+          const fragment = document.createDocumentFragment();
+          let bufferedText = "";
+          let bufferedClassName = "";
+
+          function flushBuffer() {
+            appendBufferedText(fragment, bufferedText, bufferedClassName);
+            bufferedText = "";
+            bufferedClassName = "";
+          }
+
+          for (let index = 0; index < visibleCount; index += 1) {
+            const token = tokens[index];
+
+            if (!token) {
+              continue;
+            }
+
+            if (token.type === "break") {
+              flushBuffer();
+              fragment.appendChild(document.createElement("br"));
+              continue;
+            }
+
+            const className = token.className || "";
+
+            if (bufferedText && className !== bufferedClassName) {
+              flushBuffer();
+            }
+
+            bufferedClassName = className;
+            bufferedText += token.value;
+          }
+
+          flushBuffer();
+          textElement.replaceChildren(fragment);
+        }
+
+        function setAdvanceReady(isReady) {
+          advanceButton.classList.toggle("dialogue__advance--typing", !isReady);
+          advanceButton.classList.toggle("dialogue__advance--ready", isReady);
+        }
+
+        function hideMissionChoices() {
+          clearChoiceRevealTimer();
+          quizElement.hidden = true;
+          quizChoicesElement.replaceChildren();
+          quizQuestionElement.textContent = "";
+          quizFeedbackElement.hidden = true;
+          quizFeedbackElement.textContent = "";
+          panelElement.classList.remove("dialogue__panel--choice-active");
+          panelElement.classList.remove("dialogue__panel--with-quiz");
+          panelElement.classList.remove("dialogue__panel--quiz-feedback");
+          advanceButton.disabled = false;
+        }
+
+        function navigateCurrentBrowser(url, delayMs) {
+          const targetUrl = sanitizeText(url, "");
+          if (!targetUrl) {
+            return;
+          }
+
+          function performNavigation() {
+            try {
+              const anchor = document.createElement("a");
+              anchor.href = targetUrl;
+              anchor.target = "_top";
+              anchor.rel = "noopener";
+              anchor.style.display = "none";
+              document.body.appendChild(anchor);
+              anchor.click();
+              anchor.remove();
+              return;
+            } catch (_error) {
+              // Fall through to window-level navigation.
+            }
+
+            try {
+              window.open(targetUrl, "_top");
+              return;
+            } catch (_error) {
+              // Fall through to direct top-frame navigation.
+            }
+
+            try {
+              window.top.location.href = targetUrl;
+            } catch (_error) {
+              window.location.href = targetUrl;
+            }
+          }
+
+          const safeDelayMs = Number.isFinite(delayMs) ? Math.max(delayMs, 0) : 0;
+          if (safeDelayMs <= 0) {
+            performNavigation();
+            return;
+          }
+
+          window.setTimeout(performNavigation, safeDelayMs);
+        }
+
+        function closeMediaOverlay(shouldAutoAdvance) {
+          if (!mediaElement || !mediaVideoElement) {
+            return;
+          }
+
+          mediaVideoElement.pause();
+          mediaVideoElement.removeAttribute("src");
+          mediaVideoElement.load();
+          mediaElement.hidden = true;
+
+          if (
+            shouldAutoAdvance &&
+            currentMissionMediaOverlay?.autoAdvanceOnEnd === true &&
+            currentMissionLineIndex === activeMediaLineIndex
+          ) {
+            window.setTimeout(function () {
+              if (!isTyping && currentMissionLineIndex === activeMediaLineIndex) {
+                handleAdvanceAction();
+              }
+            }, 350);
+          }
+        }
+
+        function maybeOpenMediaOverlay(lineIndex) {
+          if (!mediaElement || !mediaVideoElement || !currentMissionMediaOverlay) {
+            return;
+          }
+
+          const targetLineIndex = Number(currentMissionMediaOverlay.lineIndex);
+          if (!Number.isFinite(targetLineIndex) || targetLineIndex !== lineIndex) {
+            return;
+          }
+
+          const videoUrl = sanitizeText(currentMissionMediaOverlay.videoUrl, "");
+          if (!videoUrl) {
+            return;
+          }
+          const embeddedVideoUrl = embeddedMediaUrls[videoUrl] || "";
+          const resolvedVideoUrl = embeddedVideoUrl.indexOf("data:video/") === 0
+            ? embeddedVideoUrl
+            : videoUrl;
+
+          const mediaKey = `${sanitizeText(currentMissionPayload?.sceneId, "")}:${lineIndex}:${videoUrl}`;
+          if (playedMediaKeys[mediaKey]) {
+            return;
+          }
+
+          playedMediaKeys[mediaKey] = true;
+          activeMediaLineIndex = currentMissionLineIndex;
+          mediaTitleElement.textContent = sanitizeText(
+            currentMissionMediaOverlay.title,
+            "연출"
+          );
+          mediaVideoElement.pause();
+          mediaVideoElement.removeAttribute("controls");
+          mediaVideoElement.controls = false;
+          mediaVideoElement.autoplay = true;
+          mediaVideoElement.muted = true;
+          mediaVideoElement.defaultMuted = true;
+          mediaVideoElement.loop = false;
+          mediaVideoElement.playsInline = true;
+          mediaVideoElement.src = resolvedVideoUrl;
+          mediaElement.hidden = false;
+
+          let playbackStarted = false;
+          let playbackAttempts = 0;
+          const startPlayback = function () {
+            if (playbackStarted || mediaElement.hidden) {
+              return;
+            }
+
+            playbackAttempts += 1;
+            const playResult = mediaVideoElement.play?.();
+            if (playResult && typeof playResult.catch === "function") {
+              playResult
+                .then(function () {
+                  playbackStarted = true;
+                })
+                .catch(function () {
+                  if (playbackAttempts < 10 && !mediaElement.hidden) {
+                    window.setTimeout(startPlayback, 350);
+                  }
+                });
+            }
+          };
+
+          mediaVideoElement.addEventListener("loadeddata", startPlayback, {
+            once: true,
+          });
+          mediaVideoElement.addEventListener("canplay", startPlayback, {
+            once: true,
+          });
+          mediaVideoElement.load();
+          window.setTimeout(startPlayback, 350);
+        }
+
+        function renderMissionChoices() {
+          if (!isMissionChoicePoint()) {
+            hideMissionChoices();
+            return;
+          }
+
+          quizLabelElement.textContent = "선택";
+          quizQuestionElement.textContent = "어떻게 할까요?";
+          quizFeedbackElement.hidden = true;
+          quizFeedbackElement.textContent = "";
+          quizChoicesElement.replaceChildren();
+
+          currentMissionChoices.forEach(function (choice, choiceIndex) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "dialogue__quiz-choice";
+            button.textContent = `${choiceIndex + 1}. ${choice.label}`;
+            bindPress(button, function () {
+              clearAutoAdvanceTimer();
+              clearChoiceRevealTimer();
+              button.classList.add("dialogue__quiz-choice--selected");
+              window.parent?.postMessage(
+                { type: "mission-npc:choice", choiceId: choice.id },
+                "*"
+              );
+              repeatMissionPayloadAfterChoice = choice.repeatOnComplete
+                ? currentMissionPayload
+                : null;
+              mergeSpeakerlessLineTexts(choice.speakerlessLineTexts);
+              if (choice.lines.length > 0) {
+                currentMissionLines = currentMissionLines.concat(choice.lines);
+                currentMissionLineIndex += 1;
+              } else {
+                currentMissionLineIndex = currentMissionLines.length - 1;
+              }
+              currentMissionChoices = [];
+              renderMissionLine();
+            });
+            quizChoicesElement.appendChild(button);
+          });
+
+          quizElement.hidden = false;
+          textWrapElement.hidden = false;
+          panelElement.classList.add("dialogue__panel--choice-active");
+          panelElement.classList.add("dialogue__panel--with-quiz");
+          advanceButton.disabled = true;
+        }
+
+        function scheduleMissionChoices() {
+          clearChoiceRevealTimer();
+
+          if (!isMissionChoicePoint()) {
+            return false;
+          }
+
+          advanceButton.disabled = true;
+          choiceRevealTimer = window.setTimeout(function () {
+            choiceRevealTimer = null;
+            renderMissionChoices();
+          }, CHOICE_REVEAL_DELAY_MS);
+
+          return true;
+        }
+
+        function finishTyping() {
+          clearTypingTimer();
+          renderTokens(currentTokens, currentTokens.length);
+          isTyping = false;
+          setAdvanceReady(true);
+          if (!scheduleMissionChoices()) {
+            if (!scheduleFinalLineAutoComplete()) {
+              scheduleAutoAdvance();
+            }
+          }
+        }
+
+        function startTyping(text) {
+          clearTypingTimer();
+          clearAutoAdvanceTimer();
+          currentTokens = tokenizeText(text);
+          textElement.replaceChildren();
+
+          if (!currentTokens.length) {
+            isTyping = false;
+            setAdvanceReady(true);
+            if (!scheduleMissionChoices()) {
+              scheduleAutoAdvance();
+            }
+            return;
+          }
+
+          let cursor = 0;
+          isTyping = true;
+          setAdvanceReady(false);
+
+          typingTimer = window.setInterval(function () {
+            cursor += 1;
+            renderTokens(currentTokens, cursor);
+
+            if (cursor >= currentTokens.length) {
+              finishTyping();
+            }
+          }, TYPING_INTERVAL_MS);
+        }
+
+        function handleAdvanceAction() {
+          if (mediaElement && !mediaElement.hidden) {
+            return;
+          }
+
+          if (isTyping) {
+            finishTyping();
+            return;
+          }
+
+          if (isMissionChoicePoint()) {
+            return;
+          }
+
+          clearAutoAdvanceTimer();
+          if (currentMissionLineIndex >= currentMissionLines.length - 1) {
+            if (repeatMissionPayloadAfterChoice) {
+              const payloadToRepeat = repeatMissionPayloadAfterChoice;
+              repeatMissionPayloadAfterChoice = null;
+              applyMissionPayload(payloadToRepeat);
+              return;
+            }
+
+            navigateCurrentBrowser(
+              currentMissionPayload?.afterRedirectUrl,
+              Number(currentMissionPayload?.afterRedirectDelayMs)
+            );
+            window.parent?.postMessage({ type: "mission-npc:complete" }, "*");
+            return;
+          }
+
+          currentMissionLineIndex += 1;
+          renderMissionLine();
+        }
+
+        function isAdvanceKeyEvent(event) {
+          const key = String(event?.key || "").toLowerCase();
+          return key === "f" || key === " " || key === "space" || key === "spacebar";
+        }
+
+        function getQuizState(lineIndex) {
+          if (!quizStateByLine[lineIndex]) {
+            quizStateByLine[lineIndex] = {
+              selectedIndex: -1,
+              solved: false,
+            };
+          }
+
+          return quizStateByLine[lineIndex];
+        }
+
+        function renderQuizChoices() {
+          if (!activeQuiz) {
+            return;
+          }
+
+          const state = getQuizState(activeQuizLineIndex);
+          quizChoicesElement.replaceChildren();
+
+          activeQuiz.choices.forEach(function (choice, choiceIndex) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "dialogue__quiz-choice";
+            button.textContent = choice;
+            button.disabled = state.solved;
+
+            if (!state.solved && state.selectedIndex === choiceIndex) {
+              button.classList.add("dialogue__quiz-choice--wrong");
+            }
+
+            if (state.solved && choiceIndex === activeQuiz.correctIndex) {
+              button.classList.add("dialogue__quiz-choice--correct");
+            }
+
+            bindPress(button, function () {
+              if (state.solved) {
+                return;
+              }
+
+              state.selectedIndex = choiceIndex;
+              state.solved = choiceIndex === activeQuiz.correctIndex;
+              renderQuizChoices();
+
+              if (state.solved) {
+                clearAutoAdvanceTimer();
+                handleAdvanceAction();
+              }
+            });
+
+            quizChoicesElement.appendChild(button);
+          });
+
+          if (state.selectedIndex < 0) {
+            quizFeedbackElement.hidden = true;
+            quizFeedbackElement.className = "dialogue__quiz-feedback";
+            quizFeedbackElement.textContent = "";
+          } else if (state.solved) {
+            quizFeedbackElement.hidden = false;
+            quizFeedbackElement.className =
+              "dialogue__quiz-feedback dialogue__quiz-feedback--correct";
+            quizFeedbackElement.textContent =
+              "정답입니다. 다음 버튼으로 진행하세요.";
+          } else {
+            quizFeedbackElement.hidden = false;
+            quizFeedbackElement.className =
+              "dialogue__quiz-feedback dialogue__quiz-feedback--wrong";
+            quizFeedbackElement.textContent = activeQuiz.wrongFeedback;
+          }
+
+          panelElement.classList.toggle(
+            "dialogue__panel--quiz-feedback",
+            state.selectedIndex >= 0 && !state.solved
+          );
+          advanceButton.disabled = !state.solved;
+        }
+
+        function applyQuiz(payload, lineIndex) {
+          const rawQuiz = payload?.quiz;
+          const question = sanitizeText(rawQuiz?.question, "");
+          const choices = Array.isArray(rawQuiz?.choices)
+            ? rawQuiz.choices.filter(function (choice) {
+                return typeof choice === "string" && choice.trim();
+              })
+            : [];
+          const correctIndex = Number(rawQuiz?.correctIndex);
+          const wrongFeedback = sanitizeText(
+            rawQuiz?.wrongFeedback,
+            "정답이 아닙니다. 다시 선택해주세요."
+          );
+
+          if (
+            !question ||
+            choices.length < 2 ||
+            !Number.isInteger(correctIndex) ||
+            correctIndex < 0 ||
+            correctIndex >= choices.length
+          ) {
+            activeQuiz = null;
+            activeQuizLineIndex = 0;
+            quizElement.hidden = true;
+            textWrapElement.hidden = false;
+            advanceButton.disabled = false;
+            panelElement.classList.remove("dialogue__panel--with-quiz");
+            panelElement.classList.remove("dialogue__panel--quiz-feedback");
+            return;
+          }
+
+          activeQuiz = { question, choices, correctIndex, wrongFeedback };
+          activeQuizLineIndex = lineIndex;
+          quizQuestionElement.textContent = question;
+          quizElement.hidden = false;
+          textWrapElement.hidden = true;
+          panelElement.classList.add("dialogue__panel--with-quiz");
+          renderQuizChoices();
+        }
+
+        function applyTheme(payload) {
+          const accentColor = sanitizeText(payload?.accentColor, "#66a97b");
+          const nameColor = sanitizeText(payload?.nameColor, "#2d6d45");
+          const panelColor = normalizeOpaqueColor(payload?.panelColor, "#f8fbf8");
+
+          document.documentElement.style.setProperty("--dialogue-accent", accentColor);
+          document.documentElement.style.setProperty("--dialogue-name", nameColor);
+          document.documentElement.style.setProperty("--dialogue-panel", panelColor);
+        }
+
+        function applyPortrait(payload) {
+          const portraitUrl = sanitizeText(payload?.portraitUrl, "");
+          const speakerName = sanitizeText(payload?.speakerName, "");
+          const fallbackText = speakerName.slice(0, 2).toUpperCase();
+
+          if (!speakerName) {
+            profileElement.hidden = true;
+            profileImageElement.hidden = true;
+            profileImageElement.removeAttribute("src");
+            profileFallbackElement.hidden = true;
+            return;
+          }
+
+          profileFallbackElement.textContent = fallbackText;
+          profileElement.hidden = false;
+
+          if (!portraitUrl) {
+            profileImageElement.hidden = true;
+            profileImageElement.removeAttribute("src");
+            profileFallbackElement.hidden = false;
+            return;
+          }
+
+          profileFallbackElement.hidden = true;
+          profileImageElement.hidden = false;
+          profileImageElement.src = portraitUrl;
+          profileImageElement.alt = speakerName;
+        }
+
+        function applyContentImage(payload) {
+          const contentImageUrl = sanitizeText(payload?.contentImageUrl, "");
+          const contentImageMaxWidth = Number(payload?.contentImageMaxWidth);
+          const contentImageWidthPercent = Number(
+            payload?.contentImageWidthPercent
+          );
+
+          if (!contentImageUrl) {
+            contentImageElement.hidden = true;
+            contentImageElement.removeAttribute("src");
+            contentImageWrapElement.hidden = true;
+            contentImageWrapElement.style.maxWidth = "";
+            contentImageWrapElement.style.width = "";
+            panelElement.classList.remove("dialogue__panel--with-image");
+            return;
+          }
+
+          contentImageElement.hidden = false;
+          contentImageElement.src = contentImageUrl;
+          contentImageElement.alt = "dialogue content image";
+          contentImageWrapElement.hidden = false;
+          contentImageWrapElement.style.maxWidth = Number.isFinite(contentImageMaxWidth)
+            ? `${contentImageMaxWidth}px`
+            : "";
+          contentImageWrapElement.style.width = Number.isFinite(
+            contentImageWidthPercent
+          )
+            ? `${Math.min(Math.max(contentImageWidthPercent, 1), 100)}%`
+            : "";
+          panelElement.classList.add("dialogue__panel--with-image");
+        }
+
+        function buildMissionLinePayload() {
+          const payload = currentMissionPayload || {};
+          const speakerLine = currentMissionSpeakerLines[currentMissionLineIndex];
+          const lineText =
+            speakerLine?.text ||
+            currentMissionLines[currentMissionLineIndex] ||
+            "대사를 불러오는 중입니다.";
+          const isSpeakerlessLine =
+            speakerLine?.speakerless === true ||
+            currentMissionSpeakerlessLineTexts.indexOf(lineText) !== -1 ||
+            lineText === "열린문을 찾아 이동해주세요.";
+          const speakerName = sanitizeText(
+            speakerLine?.speakerName,
+            sanitizeText(payload?.name, "NPC")
+          );
+          const portraitUrl = sanitizeText(
+            speakerLine?.profileImageUrl,
+            sanitizeText(payload?.profileImageUrl, "")
+          );
+
+          return {
+            speakerName: isSpeakerlessLine ? "" : speakerName,
+            portraitUrl: isSpeakerlessLine ? "" : portraitUrl,
+            contentImageUrl: "",
+            textAlign: "left",
+            lineText,
+            lineIndex: currentMissionLineIndex + 1,
+            totalLines: currentMissionLines.length,
+            stopsAutoAdvance: isMissionChoicePoint(),
+            accentColor: "#66a97b",
+            nameColor: "#2d6d45",
+            panelColor: "#f8fbf8",
+          };
+        }
+
+        function renderMissionLine() {
+          currentMissionLineIndex = Math.min(
+            Math.max(currentMissionLineIndex, 0),
+            currentMissionLines.length - 1
+          );
+          hideMissionChoices();
+          applyPayload(buildMissionLinePayload());
+        }
+
+        function applyMissionPayload(payload) {
+          repeatMissionPayloadAfterChoice = null;
+          currentMissionPayload = payload || {};
+          currentMissionSpeakerLines = normalizeSpeakerLines(payload?.speakerLines);
+          currentMissionMediaOverlay = payload?.mediaOverlay || null;
+          currentMissionSpeakerlessLineTexts = normalizeTextList(
+            payload?.speakerlessLineTexts
+          );
+          currentMissionChoices = normalizeChoices(payload?.choices);
+          if (currentMissionChoices.length === 0) {
+            currentMissionChoices = getFallbackMissionChoices(payload);
+          }
+          currentMissionLines = currentMissionSpeakerLines.length
+            ? currentMissionSpeakerLines.map(function (line) {
+                return line.text;
+              })
+            : removeFallbackClosingLine(
+                normalizeLines(payload?.lines),
+                currentMissionChoices
+              );
+          currentMissionLineIndex = 0;
+          Object.keys(quizStateByLine).forEach(function (key) {
+            delete quizStateByLine[key];
+          });
+          Object.keys(playedMediaKeys).forEach(function (key) {
+            delete playedMediaKeys[key];
+          });
+          closeMediaOverlay(false);
+          hideMissionChoices();
+          renderMissionLine();
+        }
+
+        function applyPayload(payload) {
+          const speakerName = sanitizeText(payload?.speakerName, "");
+          const lineText = typeof payload?.lineText === "string" ? payload.lineText : "";
+          const textAlign = sanitizeText(payload?.textAlign, "left");
+          const lineIndex = Number(payload?.lineIndex) || 1;
+
+          stopsAutoAdvance = payload?.stopsAutoAdvance === true;
+          autoControlElement.hidden = lineIndex !== 1;
+          previousButton.disabled = lineIndex <= 1;
+          panelElement.classList.toggle(
+            "dialogue__panel--speakerless",
+            !speakerName
+          );
+          panelElement.classList.toggle(
+            "dialogue__panel--speakerless-medium",
+            !speakerName && lineText.length > 55 && lineText.length <= 130
+          );
+          panelElement.classList.toggle(
+            "dialogue__panel--speakerless-long",
+            !speakerName && lineText.length > 130
+          );
+
+          applyTheme(payload);
+          applyPortrait(payload);
+          applyContentImage(payload);
+          applyQuiz(payload, lineIndex);
+
+          speakerElement.hidden = !speakerName;
+          speakerBadgeElement.hidden = !speakerName;
+          speakerElement.textContent = speakerName;
+          counterElement.textContent = `${lineIndex}/${Number(payload?.totalLines) || 1}`;
+          textElement.style.textAlign = textAlign === "center" ? "center" : "left";
+          startTyping(lineText);
+          maybeOpenMediaOverlay(lineIndex);
+        }
+
+        function requestClose() {
+          window.parent?.postMessage({ type: "mission-npc:close" }, "*");
+        }
+
+        function handleMessage(event) {
+          const data = event?.data;
+
+          if (!data || data.type !== "mission-npc:init") {
+            if (data && data.type === "mission-npc:advance-request") {
+              handleAdvanceAction();
+            }
+            return;
+          }
+
+          applyMissionPayload(data.payload || {});
+        }
+
+        bindPress(advanceButton, function () {
+          handleAdvanceAction();
+        });
+
+        bindPress(previousButton, function () {
+          if (previousButton.disabled) {
+            return;
+          }
+
+          clearTypingTimer();
+          clearAutoAdvanceTimer();
+          isTyping = false;
+          hideMissionChoices();
+          currentMissionLineIndex -= 1;
+          renderMissionLine();
+        });
+
+        bindPress(panelElement, function (event) {
+          if (
+            event.target.closest("[data-close]") ||
+            event.target.closest("[data-advance]") ||
+            event.target.closest("[data-previous]") ||
+            event.target.closest("[data-auto-control]") ||
+            event.target.closest("[data-quiz]")
+          ) {
+            return;
+          }
+
+          handleAdvanceAction();
+        });
+
+        bindPress(closeButton, function () {
+          requestClose();
+        });
+
+        bindPress(mediaCloseButton, function () {
+          closeMediaOverlay(true);
+        });
+
+        mediaVideoElement?.addEventListener("ended", function () {
+          closeMediaOverlay(true);
+        });
+
+        mediaVideoElement?.addEventListener("error", function () {
+          mediaVideoElement.removeAttribute("src");
+          mediaVideoElement.load();
+        });
+
+        window.addEventListener("keydown", function (event) {
+          if (!isAdvanceKeyEvent(event)) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          if (!event.repeat) {
+            handleAdvanceAction();
+          }
+        });
+
+        autoControlElement.addEventListener("click", function (event) {
+          event.stopPropagation();
+        });
+
+        autoCheckboxElement.addEventListener("change", function () {
+          if (autoCheckboxElement.checked) {
+            scheduleAutoAdvance();
+            return;
+          }
+
+          clearAutoAdvanceTimer();
+        });
+
+        profileImageElement.addEventListener("error", function () {
+          profileImageElement.hidden = true;
+          profileImageElement.removeAttribute("src");
+          profileFallbackElement.hidden = false;
+        });
+
+        contentImageElement.addEventListener("error", function () {
+          contentImageElement.hidden = true;
+          contentImageElement.removeAttribute("src");
+          contentImageWrapElement.hidden = true;
+          panelElement.classList.remove("dialogue__panel--with-image");
+        });
+
+        window.addEventListener("message", handleMessage);
+        window.addEventListener("beforeunload", function () {
+          clearTypingTimer();
+          clearAutoAdvanceTimer();
+          clearChoiceRevealTimer();
+        });
+        window.parent?.postMessage({ type: "mission-npc:ready" }, "*");
+      })();
+    </script>
+  </body>
+</html>

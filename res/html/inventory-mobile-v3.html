@@ -520,8 +520,50 @@
       grid.style.setProperty('--slot-size', `${slotSize}px`);
     }
 
+    function getAppAssetUrl(fileName) {
+      try {
+        const url = new URL(window.location.href);
+        const appHashId = url.searchParams.get('appHashId');
+        const appUpdatedAt = url.searchParams.get('appUpdatedAt');
+
+        if (appHashId) {
+          const params = new URLSearchParams({
+            appHashId,
+            fileName,
+          });
+
+          if (appUpdatedAt) {
+            params.set('appUpdatedAt', appUpdatedAt);
+          }
+
+          return `${url.origin}/spaces/app/file?${params.toString()}`;
+        }
+      } catch (_error) {
+        // Local previews can use the relative fallback below.
+      }
+
+      return `../${fileName}`;
+    }
+
+    function resolveAssetUrl(value) {
+      const raw = String(value || '').trim();
+      if (!raw) {
+        return '';
+      }
+      if (/^(?:https?:|data:|blob:)/i.test(raw)) {
+        return raw;
+      }
+
+      const fileName = raw
+        .replace(/^(\.\.\/)+/, '')
+        .replace(/^(\.\/)+/, '')
+        .replace(/^\/+/, '');
+
+      return getAppAssetUrl(fileName);
+    }
+
     function toCssUrl(value) {
-      const sanitized = String(value).replace(/"/g, '\\"');
+      const sanitized = resolveAssetUrl(value).replace(/"/g, '\\"');
       return `url("${sanitized}")`;
     }
 

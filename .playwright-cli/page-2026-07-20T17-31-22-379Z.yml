@@ -1,0 +1,42 @@
+- main [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - generic [ref=f1e5]:
+        - generic [ref=f1e6]: WEB GAME
+        - heading "게임을 불러오는 중입니다." [level=1] [ref=f1e7]
+        - paragraph
+      - button "닫기" [ref=f1e8] [cursor=pointer]: ×
+    - generic [ref=f1e9]:
+      - generic [ref=f1e11]:
+        - generic [ref=f1e12]: 목표
+        - generic [ref=f1e13]: "-"
+      - generic [ref=f1e15]:
+        - generic [ref=f1e16]: 현재
+        - generic [ref=f1e17]: "-"
+      - generic [ref=f1e19]:
+        - generic [ref=f1e20]: 남은 시간
+        - generic [ref=f1e21]: "-"
+    - generic [ref=f1e22]:
+      - generic [ref=f1e23]:
+        - generic [ref=f1e24]:
+          - generic [ref=f1e25]: 弓 타이밍
+          - generic [ref=f1e29]:
+            - text: 진한
+            - text: 구간
+        - generic [ref=f1e30]:
+          - text: ↑
+          - generic [ref=f1e31]: 시위를 당기면
+          - generic [ref=f1e32]: 포인터가 왕복
+          - generic [ref=f1e33]: 움직입니다.
+        - generic:
+          - generic: 사슴
+        - generic:
+          - button "활시위를 당겨 발사하기" [ref=f1e34]
+          - generic: ↕ 시위를 당겨 놓으면 발사!
+        - generic:
+          - generic:
+            - generic: 활시위를 당겨 진한 구간에서 놓으세요.
+      - generic [ref=f1e36]:
+        - heading "준비" [level=2] [ref=f1e37]
+        - paragraph [ref=f1e38]: 시작 버튼을 누르면 게임이 시작됩니다.
+        - button "시작" [ref=f1e40] [cursor=pointer]

@@ -5,6 +5,7 @@
 import "zep-script";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
+import type { ScriptWidget } from "zep-script";
 
 import {
   addInventoryItemByMapName,
@@ -17,11 +18,15 @@ import {
 } from "./src/inventory";
 import {
   handleInventoryInteractionObjectKey,
+  handleNearbyInventoryInteractionLocation,
   registerInventoryInteractionLocations,
 } from "./src/interactions";
 import {
+  handleFinalMirrorRoomPortal,
+  handleFinalMirrorRoomPortalUpdate,
   handlePortalGateJoin,
   handlePortalGateObjectTouched,
+  registerFinalMirrorRoomPortalLocations,
 } from "./src/portal";
 import { handleSlideshowObjectKey } from "./src/slideshow";
 import { loadLastWidget, loadTaskWidget, toggleTaskWidget } from "./src/task";
@@ -46,6 +51,290 @@ import {
 } from "./src/fixGame";
 import { FIX_GAME_MAP_NAME } from "./src/fixGame/constants";
 import { ADD_ITEM_TILE_NAME, REFRESH_TASK_TILE_NAME } from "./src/constants";
+import {
+  handleNearbyMissionProgressLocation,
+  handleMissionProgressObjectKey,
+  registerMissionProgressLocations,
+  resetMissionProgress,
+  showMissionProgress,
+} from "./src/missionProgress";
+import {
+  handleNearbyMissionQuizLocation,
+  handleMissionQuizObjectKey,
+  registerMissionQuizLocations,
+} from "./src/missionQuiz";
+import {
+  handleNearbyMissionNpcLocation,
+  handleMissionNpcObjectKey,
+  registerMissionNpcLocations,
+  requestMissionNpcAdvance,
+  resetMissionNpcOncePerPlayerScenes,
+} from "./src/missionNpc";
+import {
+  addMissionGameCompleteHandler,
+  handleNearbyMissionGameLocation,
+  handleMissionGameObjectKey,
+  registerMissionGameLocations,
+} from "./src/missionGame";
+import {
+  handleAnakMuralGateJoin,
+  handleAnakMuralGateObjectKey,
+  handleAnakMuralGateUpdate,
+  registerAnakMuralGateTiles,
+  syncAnakMuralGate,
+} from "./src/anakMuralGate";
+import {
+  handleMuyongchongGateJoin,
+  handleMuyongchongGateObjectKey,
+  handleMuyongchongGateUpdate,
+  registerMuyongchongGateTiles,
+  syncMuyongchongGate,
+} from "./src/muyongchongGate";
+import {
+  handleMuryeongTombGateJoin,
+  handleMuryeongTombGateObjectKey,
+  handleMuryeongTombGateUpdate,
+  registerMuryeongTombGateTiles,
+  syncMuryeongTombGate,
+} from "./src/muryeongTombGate";
+import {
+  handleCheonmachongGateJoin,
+  handleCheonmachongGateObjectKey,
+  handleCheonmachongGateUpdate,
+  registerCheonmachongGateTiles,
+  syncCheonmachongGate,
+} from "./src/cheonmachongGate";
+import {
+  handleDaeseongdongGateJoin,
+  handleDaeseongdongGateObjectKey,
+  handleDaeseongdongGateUpdate,
+  registerDaeseongdongGateTiles,
+  syncDaeseongdongGate,
+} from "./src/daeseongdongGate";
+
+const RECENT_INTERACTION_TTL_MS = 5000;
+const NEARBY_INTERACTION_RADIUS = 1;
+
+type RecentInteractionTag = Record<string, unknown> & {
+  recentInteractionAt?: number;
+  recentInteractionKeys?: string[];
+};
+
+type ButtonGroupPlayerTag = Record<string, unknown> & {
+  buttonGroupWidget?: ScriptWidget | null;
+};
+
+interface InteractionOptions {
+  isObjectInteraction?: boolean;
+  remember?: boolean;
+}
+
+function normalizeInteractionKey(key: unknown): string | null {
+  if (typeof key !== "string") {
+    return null;
+  }
+
+  const normalized = key.trim();
+  return normalized ? normalized : null;
+}
+
+function rememberInteractionKey(player: ScriptPlayer, key: unknown): void {
+  const normalized = normalizeInteractionKey(key);
+  if (!normalized) {
+    return;
+  }
+
+  const tag = preparePlayerTag(player) as RecentInteractionTag;
+  const previousKeys = Array.isArray(tag.recentInteractionKeys)
+    ? tag.recentInteractionKeys
+    : [];
+  tag.recentInteractionKeys = [
+    normalized,
+    ...previousKeys.filter(function (candidate) {
+      return candidate !== normalized;
+    }),
+  ].slice(0, 6);
+  tag.recentInteractionAt = Date.now();
+}
+
+function handleInteractionKey(
+  player: ScriptPlayer,
+  key: unknown,
+  options?: InteractionOptions
+): boolean {
+  const normalized = normalizeInteractionKey(key);
+  if (!normalized) {
+    return false;
+  }
+
+  let handled = false;
+  handled = handleSlideshowObjectKey(player, normalized) || handled;
+  handled =
+    handleFinalMirrorRoomPortal(player, normalized, ScriptMap.name) || handled;
+  handled =
+    handleMissionProgressObjectKey(player, normalized, ScriptMap.name) ||
+    handled;
+  handled = handleMissionQuizObjectKey(player, normalized) || handled;
+  handled = handleMissionNpcObjectKey(player, normalized) || handled;
+  handled = handleMissionGameObjectKey(player, normalized) || handled;
+  handled =
+    handleAnakMuralGateObjectKey(player, normalized, ScriptMap.name) ||
+    handled;
+  handled =
+    handleMuyongchongGateObjectKey(player, normalized, ScriptMap.name) ||
+    handled;
+  handled =
+    handleMuryeongTombGateObjectKey(player, normalized, ScriptMap.name) ||
+    handled;
+  handled =
+    handleCheonmachongGateObjectKey(player, normalized, ScriptMap.name) ||
+    handled;
+  handled =
+    handleDaeseongdongGateObjectKey(player, normalized, ScriptMap.name) ||
+    handled;
+  handled = handleInventoryInteractionObjectKey(player, normalized) || handled;
+
+  handlePortalGateObjectTouched(player, normalized, ScriptMap.name);
+  syncAnakMuralGate(player, ScriptMap.name);
+  syncMuyongchongGate(player, ScriptMap.name);
+  syncMuryeongTombGate(player, ScriptMap.name);
+  syncCheonmachongGate(player, ScriptMap.name);
+  syncDaeseongdongGate(player, ScriptMap.name);
+
+  if (ScriptMap.name === FIX_GAME_MAP_NAME) {
+    handleFixGameObjectInteraction(
+      player,
+      normalized,
+      ScriptMap.name,
+      Boolean(options?.isObjectInteraction)
+    );
+  }
+
+  if (handled && options?.remember !== false) {
+    rememberInteractionKey(player, normalized);
+  }
+
+  return handled;
+}
+
+function getObjectByInteractionKey(
+  key: string
+): { param1?: string; key?: string } | null {
+  try {
+    return ScriptMap.getObjectWithKey(key) as
+      | { param1?: string; key?: string }
+      | null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function handleInteractionKeyOrObjectParam(
+  player: ScriptPlayer,
+  key: unknown,
+  options?: InteractionOptions
+): boolean {
+  const normalized = normalizeInteractionKey(key);
+  if (!normalized) {
+    return false;
+  }
+
+  if (options?.remember !== false) {
+    rememberInteractionKey(player, normalized);
+  }
+
+  const handledByKey = handleInteractionKey(player, normalized, {
+    ...options,
+    remember: false,
+  });
+  if (handledByKey) {
+    return true;
+  }
+
+  const targetObject = getObjectByInteractionKey(normalized);
+  if (!targetObject) {
+    return false;
+  }
+
+  const handledByParam = handleInteractionKey(player, targetObject.param1, {
+    ...options,
+    remember: options?.remember,
+  });
+  if (handledByParam) {
+    return true;
+  }
+
+  if (
+    typeof targetObject.key === "string" &&
+    targetObject.key.trim() &&
+    targetObject.key !== normalized
+  ) {
+    return handleInteractionKey(player, targetObject.key, {
+      ...options,
+      remember: options?.remember,
+    });
+  }
+
+  return false;
+}
+
+function handleRecentInteractionKey(player: ScriptPlayer): boolean {
+  const tag = (player.tag ?? {}) as RecentInteractionTag;
+  if (
+    typeof tag.recentInteractionAt !== "number" ||
+    Date.now() - tag.recentInteractionAt > RECENT_INTERACTION_TTL_MS ||
+    !Array.isArray(tag.recentInteractionKeys)
+  ) {
+    return false;
+  }
+
+  return tag.recentInteractionKeys.some(function (key) {
+    return handleInteractionKeyOrObjectParam(player, key, {
+      isObjectInteraction: true,
+      remember: false,
+    });
+  });
+}
+
+function handleNearbyInteractionLocation(player: ScriptPlayer): boolean {
+  return (
+    handleNearbyMissionNpcLocation(player, NEARBY_INTERACTION_RADIUS) ||
+    handleNearbyMissionGameLocation(player, NEARBY_INTERACTION_RADIUS) ||
+    handleNearbyMissionQuizLocation(player, NEARBY_INTERACTION_RADIUS) ||
+    handleNearbyMissionProgressLocation(
+      player,
+      ScriptMap.name,
+      NEARBY_INTERACTION_RADIUS
+    ) ||
+    handleNearbyInventoryInteractionLocation(player, NEARBY_INTERACTION_RADIUS)
+  );
+}
+
+function handleCurrentInteractionLocation(player: ScriptPlayer): boolean {
+  try {
+    return handleInteractionKey(player, player.getLocationName(), {
+      isObjectInteraction: true,
+    });
+  } catch (_error) {
+    return false;
+  }
+}
+
+function handleActionButton(player: ScriptPlayer): void {
+  if (requestMissionNpcAdvance(player)) {
+    return;
+  }
+
+  if (handleRecentInteractionKey(player)) {
+    return;
+  }
+
+  if (handleCurrentInteractionLocation(player)) {
+    return;
+  }
+
+  handleNearbyInteractionLocation(player);
+}
 
 ScriptApp.onInit.Add(function () {
   // register task key
@@ -53,7 +342,24 @@ ScriptApp.onInit.Add(function () {
     debugMessage("T: key Pressed");
     toggleTaskWidget(ScriptMap.name, player);
   });
+  ScriptApp.addOnKeyDown(KeyCodeType.F, function (player) {
+    handleActionButton(player);
+  });
+  ScriptApp.addOnKeyDown(32, function (player) {
+    handleActionButton(player);
+  });
   registerInventoryInteractionLocations();
+  registerMissionProgressLocations();
+  registerFinalMirrorRoomPortalLocations();
+  registerMissionQuizLocations();
+  registerMissionNpcLocations();
+  registerMissionGameLocations();
+  registerAnakMuralGateTiles();
+  registerMuyongchongGateTiles();
+  registerMuryeongTombGateTiles();
+  registerCheonmachongGateTiles();
+  registerDaeseongdongGateTiles();
+  registerMissionGameCompletionNpcFeedback();
 
   registerConfiguredTileMessages();
 });
@@ -66,6 +372,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   preparePlayerStorage(player, {
     purchases: {},
     fixGame: { fixedKeys: [], gateObjectKeys: [] },
+    missionProgress: { missions: {} },
   });
   resetTileMessageHistory(player);
   const mapName = ScriptMap.name;
@@ -76,6 +383,11 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   }
 
   handlePortalGateJoin(player, mapName);
+  handleAnakMuralGateJoin(player, mapName);
+  handleMuyongchongGateJoin(player, mapName);
+  handleMuryeongTombGateJoin(player, mapName);
+  handleCheonmachongGateJoin(player, mapName);
+  handleDaeseongdongGateJoin(player, mapName);
 
   cameraMoveByMapName(player, mapName);
   if (!player.isMobile) {
@@ -107,12 +419,7 @@ ScriptApp.onStart.Add(function () {
 ScriptApp.onStart.Add(startHorseGame);
 
 ScriptApp.onAppObjectTouched.Add((player: ScriptPlayer, key: string) => {
-  handleSlideshowObjectKey(player, key);
-  handlePortalGateObjectTouched(player, key, ScriptMap.name);
-
-  if (ScriptMap.name === FIX_GAME_MAP_NAME) {
-    handleFixGameObjectInteraction(player, key, ScriptMap.name, false);
-  }
+  handleInteractionKeyOrObjectParam(player, key, { isObjectInteraction: false });
   // handleHorseTouched(player, key);
 });
 
@@ -124,11 +431,13 @@ ScriptApp.onObjectTouched.Add(function (
   obj: any
 ) {
   if (obj !== null) {
-    handleSlideshowObjectKey(player, obj.param1);
-    const handledByParam = handleInventoryInteractionObjectKey(player, obj.param1);
+    const handledByParam = handleInteractionKey(player, obj.param1, {
+      isObjectInteraction: false,
+    });
     if (!handledByParam) {
-      handleSlideshowObjectKey(player, obj.key);
-      handleInventoryInteractionObjectKey(player, obj.key);
+      handleInteractionKeyOrObjectParam(player, obj.key, {
+        isObjectInteraction: false,
+      });
     }
   }
 });
@@ -137,34 +446,23 @@ ScriptApp.onObjectTouched.Add(function (
 
 ScriptApp.onTriggerObject.Add(
   (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
-    handleSlideshowObjectKey(player, key);
-    const handledByKey = handleInventoryInteractionObjectKey(player, key);
-    if (!handledByKey) {
-      const targetObject = ScriptMap.getObjectWithKey(key) as
-        | { param1?: string; key?: string }
-        | null;
-
-      if (targetObject) {
-        handleSlideshowObjectKey(player, targetObject.param1 ?? "");
-        const handledByParam = handleInventoryInteractionObjectKey(
-          player,
-          targetObject.param1 ?? ""
-        );
-        if (!handledByParam && typeof targetObject.key === "string") {
-          handleSlideshowObjectKey(player, targetObject.key);
-          handleInventoryInteractionObjectKey(player, targetObject.key);
-        }
-      }
-    }
-
-    if (ScriptMap.name === FIX_GAME_MAP_NAME) {
-      handleFixGameObjectInteraction(player, key, ScriptMap.name, true);
-    }
+    handleInteractionKeyOrObjectParam(player, key, {
+      isObjectInteraction: true,
+    });
   },
 );
 
 ScriptApp.onLeavePlayer.Add((player: ScriptPlayer) => {
   handlePlayerLeave(player);
+});
+
+ScriptApp.onUpdate.Add(function () {
+  handleFinalMirrorRoomPortalUpdate();
+  handleAnakMuralGateUpdate(ScriptMap.name);
+  handleMuyongchongGateUpdate(ScriptMap.name);
+  handleMuryeongTombGateUpdate(ScriptMap.name);
+  handleCheonmachongGateUpdate(ScriptMap.name);
+  handleDaeseongdongGateUpdate(ScriptMap.name);
 });
 
 // ScriptApp.onUpdate.Add((dt: number) => {
@@ -179,12 +477,19 @@ ScriptApp.onDestroy.Add(function () {
 });
 
 function loadPCButtonGroup(player: ScriptPlayer) {
+  const tag = preparePlayerTag(player) as ButtonGroupPlayerTag;
+
+  if (tag.buttonGroupWidget) {
+    tag.buttonGroupWidget.destroy();
+    tag.buttonGroupWidget = null;
+  }
+
   const widgetPath = player.isMobile
-    ? "html/mobile_button-v5.html"
-    : "html/pc_button.html";
-  const widgetAlign = player.isMobile ? "bottomright" : "topleft";
-  const widgetWidth = player.isMobile ? 400 : 360;
-  const widgetHeight = player.isMobile ? 190 : 150;
+    ? "html/mobile_button-v7.html"
+    : "html/pc_button-v2.html";
+  const widgetAlign = player.isMobile ? "topright" : "topleft";
+  const widgetWidth = 142;
+  const widgetHeight = 72;
 
   const buttonGroup = player.showWidget(
     widgetPath,
@@ -192,6 +497,7 @@ function loadPCButtonGroup(player: ScriptPlayer) {
     widgetWidth,
     widgetHeight
   );
+  tag.buttonGroupWidget = buttonGroup;
 
   buttonGroup.onMessage.Add(function (player: ScriptPlayer, message: any) {
     if (message.openTask) {
@@ -204,6 +510,9 @@ function loadPCButtonGroup(player: ScriptPlayer) {
         width: player.isMobile ? 214 : 270,
         height: player.isMobile ? 360 : 420,
       });
+    }
+    if (message.openMissionProgress) {
+      showMissionProgress(player, ScriptMap.name);
     }
   });
 }
@@ -222,8 +531,107 @@ function checkPassport(player: ScriptPlayer) {
   return false;
 }
 
+function normalizeMissionNpcDebugTrigger(text: string): string | null {
+  if (!text.startsWith("#npc ")) {
+    return null;
+  }
+
+  const triggerInput = text.slice("#npc ".length).trim();
+  if (!triggerInput) {
+    return null;
+  }
+
+  return triggerInput.startsWith("npc:") || triggerInput.startsWith("dialog:")
+    ? triggerInput
+    : `npc:${triggerInput.replace(/\s+/g, ":")}`;
+}
+
+function normalizeMissionGameDebugTrigger(text: string): string | null {
+  if (!text.startsWith("#game ")) {
+    return null;
+  }
+
+  const triggerInput = text.slice("#game ".length).trim();
+  if (!triggerInput) {
+    return null;
+  }
+
+  return triggerInput.startsWith("game:") || triggerInput.startsWith("wg:")
+    ? triggerInput
+    : `game:${triggerInput.replace(/\s+/g, "-")}`;
+}
+
+function registerMissionGameCompletionNpcFeedback(): void {
+  addMissionGameCompleteHandler(function (player, gameId) {
+    if (gameId === "muyongchong-hunting") {
+      handleMissionNpcObjectKey(player, "npc:godu:hunting-success");
+      syncMuyongchongGate(player, ScriptMap.name);
+      return;
+    }
+
+    if (gameId === "muyongchong-dance") {
+      handleMissionNpcObjectKey(player, "npc:godu:dance-success");
+      syncMuyongchongGate(player, ScriptMap.name);
+      return;
+    }
+
+    if (gameId === "jinmyosu-artifact-map") {
+      handleMissionNpcObjectKey(player, "npc:jinmyosu:exchange-correct");
+      syncMuryeongTombGate(player, ScriptMap.name);
+      return;
+    }
+
+    if (gameId === "cheonmachong-costume") {
+      handleMissionNpcObjectKey(player, "npc:seoki:costume-complete");
+      syncCheonmachongGate(player, ScriptMap.name);
+      return;
+    }
+
+    if (gameId === "daeseongdong-iron-process") {
+      handleMissionNpcObjectKey(player, "npc:gwanghoek:iron-success");
+      syncDaeseongdongGate(player, ScriptMap.name);
+      return;
+    }
+
+    if (gameId === "daeseongdong-artifact-match") {
+      handleMissionNpcObjectKey(player, "npc:gwanghoek:artifact-correct");
+    }
+  });
+}
+
+function resetOneTimeTriggerHistory(player: ScriptPlayer): void {
+  resetMissionNpcOncePerPlayerScenes(player);
+  resetTileMessageHistory(player);
+  player.showCenterLabel(
+    "1회 출력 트리거 기록을 초기화했습니다.",
+    0xffffff,
+    0x000000,
+    420,
+    3000
+  );
+  player.sendUpdated();
+}
+
 ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {
   if (player.role > 1000) {
+    const trimmedText = text.trim();
+    const debugNpcTrigger = normalizeMissionNpcDebugTrigger(text.trim());
+    if (debugNpcTrigger) {
+      handleMissionNpcObjectKey(player, debugNpcTrigger);
+      syncAnakMuralGate(player, ScriptMap.name);
+      syncMuyongchongGate(player, ScriptMap.name);
+      syncCheonmachongGate(player, ScriptMap.name);
+      syncMuryeongTombGate(player, ScriptMap.name);
+      syncDaeseongdongGate(player, ScriptMap.name);
+      return;
+    }
+
+    const debugGameTrigger = normalizeMissionGameDebugTrigger(text.trim());
+    if (debugGameTrigger) {
+      handleMissionGameObjectKey(player, debugGameTrigger);
+      return;
+    }
+
     if (text === "!인벤리셋") {
       clearInventoryItems(player);
       player.sendUpdated();
@@ -231,6 +639,30 @@ ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {
       if (ScriptMap.name === FIX_GAME_MAP_NAME) {
         resetFixGameProgress(player, ScriptMap.name);
       }
+    } else if (text === "!진행률") {
+      showMissionProgress(player, ScriptMap.name);
+    } else if (text === "!미션리셋") {
+      resetMissionProgress(player);
+      showMissionProgress(player, ScriptMap.name);
+    } else if (trimmedText === "!트리거리셋") {
+      resetOneTimeTriggerHistory(player);
+    } else if (trimmedText === "!트리거리셋 전체") {
+      ScriptApp.players.forEach(function (targetPlayer) {
+        resetOneTimeTriggerHistory(targetPlayer);
+      });
+    } else if (text.startsWith("!npc ")) {
+      const trigger = normalizeMissionNpcDebugTrigger(
+        `#npc ${text.slice("!npc ".length).trim()}`
+      );
+      handleMissionNpcObjectKey(player, trigger);
+      syncAnakMuralGate(player, ScriptMap.name);
+      syncMuyongchongGate(player, ScriptMap.name);
+      syncDaeseongdongGate(player, ScriptMap.name);
+    } else if (text.startsWith("!game ")) {
+      const trigger = normalizeMissionGameDebugTrigger(
+        `#game ${text.slice("!game ".length).trim()}`
+      );
+      handleMissionGameObjectKey(player, trigger);
     } else if (text === "!상점") {
     }
   }

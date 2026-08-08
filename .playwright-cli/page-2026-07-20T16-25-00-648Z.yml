@@ -1,0 +1,32 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "수렵도 활쏘기" [level=1] [ref=e41]
+        - paragraph [ref=e42]: 고구려 무사의 말 위 활쏘기
+      - button "닫기" [ref=e8] [cursor=pointer]: ×
+    - generic [ref=e9]:
+      - generic [ref=e11]:
+        - generic [ref=e12]: 목표
+        - generic [ref=e13]: 2발
+      - generic [ref=e15]:
+        - generic [ref=e16]: 현재
+        - generic [ref=e17]: 0발
+      - generic [ref=e19]:
+        - generic [ref=e20]: 남은 시간
+        - generic [ref=e21]: 120초
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - generic [ref=e25]: 弓 타이밍
+        - generic [ref=e29]:
+          - text: 진한
+          - text: 구간
+      - text: ↑
+      - generic:
+        - generic: 🐯 호랑이
+      - generic:
+        - button "활시위를 당겨 발사하기" [ref=e34]
+        - generic: ↕ 시위를 당겨 놓으면 발사!
+      - generic:
+        - generic:
+          - generic: 시위를 당기면 왼쪽 포인터가 움직입니다. 진한 구간에서 놓으세요.

@@ -1,0 +1,22 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "부장품 교류 지도" [level=1] [ref=e5]
+    - generic [ref=e6]: 1/3
+    - button "닫기" [ref=e7] [cursor=pointer]: ×
+  - paragraph [ref=e8]: 부장품을 알맞은 지역으로 끌어다 놓으세요.
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - img "무령왕릉 부장품 교류 지도" [ref=e11]
+      - generic:
+        - generic "청동거울 - 중국 남조": 銅 ✓
+      - button "중국 남조" [ref=e12]
+      - button "일본" [ref=e13]
+      - button "동남아" [ref=e14]
+    - generic "배치할 아이콘" [ref=e15]:
+      - button "청동거울" [disabled] [ref=e16]:
+        - generic [ref=e17]: 銅
+      - button "금송 목관 조각" [ref=e19]:
+        - generic [ref=e20]: 松
+      - button "흑단 두침" [ref=e22]:
+        - generic [ref=e23]: 枕
+  - generic [ref=e25]: 청동거울이(가) 중국 남조에 연결되었습니다.

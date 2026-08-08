@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Daeseongdong Artifact Link</title>
+    <style>
+      :root {
+        --ink: #2c2115;
+        --muted: #6f604a;
+        --paper: #fff7df;
+        --paper-deep: #f2d796;
+        --line: #7b5530;
+        --good: #24755b;
+        --good-soft: #e1f1e7;
+        --bad: #b34a3f;
+        --shadow: rgba(58, 37, 18, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        background: transparent;
+        color: var(--ink);
+        font-family: "Pretendard", "Noto Sans KR", sans-serif;
+        letter-spacing: 0;
+        user-select: none;
+      }
+
+      button {
+        font: inherit;
+        letter-spacing: 0;
+      }
+
+      .stage {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+      }
+
+      .game {
+        position: relative;
+        width: min(100%, 960px);
+        height: 100%;
+        max-height: 680px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .board {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1080 / 761;
+        max-height: 100%;
+        overflow: hidden;
+        border-radius: 6px;
+        background-color: transparent;
+        background-image: var(--board-image);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: contain;
+        filter: drop-shadow(0 18px 22px var(--shadow));
+        touch-action: none;
+      }
+
+      .title {
+        position: absolute;
+        left: 50%;
+        top: 4.7%;
+        width: 34%;
+        margin: 0;
+        transform: translateX(-50%);
+        color: #4b2e13;
+        font-size: clamp(14px, 2.05vw, 23px);
+        font-weight: 900;
+        line-height: 1;
+        text-align: center;
+        text-shadow: 0 1px 0 rgba(255, 246, 213, 0.6);
+        pointer-events: none;
+      }
+
+      .subtitle {
+        position: absolute;
+        left: 50%;
+        top: 13.2%;
+        width: 52%;
+        margin: 0;
+        transform: translateX(-50%);
+        color: rgba(75, 46, 19, 0.78);
+        font-size: clamp(8px, 1.1vw, 13px);
+        font-weight: 800;
+        line-height: 1.25;
+        text-align: center;
+        pointer-events: none;
+        display: none;
+      }
+
+      .close {
+        position: absolute;
+        top: 5.1%;
+        right: 4.3%;
+        z-index: 30;
+        width: clamp(30px, 4.2vw, 42px);
+        height: clamp(30px, 4.2vw, 42px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(91, 57, 22, 0.28);
+        border-radius: 50%;
+        background: rgba(255, 247, 223, 0.92);
+        color: #473016;
+        cursor: pointer;
+        font-size: clamp(22px, 3vw, 30px);
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .progress {
+        position: absolute;
+        top: 8.6%;
+        right: 13.2%;
+        z-index: 24;
+        min-width: clamp(42px, 6.5vw, 62px);
+        height: clamp(24px, 3.2vw, 34px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(36, 117, 91, 0.35);
+        border-radius: 999px;
+        background: rgba(225, 241, 231, 0.9);
+        color: var(--good);
+        font-size: clamp(12px, 1.7vw, 18px);
+        font-weight: 900;
+        display: none;
+      }
+
+      .item-card,
+      .target-card {
+        position: absolute;
+        z-index: 12;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+      }
+
+      .item-card {
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        border: 2px solid transparent;
+        background: rgba(255, 247, 223, 0.06);
+        cursor: grab;
+        transition:
+          border-color 140ms ease,
+          background-color 140ms ease,
+          filter 140ms ease,
+          transform 140ms ease;
+      }
+
+      .item-card:active {
+        cursor: grabbing;
+      }
+
+      .item-card--selected {
+        border-color: transparent;
+        background: transparent;
+        filter: none;
+      }
+
+      .item-card--done {
+        cursor: default;
+        filter: saturate(0.92);
+      }
+
+      .item-card--done::after,
+      .target-card--done::after {
+        content: "✓";
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        width: clamp(20px, 2.9vw, 30px);
+        height: clamp(20px, 2.9vw, 30px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #2fa36e;
+        color: white;
+        font-size: clamp(14px, 2vw, 20px);
+        font-weight: 900;
+        display: none;
+      }
+
+      .target-card {
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        z-index: 10;
+        border: 2px solid transparent;
+        background: transparent;
+        cursor: pointer;
+        transition:
+          border-color 140ms ease,
+          background-color 140ms ease,
+          transform 140ms ease;
+      }
+
+      .target-card--hover {
+        border-color: transparent;
+        background: transparent;
+      }
+
+      .target-card--wrong {
+        border-color: transparent;
+        animation: shake 260ms ease;
+      }
+
+      .artifact {
+        display: block;
+        max-width: 76%;
+        max-height: 72%;
+        object-fit: contain;
+        pointer-events: none;
+        filter: drop-shadow(0 5px 5px rgba(72, 42, 17, 0.2));
+      }
+
+      .artifact--helmet {
+        max-height: 74%;
+        max-width: 30%;
+      }
+
+      .artifact--horse-gear {
+        max-width: 64%;
+      }
+
+      .artifact--sword {
+        max-width: 54%;
+      }
+
+      .artifact--armor {
+        max-height: 68%;
+        max-width: 40%;
+      }
+
+      .line-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .node-layer {
+        position: absolute;
+        inset: 0;
+        z-index: 18;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      .node {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: clamp(28px, 3.4vw, 38px);
+        height: clamp(28px, 3.4vw, 38px);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transform: translate(-50%, -50%);
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        pointer-events: auto;
+        touch-action: none;
+      }
+
+      .node::before {
+        content: "";
+        width: clamp(9px, 1.05vw, 13px);
+        height: clamp(9px, 1.05vw, 13px);
+        border-radius: 50%;
+        background: #1f170f;
+        box-shadow:
+          0 0 0 2px rgba(255, 239, 197, 0.76),
+          0 3px 6px rgba(31, 23, 15, 0.22);
+      }
+
+      .node::after {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border: 2px solid rgba(31, 117, 86, 0);
+        border-radius: 50%;
+        transition:
+          border-color 140ms ease,
+          background-color 140ms ease,
+          transform 140ms ease;
+      }
+
+      .node--left:not(.node--done)::after {
+        border-color: rgba(31, 117, 86, 0.18);
+        background: rgba(255, 247, 223, 0.08);
+      }
+
+      .node--left:not(.node--done):hover::after,
+      .node--selected::after,
+      .node--hover::after {
+        border-color: rgba(31, 117, 86, 0.72);
+        background: rgba(225, 241, 231, 0.28);
+        transform: scale(1.12);
+      }
+
+      .node--right:not(.node--done):hover::after,
+      .node--right.node--hover::after {
+        border-color: rgba(31, 117, 86, 0.72);
+        background: rgba(225, 241, 231, 0.28);
+        transform: scale(1.12);
+      }
+
+      .node--done::before {
+        background: #1d7556;
+        box-shadow:
+          0 0 0 2px rgba(255, 247, 223, 0.86),
+          0 3px 7px rgba(29, 117, 86, 0.32);
+      }
+
+      .line-layer path {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .line-shadow {
+        stroke: rgba(255, 246, 214, 0.9);
+        stroke-width: 8;
+      }
+
+      .line-main {
+        stroke: #1d7556;
+        stroke-width: 4.5;
+      }
+
+      .line-temp {
+        stroke: rgba(31, 23, 15, 0.6);
+        stroke-width: 3;
+        stroke-dasharray: 9 8;
+      }
+
+      .feedback {
+        position: absolute;
+        left: 50%;
+        bottom: 2.8%;
+        z-index: 28;
+        width: min(48%, 480px);
+        min-height: clamp(34px, 5vw, 48px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translateX(-50%);
+        border: 1px solid rgba(123, 85, 48, 0.35);
+        border-radius: 999px;
+        background: rgba(255, 247, 223, 0.88);
+        color: var(--muted);
+        font-size: clamp(12px, 1.7vw, 17px);
+        font-weight: 900;
+        line-height: 1.3;
+        text-align: center;
+        padding: 8px 16px;
+        pointer-events: none;
+        word-break: keep-all;
+      }
+
+      .feedback--ok {
+        border-color: rgba(36, 117, 91, 0.35);
+        background: rgba(225, 241, 231, 0.94);
+        color: var(--good);
+      }
+
+      .feedback--bad {
+        border-color: rgba(179, 74, 63, 0.28);
+        background: rgba(255, 236, 231, 0.95);
+        color: var(--bad);
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        30% {
+          transform: translateX(-5px);
+        }
+        70% {
+          transform: translateX(5px);
+        }
+      }
+
+      @media (max-width: 520px) {
+        .stage {
+          padding: 6px;
+        }
+
+        .game {
+          align-items: flex-start;
+          padding-top: 8px;
+        }
+
+        .board {
+          width: 100%;
+          filter: drop-shadow(0 10px 12px rgba(58, 37, 18, 0.18));
+        }
+
+        .title {
+          top: 5.1%;
+          width: 42%;
+          font-size: 13px;
+        }
+
+        .subtitle {
+          display: none;
+        }
+
+        .feedback {
+          width: 72%;
+          bottom: 3.1%;
+          min-height: 28px;
+          padding: 5px 10px;
+          font-size: 10px;
+        }
+
+        .progress {
+          top: 8.8%;
+          right: 13%;
+        }
+
+        .close {
+          top: 5.4%;
+          right: 4.6%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <section class="game" aria-live="polite">
+        <div class="board" id="board">
+          <h1 class="title" id="title">철제 유물 용도 짝짓기</h1>
+          <p class="subtitle" id="subtitle">유물과 쓰임을 선으로 연결하세요.</p>
+          <button class="close" id="closeButton" type="button" aria-label="닫기">×</button>
+          <div class="progress" id="progress">0/4</div>
+          <svg
+            class="line-layer"
+            id="lineLayer"
+            viewBox="0 0 1080 761"
+            aria-hidden="true"
+          ></svg>
+          <div class="node-layer" id="nodeLayer" aria-hidden="true"></div>
+          <div id="itemLayer"></div>
+          <div id="targetLayer"></div>
+          <div class="feedback" id="feedback">유물을 선택해 알맞은 용도와 연결하세요.</div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const BOARD_WIDTH = 1080;
+        const BOARD_HEIGHT = 761;
+        const ORDERED_ITEM_IDS = ["sword", "helmet", "armor", "horse-gear"];
+        const ORDERED_TARGET_IDS = [
+          "helmet-target",
+          "horse-target",
+          "warrior-target",
+          "armor-target",
+        ];
+        const ITEM_SLOTS = [
+          { x: 60, y: 102, w: 252, h: 141 },
+          { x: 60, y: 253, w: 252, h: 140 },
+          { x: 60, y: 402, w: 252, h: 138 },
+          { x: 60, y: 551, w: 252, h: 139 },
+        ];
+        const TARGET_SLOTS = [
+          { x: 762, y: 108, w: 263, h: 139 },
+          { x: 762, y: 256, w: 263, h: 138 },
+          { x: 762, y: 405, w: 263, h: 139 },
+          { x: 762, y: 552, w: 263, h: 138 },
+        ];
+        const LEFT_NODES = [
+          { x: 374, y: 173 },
+          { x: 374, y: 323 },
+          { x: 374, y: 471 },
+          { x: 374, y: 621 },
+        ];
+        const RIGHT_NODES = [
+          { x: 720, y: 178 },
+          { x: 720, y: 325 },
+          { x: 720, y: 474 },
+          { x: 720, y: 621 },
+        ];
+
+        const defaultPayload = {
+          title: "철제 유물 용도 짝짓기",
+          subtitle: "유물과 쓰임을 선으로 연결하세요.",
+          instruction: "갑옷·말갖춤·환두대도·투구를 알맞은 대상과 연결하세요!",
+          initialFeedback: "왼쪽 검은 점을 오른쪽 검은 점으로 끌어 연결하세요.",
+          wrongMessage: "광획: 어허, 짝이 틀렸네. 다시 연결해 보렴.",
+          successMessage: "가야의 철은 힘과 장사 솜씨를 보여 준단다.",
+          image: {
+            url: "images/daeseongdong/artifact-match-board.png",
+            width: BOARD_WIDTH,
+            height: BOARD_HEIGHT,
+          },
+          items: [
+            {
+              id: "sword",
+              imageUrl: "images/daeseongdong/sword.png",
+              label: "환두대도",
+              targetId: "warrior-target",
+            },
+            {
+              id: "helmet",
+              imageUrl: "images/daeseongdong/helmet.png",
+              label: "투구",
+              targetId: "helmet-target",
+            },
+            {
+              id: "armor",
+              imageUrl: "images/daeseongdong/armor.png",
+              label: "갑옷",
+              targetId: "armor-target",
+            },
+            {
+              id: "horse-gear",
+              imageUrl: "images/daeseongdong/horse-gear.png",
+              label: "말갖춤",
+              targetId: "horse-target",
+            },
+          ],
+          targets: [
+            { id: "helmet-target", label: "투구" },
+            { id: "horse-target", label: "말" },
+            { id: "warrior-target", label: "허리의 큰 칼" },
+            { id: "armor-target", label: "장수의 갑옷" },
+          ],
+        };
+
+        const boardElement = document.getElementById("board");
+        const titleElement = document.getElementById("title");
+        const subtitleElement = document.getElementById("subtitle");
+        const closeButton = document.getElementById("closeButton");
+        const progressElement = document.getElementById("progress");
+        const lineLayerElement = document.getElementById("lineLayer");
+        const nodeLayerElement = document.getElementById("nodeLayer");
+        const itemLayerElement = document.getElementById("itemLayer");
+        const targetLayerElement = document.getElementById("targetLayer");
+        const feedbackElement = document.getElementById("feedback");
+
+        let payload = defaultPayload;
+        let items = [];
+        let targets = [];
+        let selectedItemId = "";
+        let activePointerId = null;
+        let activeItemId = "";
+        let connections = {};
+        let completing = false;
+        let successMessage = defaultPayload.successMessage;
+        let wrongMessage = defaultPayload.wrongMessage;
+
+        function sanitizeText(value, fallback) {
+          return typeof value === "string" && value.trim() ? value.trim() : fallback;
+        }
+
+        function getAppAssetUrl(fileName) {
+          try {
+            const url = new URL(window.location.href);
+            const appHashId = url.searchParams.get("appHashId");
+            const appUpdatedAt = url.searchParams.get("appUpdatedAt");
+
+            if (appHashId) {
+              const params = new URLSearchParams({
+                appHashId,
+                fileName,
+              });
+
+              if (appUpdatedAt) {
+                params.set("appUpdatedAt", appUpdatedAt);
+              }
+
+              return `${url.origin}/spaces/app/file?${params.toString()}`;
+            }
+          } catch (_error) {
+            // Local previews can use the relative fallback below.
+          }
+
+          return `../${fileName}`;
+        }
+
+        function resolveAssetUrl(nextUrl) {
+          const rawUrl = sanitizeText(nextUrl, "");
+          if (!rawUrl) {
+            return "";
+          }
+
+          if (/^(?:https?:|data:|blob:|\/)/i.test(rawUrl)) {
+            return rawUrl;
+          }
+
+          const fileName = rawUrl.replace(/^(?:\.\.?\/)+/, "");
+          return getAppAssetUrl(fileName);
+        }
+
+        function toPercent(value, total) {
+          return `${(value / total) * 100}%`;
+        }
+
+        function byPreferredOrder(list, order) {
+          return list
+            .slice()
+            .sort(function (left, right) {
+              const leftIndex = order.indexOf(left.id);
+              const rightIndex = order.indexOf(right.id);
+              const safeLeftIndex = leftIndex >= 0 ? leftIndex : 999;
+              const safeRightIndex = rightIndex >= 0 ? rightIndex : 999;
+              return safeLeftIndex - safeRightIndex;
+            });
+        }
+
+        function setFeedback(text, tone) {
+          feedbackElement.textContent = text;
+          feedbackElement.classList.toggle("feedback--ok", tone === "ok");
+          feedbackElement.classList.toggle("feedback--bad", tone === "bad");
+        }
+
+        function updateProgress() {
+          const done = Object.keys(connections).length;
+          progressElement.textContent = `${done}/${items.length || 4}`;
+        }
+
+        function getItem(itemId) {
+          return items.find(function (item) {
+            return item.id === itemId;
+          });
+        }
+
+        function getTarget(targetId) {
+          return targets.find(function (target) {
+            return target.id === targetId;
+          });
+        }
+
+        function getItemNode(itemId) {
+          const index = items.findIndex(function (item) {
+            return item.id === itemId;
+          });
+          return LEFT_NODES[Math.max(0, index)] || LEFT_NODES[0];
+        }
+
+        function getTargetNode(targetId) {
+          const index = targets.findIndex(function (target) {
+            return target.id === targetId;
+          });
+          return RIGHT_NODES[Math.max(0, index)] || RIGHT_NODES[0];
+        }
+
+        function makePath(start, end) {
+          const centerOffset = Math.max(60, Math.abs(end.x - start.x) * 0.34);
+          const c1x = start.x + centerOffset;
+          const c2x = end.x - centerOffset;
+          return `M ${start.x} ${start.y} C ${c1x} ${start.y}, ${c2x} ${end.y}, ${end.x} ${end.y}`;
+        }
+
+        function appendPath(className, pathData) {
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("class", className);
+          path.setAttribute("d", pathData);
+          lineLayerElement.appendChild(path);
+          return path;
+        }
+
+        function drawConnections() {
+          lineLayerElement.replaceChildren();
+          Object.keys(connections).forEach(function (itemId) {
+            const targetId = connections[itemId];
+            const start = getItemNode(itemId);
+            const end = getTargetNode(targetId);
+            const pathData = makePath(start, end);
+            appendPath("line-shadow", pathData);
+            appendPath("line-main", pathData);
+          });
+        }
+
+        function drawTempLine(clientX, clientY) {
+          drawConnections();
+          if (!activeItemId) {
+            return;
+          }
+
+          const rect = boardElement.getBoundingClientRect();
+          const x = ((clientX - rect.left) / rect.width) * BOARD_WIDTH;
+          const y = ((clientY - rect.top) / rect.height) * BOARD_HEIGHT;
+          appendPath("line-temp", makePath(getItemNode(activeItemId), { x, y }));
+        }
+
+        function clearSelection() {
+          selectedItemId = "";
+          activeItemId = "";
+          activePointerId = null;
+          document.querySelectorAll(".item-card--selected").forEach(function (node) {
+            node.classList.remove("item-card--selected");
+          });
+          document.querySelectorAll(".node--selected").forEach(function (node) {
+            node.classList.remove("node--selected");
+          });
+          document.querySelectorAll(".target-card--hover").forEach(function (node) {
+            node.classList.remove("target-card--hover");
+          });
+          document.querySelectorAll(".node--hover").forEach(function (node) {
+            node.classList.remove("node--hover");
+          });
+          drawConnections();
+        }
+
+        function selectItem(itemId) {
+          if (connections[itemId] || completing) {
+            return;
+          }
+
+          selectedItemId = itemId;
+          document.querySelectorAll(".item-card").forEach(function (node) {
+            node.classList.toggle("item-card--selected", node.dataset.item === itemId);
+          });
+          document.querySelectorAll(".node--left").forEach(function (node) {
+            node.classList.toggle("node--selected", node.dataset.item === itemId);
+          });
+
+          const item = getItem(itemId);
+          setFeedback(
+            item ? `${item.label} 왼쪽 점을 오른쪽 점에 연결하세요.` : "오른쪽 검은 점에 연결하세요.",
+            ""
+          );
+        }
+
+        function findTargetAtPoint(clientX, clientY) {
+          const node = document.elementFromPoint(clientX, clientY);
+          const targetNode = node?.closest
+            ? node.closest(".node--right") || node.closest(".target-card")
+            : null;
+          return targetNode ? getTarget(targetNode.dataset.target || "") : null;
+        }
+
+        function setHoverTarget(targetId) {
+          document.querySelectorAll(".target-card").forEach(function (node) {
+            node.classList.toggle(
+              "target-card--hover",
+              Boolean(targetId && node.dataset.target === targetId)
+            );
+          });
+          document.querySelectorAll(".node--right").forEach(function (node) {
+            node.classList.toggle(
+              "node--hover",
+              Boolean(targetId && node.dataset.target === targetId)
+            );
+          });
+        }
+
+        function markTargetWrong(targetId) {
+          const node = document.querySelector(`[data-target="${targetId}"]`);
+          if (!node) {
+            return;
+          }
+          node.classList.remove("target-card--wrong");
+          void node.offsetWidth;
+          node.classList.add("target-card--wrong");
+        }
+
+        function attemptConnect(itemId, targetId) {
+          const item = getItem(itemId);
+          const target = getTarget(targetId);
+          if (!item || !target || completing || connections[item.id]) {
+            return;
+          }
+
+          if (Object.keys(connections).some(function (doneItemId) {
+            return connections[doneItemId] === target.id;
+          })) {
+            setFeedback("이미 연결된 칸입니다. 다른 용도를 골라 보세요.", "bad");
+            markTargetWrong(target.id);
+            selectItem(item.id);
+            return;
+          }
+
+          if (item.targetId !== target.id) {
+            setFeedback(wrongMessage, "bad");
+            markTargetWrong(target.id);
+            selectItem(item.id);
+            return;
+          }
+
+          connections[item.id] = target.id;
+          document.querySelector(`[data-item="${item.id}"]`)?.classList.add("item-card--done");
+          document.querySelector(`[data-target="${target.id}"]`)?.classList.add("target-card--done");
+          document.querySelector(`.node--left[data-item="${item.id}"]`)?.classList.add("node--done");
+          document.querySelector(`.node--right[data-target="${target.id}"]`)?.classList.add("node--done");
+          clearSelection();
+          drawConnections();
+          updateProgress();
+
+          if (Object.keys(connections).length >= items.length) {
+            completeMission();
+          } else {
+            setFeedback("좋아요. 다음 유물을 연결해 보세요.", "ok");
+          }
+        }
+
+        function completeMission() {
+          if (completing) {
+            return;
+          }
+
+          completing = true;
+          setFeedback(successMessage, "ok");
+          window.parent?.postMessage({ type: "mission-game:complete" }, "*");
+        }
+
+        function renderNodes() {
+          nodeLayerElement.replaceChildren();
+          items.forEach(function (item, index) {
+            const node = LEFT_NODES[index] || LEFT_NODES[0];
+            const element = document.createElement("button");
+            element.type = "button";
+            element.className = "node node--left";
+            element.dataset.item = item.id;
+            element.setAttribute("aria-label", `${item.label} 연결 시작점`);
+            element.style.setProperty("--x", toPercent(node.x, BOARD_WIDTH));
+            element.style.setProperty("--y", toPercent(node.y, BOARD_HEIGHT));
+            element.addEventListener("pointerdown", function (event) {
+              if (connections[item.id] || completing) {
+                return;
+              }
+              event.preventDefault();
+              activePointerId = event.pointerId;
+              activeItemId = item.id;
+              selectItem(item.id);
+              element.setPointerCapture?.(event.pointerId);
+              drawTempLine(event.clientX, event.clientY);
+            });
+            element.addEventListener("pointermove", function (event) {
+              if (activePointerId !== event.pointerId || activeItemId !== item.id) {
+                return;
+              }
+              event.preventDefault();
+              drawTempLine(event.clientX, event.clientY);
+              const target = findTargetAtPoint(event.clientX, event.clientY);
+              setHoverTarget(target ? target.id : "");
+            });
+            element.addEventListener("pointerup", function (event) {
+              if (activePointerId !== event.pointerId || activeItemId !== item.id) {
+                return;
+              }
+              event.preventDefault();
+              const target = findTargetAtPoint(event.clientX, event.clientY);
+              activePointerId = null;
+              activeItemId = "";
+              setHoverTarget("");
+              if (target) {
+                attemptConnect(item.id, target.id);
+                return;
+              }
+              selectedItemId = item.id;
+              drawConnections();
+              setFeedback("오른쪽 검은 점 위에서 놓아 연결하세요.", "");
+            });
+            element.addEventListener("click", function () {
+              selectItem(item.id);
+            });
+            nodeLayerElement.appendChild(element);
+          });
+          targets.forEach(function (target, index) {
+            const node = RIGHT_NODES[index] || RIGHT_NODES[0];
+            const element = document.createElement("button");
+            element.type = "button";
+            element.className = "node node--right";
+            element.dataset.target = target.id;
+            element.setAttribute("aria-label", `${target.label} 연결 도착점`);
+            element.style.setProperty("--x", toPercent(node.x, BOARD_WIDTH));
+            element.style.setProperty("--y", toPercent(node.y, BOARD_HEIGHT));
+            element.addEventListener("click", function () {
+              if (!selectedItemId) {
+                setFeedback("왼쪽 검은 점을 먼저 선택하세요.", "");
+                return;
+              }
+              attemptConnect(selectedItemId, target.id);
+            });
+            nodeLayerElement.appendChild(element);
+          });
+        }
+
+        function renderItems() {
+          itemLayerElement.replaceChildren();
+          items.forEach(function (item, index) {
+            const slot = ITEM_SLOTS[index] || ITEM_SLOTS[0];
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "item-card";
+            button.dataset.item = item.id;
+            button.setAttribute("aria-label", item.label);
+            button.style.setProperty("--x", toPercent(slot.x, BOARD_WIDTH));
+            button.style.setProperty("--y", toPercent(slot.y, BOARD_HEIGHT));
+            button.style.setProperty("--w", toPercent(slot.w, BOARD_WIDTH));
+            button.style.setProperty("--h", toPercent(slot.h, BOARD_HEIGHT));
+
+            const imageUrl = resolveAssetUrl(item.imageUrl);
+            if (imageUrl) {
+              const image = document.createElement("img");
+              image.className = `artifact artifact--${item.id}`;
+              image.src = imageUrl;
+              image.alt = item.label;
+              button.appendChild(image);
+            } else {
+              button.textContent = item.label;
+            }
+
+            button.addEventListener("pointerdown", function (event) {
+              if (connections[item.id] || completing) {
+                return;
+              }
+              event.preventDefault();
+              activePointerId = event.pointerId;
+              activeItemId = item.id;
+              selectItem(item.id);
+              button.setPointerCapture?.(event.pointerId);
+              drawTempLine(event.clientX, event.clientY);
+            });
+            button.addEventListener("pointermove", function (event) {
+              if (activePointerId !== event.pointerId || activeItemId !== item.id) {
+                return;
+              }
+              event.preventDefault();
+              drawTempLine(event.clientX, event.clientY);
+              const target = findTargetAtPoint(event.clientX, event.clientY);
+              setHoverTarget(target ? target.id : "");
+            });
+            button.addEventListener("pointerup", function (event) {
+              if (activePointerId !== event.pointerId || activeItemId !== item.id) {
+                return;
+              }
+              event.preventDefault();
+              const target = findTargetAtPoint(event.clientX, event.clientY);
+              activePointerId = null;
+              activeItemId = "";
+              setHoverTarget("");
+              if (target) {
+                attemptConnect(item.id, target.id);
+                return;
+              }
+              selectedItemId = item.id;
+              drawConnections();
+              setFeedback("오른쪽 검은 점을 눌러 연결하세요.", "");
+            });
+            button.addEventListener("click", function () {
+              selectItem(item.id);
+            });
+
+            itemLayerElement.appendChild(button);
+          });
+        }
+
+        function renderTargets() {
+          targetLayerElement.replaceChildren();
+          targets.forEach(function (target, index) {
+            const slot = TARGET_SLOTS[index] || TARGET_SLOTS[0];
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "target-card";
+            button.dataset.target = target.id;
+            button.setAttribute("aria-label", target.label);
+            button.style.setProperty("--x", toPercent(slot.x, BOARD_WIDTH));
+            button.style.setProperty("--y", toPercent(slot.y, BOARD_HEIGHT));
+            button.style.setProperty("--w", toPercent(slot.w, BOARD_WIDTH));
+            button.style.setProperty("--h", toPercent(slot.h, BOARD_HEIGHT));
+            button.addEventListener("click", function () {
+              if (!selectedItemId) {
+                setFeedback("왼쪽 유물을 먼저 선택하세요.", "");
+                return;
+              }
+              attemptConnect(selectedItemId, target.id);
+            });
+            targetLayerElement.appendChild(button);
+          });
+        }
+
+        function applyPayload(nextPayload) {
+          payload = nextPayload || defaultPayload;
+          const rawItems = Array.isArray(payload.items) ? payload.items : defaultPayload.items;
+          const rawTargets = Array.isArray(payload.targets) ? payload.targets : defaultPayload.targets;
+          items = byPreferredOrder(
+            rawItems
+              .map(function (item) {
+                const id = sanitizeText(item?.id, "");
+                const imageUrl = sanitizeText(item?.imageUrl, "");
+                const label = sanitizeText(item?.label, "");
+                const targetId = sanitizeText(item?.targetId, "");
+                return id && label && targetId ? { id, imageUrl, label, targetId } : null;
+              })
+              .filter(Boolean),
+            ORDERED_ITEM_IDS
+          );
+          targets = byPreferredOrder(
+            rawTargets
+              .map(function (target) {
+                const id = sanitizeText(target?.id, "");
+                const label = sanitizeText(target?.label, "");
+                return id ? { id, label } : null;
+              })
+              .filter(Boolean),
+            ORDERED_TARGET_IDS
+          );
+
+          titleElement.textContent = sanitizeText(payload.title, defaultPayload.title);
+          subtitleElement.textContent = sanitizeText(
+            payload.subtitle || payload.instruction,
+            defaultPayload.subtitle
+          );
+          successMessage = sanitizeText(payload.successMessage, defaultPayload.successMessage);
+          wrongMessage = sanitizeText(payload.wrongMessage, defaultPayload.wrongMessage);
+
+          const boardUrl = resolveAssetUrl(payload.image?.url || defaultPayload.image.url);
+          boardElement.style.setProperty("--board-image", `url("${boardUrl}")`);
+          selectedItemId = "";
+          activePointerId = null;
+          activeItemId = "";
+          connections = {};
+          completing = false;
+
+          renderNodes();
+          renderItems();
+          renderTargets();
+          drawConnections();
+          updateProgress();
+          setFeedback(
+            "왼쪽 검은 점을 오른쪽 검은 점으로 끌어 연결하세요.",
+            ""
+          );
+        }
+
+        function handleMessage(event) {
+          const data = event?.data;
+          if (!data || data.type !== "mission-game:init") {
+            return;
+          }
+
+          applyPayload(data.payload || {});
+        }
+
+        closeButton.addEventListener("click", function () {
+          window.parent?.postMessage({ type: "mission-game:close" }, "*");
+        });
+
+        window.addEventListener("message", handleMessage);
+        if (window.parent === window) {
+          applyPayload(defaultPayload);
+        }
+        window.parent?.postMessage({ type: "mission-game:ready" }, "*");
+      })();
+    </script>
+  </body>
+</html>

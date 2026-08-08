@@ -334,11 +334,38 @@ export function addInventoryItem(
     return state;
   }
 
-  const hasSameItem = state.items.some(
+  const existingIndex = state.items.findIndex(
     (entry) => entry.name === normalized.name
   );
 
-  if (hasSameItem) {
+  if (existingIndex >= 0) {
+    const existing = state.items[existingIndex];
+    const updated: InventoryItem = { ...existing };
+    let changed = false;
+
+    if (normalized.imageUrl && existing.imageUrl !== normalized.imageUrl) {
+      updated.imageUrl = normalized.imageUrl;
+      changed = true;
+    }
+
+    if (
+      normalized.description &&
+      existing.description !== normalized.description
+    ) {
+      updated.description = normalized.description;
+      changed = true;
+    }
+
+    if (!Number.isFinite(existing.quantity) || existing.quantity < 1) {
+      updated.quantity = normalized.quantity;
+      changed = true;
+    }
+
+    if (changed) {
+      state.items[existingIndex] = updated;
+      persistInventory(player, storage, state);
+    }
+
     return state;
   }
 
@@ -346,6 +373,17 @@ export function addInventoryItem(
   persistInventory(player, storage, state);
 
   return state;
+}
+
+export function refreshInventoryWidget(player: ScriptPlayer): void {
+  const tag = preparePlayerTag(player) as InventoryPlayerTag;
+  if (!tag.inventoryWidget) {
+    return;
+  }
+
+  const previousOptions = cloneShowInventoryOptions(tag.inventoryWidgetOptions);
+  teardownInventoryWidget(player);
+  showInventoryWidget(player, previousOptions);
 }
 
 export function addInventoryItemByMapName(

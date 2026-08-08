@@ -23,6 +23,17 @@ Follow TypeScript conventions with 2-space indentation, explicit return types, a
 ## ZEP Script API Usage
 Use `ScriptApp` lifecycle callbacks to orchestrate startup (`onInit`, `onStart`), player churn (`onJoinPlayer`, `onLeavePlayer`), and teardown (`onDestroy`). Manipulate world state through `ScriptMap` methods like `putObject`, `addOnTileTouched`, and timed helpers (`setTimeout`, `setInterval`). Interact with individuals via `ScriptPlayer` APIs—`showCenterLabel`, `spawnAt`, `playSound`—and communicate with UI overlays through `ScriptWidget.sendMessage`. Prefer storing persistent state with `ScriptApp.storage` and guard any restricted 🔒 fields behind null checks.
 
+### Map and Space Navigation Standard
+When moving a player to another ZEP map or space, use `ScriptPlayer.spawnAtMap(spaceHashId, mapHashId)`. Do not try to navigate by changing `window.location`, using `_top`, or calling `openWebLink` from widget HTML; widget iframe navigation can be blocked by ZEP and `openWebLink` opens a browser popup/new tab instead of moving the in-world character.
+
+For same-space map movement, pass `ScriptApp.spaceHashID` as the first argument and the target map hash as the second argument:
+
+```ts
+player.spawnAtMap(ScriptApp.spaceHashID, "7RbjZ7");
+```
+
+For a different space, pass the target space hash and map hash explicitly. If a dialogue/widget should trigger map movement, let the widget send a completion message to the script, then run `spawnAtMap` from TypeScript after the dialogue is complete. This is the standard pattern for reward-return flows such as returning to 시간 광장.
+
 ## Testing Guidelines
 Treat `npm run build` as a gating step; it surfaces type errors and missing imports. For behavioral validation, stage the app in a sandbox space and exercise lifecycle hooks, especially collision callbacks like `onObjectTouched`. If you add automated tests, organize them under `src/__tests__/` and mock `ScriptApp` interfaces so timer utilities (`runLater`, `setInterval`) remain deterministic.
 

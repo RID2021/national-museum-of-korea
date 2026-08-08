@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 680">
+  <defs>
+    <linearGradient id="paper" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff5d8"/>
+      <stop offset="1" stop-color="#e9c98f"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#5b3a1d" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="680" rx="34" fill="url(#paper)"/>
+  <rect x="26" y="26" width="1028" height="628" rx="24" fill="none" stroke="#8d6335" stroke-width="6"/>
+  <text x="540" y="74" text-anchor="middle" font-family="serif" font-size="42" font-weight="800" fill="#412b17">가야 철 생산 순서</text>
+  <text x="540" y="118" text-anchor="middle" font-family="sans-serif" font-size="24" font-weight="700" fill="#775632">철 생산과 가공에 필요한 물건을 순서대로 놓아 보세요.</text>
+  <g filter="url(#shadow)">
+    <rect x="75" y="170" width="160" height="150" rx="18" fill="#fff8e3" stroke="#b98746" stroke-width="4"/>
+    <rect x="295" y="170" width="160" height="150" rx="18" fill="#fff8e3" stroke="#b98746" stroke-width="4"/>
+    <rect x="515" y="170" width="160" height="150" rx="18" fill="#fff8e3" stroke="#b98746" stroke-width="4"/>
+    <rect x="735" y="170" width="160" height="150" rx="18" fill="#fff8e3" stroke="#b98746" stroke-width="4"/>
+    <rect x="190" y="420" width="160" height="150" rx="18" fill="#fff8e3" stroke="#8b6238" stroke-width="4"/>
+    <rect x="460" y="420" width="160" height="150" rx="18" fill="#fff8e3" stroke="#8b6238" stroke-width="4"/>
+    <rect x="730" y="420" width="160" height="150" rx="18" fill="#fff8e3" stroke="#8b6238" stroke-width="4"/>
+  </g>
+  <text x="155" y="352" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">1. 철광석</text>
+  <text x="375" y="352" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">2. 숯</text>
+  <text x="595" y="352" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">3. 풀무</text>
+  <text x="815" y="352" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">4. 제련로</text>
+  <text x="270" y="602" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">5. 집게</text>
+  <text x="540" y="602" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">6. 망치</text>
+  <text x="810" y="602" text-anchor="middle" font-family="sans-serif" font-size="25" font-weight="800" fill="#53361e">7. 담금질</text>
+  <path d="M240 245h42m180 0h42m180 0h42M455 500h-84m256 0h84" fill="none" stroke="#9c6b37" stroke-width="8" stroke-linecap="round" stroke-dasharray="14 16"/>
+</svg>

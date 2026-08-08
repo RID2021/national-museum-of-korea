@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sequence Choice Game</title>
+    <style>
+      :root {
+        --ink: #243129;
+        --muted: #6a7469;
+        --paper: #fffcef;
+        --surface: #f7fbf4;
+        --line: #d7dfc7;
+        --deep: #1f5f48;
+        --deep-2: #2e745a;
+        --soft: #e6f0df;
+        --cream: #fff8df;
+        --gold: #c4912e;
+        --gold-soft: #f9edc8;
+        --rose: #d06b5e;
+        --red: #b65048;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        background: transparent;
+        color: var(--ink);
+        font-family: "Pretendard", "Noto Sans KR", sans-serif;
+        letter-spacing: 0;
+      }
+
+      button {
+        font: inherit;
+        letter-spacing: 0;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .stage {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        padding: 8px;
+      }
+
+      .quiz {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+        gap: 10px;
+        overflow: hidden;
+        border: 2px solid rgba(68, 82, 61, 0.18);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 252, 239, 0.86)),
+          radial-gradient(circle at 16% 8%, rgba(196, 145, 46, 0.16), transparent 30%),
+          radial-gradient(circle at 86% 96%, rgba(46, 116, 90, 0.12), transparent 34%),
+          var(--paper);
+        box-shadow:
+          0 18px 34px rgba(31, 48, 38, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        padding: 16px;
+      }
+
+      .header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0;
+      }
+
+      .title {
+        margin: 0;
+        color: var(--deep);
+        font-size: 25px;
+        font-weight: 950;
+        line-height: 1.15;
+        word-break: keep-all;
+      }
+
+      .subtitle {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.35;
+        word-break: keep-all;
+      }
+
+      .progress {
+        min-width: 62px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid rgba(31, 95, 72, 0.12);
+        background: linear-gradient(180deg, #eef8ef, #dcebdd);
+        color: var(--deep);
+        font-size: 15px;
+        font-weight: 950;
+      }
+
+      .close {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 999px;
+        background: #e7eee5;
+        color: #31483d;
+        font-size: 22px;
+        font-weight: 950;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .question {
+        position: relative;
+        border: 1px solid rgba(98, 114, 87, 0.22);
+        border-radius: 16px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 248, 223, 0.9)),
+          var(--cream);
+        padding: 12px 14px;
+      }
+
+      .question__label {
+        width: fit-content;
+        min-height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: #e9f0df;
+        color: var(--deep);
+        font-size: 12px;
+        font-weight: 950;
+        padding: 2px 12px;
+      }
+
+      .question__text {
+        margin: 8px 0 4px;
+        color: var(--ink);
+        font-size: 18px;
+        font-weight: 950;
+        line-height: 1.35;
+        word-break: keep-all;
+      }
+
+      .question__hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.45;
+        word-break: keep-all;
+      }
+
+      .answerBlock {
+        margin: 0;
+        border: 1px solid rgba(98, 114, 87, 0.2);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.58);
+        padding: 12px;
+      }
+
+      .answerBlock__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .answerBlock__title {
+        color: var(--deep);
+        font-size: 14px;
+        font-weight: 950;
+      }
+
+      .answerBlock__guide {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .answer {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        align-items: center;
+        margin: 0;
+      }
+
+      .answer__unit {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .answer__unit:last-child {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .answer__slot {
+        position: relative;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed #cab777;
+        border-radius: 12px;
+        background:
+          linear-gradient(180deg, rgba(255, 252, 239, 0.98), rgba(249, 239, 203, 0.88));
+        color: #8b7c56;
+        font-size: 15px;
+        font-weight: 950;
+        line-height: 1.2;
+        text-align: center;
+        padding: 10px 8px 8px;
+      }
+
+      .answer__slot::before {
+        content: attr(data-step);
+        position: absolute;
+        top: -9px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(145, 125, 72, 0.32);
+        border-radius: 999px;
+        background: #fff8df;
+        color: #8c6d24;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .answer__slot--filled {
+        border-style: solid;
+        border-color: #4f916c;
+        background:
+          linear-gradient(180deg, #f3fbef, #dcefd9);
+        color: var(--deep);
+      }
+
+      .answer__arrow {
+        color: #9d813e;
+        font-size: 20px;
+        font-weight: 950;
+      }
+
+      .choices {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .choice {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr);
+        align-items: center;
+        gap: 11px;
+        border: 1px solid rgba(104, 121, 93, 0.22);
+        border-radius: 14px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 248, 238, 0.88));
+        color: var(--ink);
+        cursor: pointer;
+        padding: 10px 12px;
+        text-align: left;
+        box-shadow: inset 0 -2px 0 rgba(110, 96, 57, 0.08);
+        transition:
+          border-color 140ms ease,
+          background 140ms ease,
+          transform 140ms ease;
+      }
+
+      .choice:hover:not(:disabled) {
+        transform: translateY(-1px);
+        border-color: rgba(31, 95, 72, 0.36);
+        background: #fffdf5;
+      }
+
+      .choice:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      .choice:disabled {
+        cursor: default;
+        opacity: 0.62;
+      }
+
+      .choice__number {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #fff5d8, #ecd28b);
+        color: #75551a;
+        font-size: 16px;
+        font-weight: 950;
+      }
+
+      .choice__label {
+        min-width: 0;
+        font-size: 18px;
+        font-weight: 950;
+        line-height: 1.2;
+        word-break: keep-all;
+      }
+
+      .choice--picked {
+        border-color: rgba(31, 95, 72, 0.5);
+        background:
+          linear-gradient(180deg, #f4fbef, #e1f0dc);
+        box-shadow: inset 0 -2px 0 rgba(31, 95, 72, 0.08);
+      }
+
+      .feedback {
+        min-height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0;
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 850;
+        line-height: 1.35;
+        text-align: center;
+        word-break: keep-all;
+      }
+
+      .feedback--wrong {
+        background: #fff1ee;
+        color: var(--red);
+      }
+
+      .feedback--success {
+        background: #e9f6ed;
+        color: var(--deep);
+      }
+
+      .quiz--wrong .answer {
+        animation: shake 260ms ease;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-7px);
+        }
+        75% {
+          transform: translateX(7px);
+        }
+      }
+
+      @media (max-width: 520px) {
+        .stage {
+          padding: 6px;
+        }
+
+        .quiz {
+          border-radius: 16px;
+          gap: 7px;
+          padding: 10px;
+        }
+
+        .header {
+          gap: 7px;
+          margin-bottom: 0;
+        }
+
+        .title {
+          font-size: 17px;
+        }
+
+        .subtitle {
+          margin-top: 4px;
+          font-size: 11px;
+        }
+
+        .progress {
+          min-width: 46px;
+          height: 28px;
+          font-size: 12px;
+        }
+
+        .close {
+          width: 30px;
+          height: 30px;
+          font-size: 19px;
+        }
+
+        .question {
+          padding: 8px 9px;
+          border-radius: 12px;
+        }
+
+        .question__label {
+          min-height: 22px;
+          font-size: 11px;
+          padding: 2px 10px;
+        }
+
+        .question__text {
+          margin: 6px 0 3px;
+          font-size: 13px;
+        }
+
+        .question__hint {
+          font-size: 10px;
+        }
+
+        .answerBlock {
+          margin: 0;
+          padding: 8px;
+          border-radius: 12px;
+        }
+
+        .answerBlock__top {
+          margin-bottom: 7px;
+        }
+
+        .answerBlock__title {
+          font-size: 12px;
+        }
+
+        .answerBlock__guide {
+          display: none;
+        }
+
+        .answer {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 5px;
+        }
+
+        .answer__unit,
+        .answer__unit:last-child {
+          grid-template-columns: minmax(0, 1fr) 12px;
+          gap: 4px;
+        }
+
+        .answer__unit:last-child .answer__arrow {
+          display: none;
+        }
+
+        .answer__slot {
+          min-height: 38px;
+          border-width: 1px;
+          border-radius: 10px;
+          font-size: 11px;
+          padding: 9px 3px 4px;
+        }
+
+        .answer__slot::before {
+          top: -7px;
+          width: 18px;
+          height: 18px;
+          font-size: 10px;
+        }
+
+        .answer__arrow {
+          font-size: 12px;
+        }
+
+        .choices {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .choice {
+          min-height: 42px;
+          grid-template-columns: 28px minmax(0, 1fr);
+          gap: 8px;
+          border-radius: 11px;
+          padding: 7px 8px;
+        }
+
+        .choice__number {
+          width: 28px;
+          height: 28px;
+          font-size: 13px;
+        }
+
+        .choice__label {
+          font-size: 13px;
+        }
+
+        .feedback {
+          min-height: 26px;
+          margin-top: 0;
+          font-size: 11px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <section class="quiz" id="quiz">
+        <header class="header">
+          <div>
+            <h1 class="title" id="title">가야 철 생산 순서</h1>
+            <p class="subtitle" id="subtitle">철 생산 과정을 순서대로 고르기</p>
+          </div>
+          <div class="progress" id="progress">0/4</div>
+          <button class="close" id="close" type="button" aria-label="닫기">×</button>
+        </header>
+
+        <section class="question">
+          <div class="question__label">문제</div>
+          <h2 class="question__text" id="questionText">철 생산 순서를 알맞게 완성하세요.</h2>
+          <p class="question__hint" id="hint">보기에서 정답을 순서대로 누르세요. 틀리면 처음부터 다시 시작합니다.</p>
+        </section>
+
+        <section class="answerBlock">
+          <div class="answerBlock__top">
+            <div class="answerBlock__title">정답 순서</div>
+            <div class="answerBlock__guide">왼쪽부터 차례대로 채워집니다.</div>
+          </div>
+          <div class="answer" id="answer" aria-label="정답 순서"></div>
+        </section>
+        <section class="choices" id="choices" aria-label="객관식 보기"></section>
+        <div class="feedback" id="feedback">첫 번째 순서를 고르세요.</div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        var payload = {};
+        var answers = [];
+        var completed = false;
+        var clearWrongTimer = 0;
+        var shuffledItems = [];
+
+        var quizEl = document.getElementById("quiz");
+        var titleEl = document.getElementById("title");
+        var subtitleEl = document.getElementById("subtitle");
+        var questionTextEl = document.getElementById("questionText");
+        var hintEl = document.getElementById("hint");
+        var progressEl = document.getElementById("progress");
+        var answerEl = document.getElementById("answer");
+        var choicesEl = document.getElementById("choices");
+        var feedbackEl = document.getElementById("feedback");
+        var closeEl = document.getElementById("close");
+
+        function post(type) {
+          if (window.parent) {
+            window.parent.postMessage({ type: type }, "*");
+          }
+        }
+
+        function items() {
+          return shuffledItems.length > 0 ? shuffledItems : sourceItems();
+        }
+
+        function sourceItems() {
+          return Array.isArray(payload.items) ? payload.items : [];
+        }
+
+        function sequence() {
+          return Array.isArray(payload.sequence) ? payload.sequence : [];
+        }
+
+        function isSameOrder(list, order) {
+          if (!list.length || list.length !== order.length) {
+            return false;
+          }
+
+          for (var i = 0; i < list.length; i += 1) {
+            if (list[i].id !== order[i]) {
+              return false;
+            }
+          }
+
+          return true;
+        }
+
+        function shuffleItems(list) {
+          var shuffled = list.slice();
+
+          for (var i = shuffled.length - 1; i > 0; i -= 1) {
+            var randomIndex = Math.floor(Math.random() * (i + 1));
+            var item = shuffled[i];
+            shuffled[i] = shuffled[randomIndex];
+            shuffled[randomIndex] = item;
+          }
+
+          if (shuffled.length > 1 && isSameOrder(shuffled, sequence())) {
+            var first = shuffled[0];
+            shuffled[0] = shuffled[1];
+            shuffled[1] = first;
+          }
+
+          return shuffled;
+        }
+
+        function findItem(id) {
+          var list = items();
+          for (var i = 0; i < list.length; i += 1) {
+            if (list[i].id === id) {
+              return list[i];
+            }
+          }
+          return null;
+        }
+
+        function setFeedback(text, state) {
+          feedbackEl.textContent = text || "";
+          feedbackEl.classList.toggle("feedback--wrong", state === "wrong");
+          feedbackEl.classList.toggle("feedback--success", state === "success");
+        }
+
+        function renderAnswer() {
+          var order = sequence();
+          answerEl.innerHTML = "";
+
+          for (var i = 0; i < order.length; i += 1) {
+            var unit = document.createElement("div");
+            unit.className = "answer__unit";
+
+            var slot = document.createElement("div");
+            slot.className = "answer__slot";
+            slot.setAttribute("data-step", String(i + 1));
+            if (answers[i]) {
+              var item = findItem(answers[i]);
+              slot.classList.add("answer__slot--filled");
+              slot.textContent = item ? item.label : answers[i];
+            } else {
+              slot.textContent = "";
+            }
+
+            unit.appendChild(slot);
+            if (i < order.length - 1) {
+              var arrow = document.createElement("span");
+              arrow.className = "answer__arrow";
+              arrow.textContent = "→";
+              unit.appendChild(arrow);
+            }
+            answerEl.appendChild(unit);
+          }
+        }
+
+        function renderChoices() {
+          var list = items();
+          choicesEl.innerHTML = "";
+
+          for (var i = 0; i < list.length; i += 1) {
+            var item = list[i];
+            var button = document.createElement("button");
+            button.type = "button";
+            button.className = "choice";
+            button.dataset.id = item.id;
+            button.disabled = completed;
+            if (answers.indexOf(item.id) >= 0) {
+              button.classList.add("choice--picked");
+            }
+
+            var number = document.createElement("span");
+            number.className = "choice__number";
+            number.textContent = String(i + 1);
+
+            var label = document.createElement("span");
+            label.className = "choice__label";
+            label.textContent = item.label;
+
+            button.appendChild(number);
+            button.appendChild(label);
+            choicesEl.appendChild(button);
+          }
+        }
+
+        function render() {
+          var total = sequence().length;
+          progressEl.textContent = answers.length + "/" + total;
+          renderAnswer();
+          renderChoices();
+        }
+
+        function resetWrong() {
+          answers = [];
+          quizEl.classList.add("quiz--wrong");
+          render();
+          window.clearTimeout(clearWrongTimer);
+          clearWrongTimer = window.setTimeout(function () {
+            quizEl.classList.remove("quiz--wrong");
+          }, 300);
+        }
+
+        function complete() {
+          completed = true;
+          render();
+          setFeedback(payload.successMessage || "정답입니다.", "success");
+          window.setTimeout(function () {
+            post("mission-game:complete");
+          }, 650);
+        }
+
+        function choose(id) {
+          if (completed) {
+            return;
+          }
+
+          var order = sequence();
+          var expected = order[answers.length];
+          if (id !== expected) {
+            resetWrong();
+            setFeedback(payload.wrongMessage || "순서가 틀렸습니다. 처음부터 다시 고르세요.", "wrong");
+            return;
+          }
+
+          answers.push(id);
+          render();
+
+          if (answers.length >= order.length) {
+            complete();
+            return;
+          }
+
+          setFeedback((answers.length + 1) + "번째 순서를 고르세요.", "");
+        }
+
+        function applyPayload(nextPayload) {
+          payload = nextPayload || {};
+          answers = [];
+          completed = false;
+          shuffledItems = shuffleItems(sourceItems());
+          titleEl.textContent = payload.title || "가야 철 생산 순서";
+          subtitleEl.textContent = payload.subtitle || "철 생산 과정을 순서대로 고르기";
+          questionTextEl.textContent = "철 생산 순서를 알맞게 완성하세요.";
+          hintEl.textContent = payload.instruction || "보기에서 정답을 순서대로 누르세요. 틀리면 처음부터 다시 시작합니다.";
+          setFeedback(payload.initialFeedback || "첫 번째 순서를 고르세요.", "");
+          render();
+        }
+
+        function handleMessage(event) {
+          var data = event.data;
+          if (!data || data.type !== "mission-game:init") {
+            return;
+          }
+          applyPayload(data.payload);
+        }
+
+        choicesEl.addEventListener("click", function (event) {
+          var button = event.target && event.target.closest
+            ? event.target.closest(".choice")
+            : null;
+          if (!button) {
+            return;
+          }
+          choose(button.dataset.id);
+        });
+
+        closeEl.addEventListener("click", function () {
+          post("mission-game:close");
+        });
+
+        window.addEventListener("message", handleMessage);
+        window.setTimeout(function () {
+          post("mission-game:ready");
+        }, 0);
+      })();
+    </script>
+  </body>
+</html>

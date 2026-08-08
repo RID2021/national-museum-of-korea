@@ -1,0 +1,2 @@
+[     907ms] TypeError: Failed to execute 'getComputedStyle' on 'Window': parameter 1 is not of type 'Element'.
+    at eval (eval at <anonymous> (eval at evaluate (:303:30)), <anonymous>:1:779)

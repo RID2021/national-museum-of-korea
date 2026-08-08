@@ -1,0 +1,21 @@
+- generic [ref=f2e3]:
+  - generic [ref=f2e4]:
+    - heading "부장품 교류 지도" [level=1] [ref=f2e5]
+    - generic [ref=f2e6]: 3/3
+    - button "닫기" [ref=f2e7] [cursor=pointer]: ×
+  - paragraph [ref=f2e8]: 부장품을 알맞은 지역으로 끌어다 놓으세요.
+  - generic [ref=f2e9]:
+    - generic [ref=f2e10]:
+      - img "무령왕릉 부장품 교류 지도" [ref=f2e11]
+      - generic:
+        - generic "청동거울 - 중국 남조": ✓
+        - generic "금송 목관 조각 - 일본": ✓
+        - generic "흑단 두침 - 동남아": ✓
+      - button "중국 남조" [ref=f2e12]
+      - button "일본" [ref=f2e13]
+      - button "동남아" [ref=f2e14]
+    - generic "배치할 아이콘" [ref=f2e15]:
+      - button "청동거울" [disabled] [ref=f2e16]
+      - button "금송 목관 조각" [disabled] [ref=f2e19]
+      - button "흑단 두침" [disabled] [ref=f2e22]
+  - generic [ref=f2e25]: 그렇다. 잘 짝지었구나.

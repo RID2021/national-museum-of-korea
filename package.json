@@ -5,7 +5,9 @@
     "build": "zep-script build",
     "pack": "zep-script pack",
     "archive": "zep-script archive",
-    "deploy": "zep-script publish"
+    "publish:zep": "zep-script publish",
+    "deploy": "npm run build && npm run archive && npm run publish:zep",
+    "cdn:upload": "node scripts/upload-cdn-asset.js"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",

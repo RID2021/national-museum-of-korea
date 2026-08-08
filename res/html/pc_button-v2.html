@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PC Buttons</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    body {
+      box-sizing: border-box;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 7px;
+      padding: 3px 4px;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+    }
+
+    .action-button {
+      width: 62px;
+      height: 64px;
+      border: 2px solid rgba(28, 24, 22, 0.88);
+      border-radius: 18px;
+      color: #fffaf0;
+      display: grid;
+      grid-template-rows: 34px auto;
+      place-items: center;
+      gap: 1px;
+      padding: 6px 4px 7px;
+      cursor: pointer;
+      white-space: nowrap;
+      text-shadow: none;
+      box-shadow: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    .action-button:active {
+      transform: translateY(2px);
+      filter: brightness(0.96);
+    }
+
+    .btn-progress {
+      background:
+        radial-gradient(circle at 32% 18%, rgba(255, 255, 255, 0.24), transparent 34%),
+        linear-gradient(145deg, #e1ad55 0%, #bc763a 100%);
+    }
+
+    .btn-inventory {
+      background:
+        radial-gradient(circle at 32% 18%, rgba(255, 255, 255, 0.23), transparent 34%),
+        linear-gradient(145deg, #cf83a0 0%, #995178 100%);
+    }
+
+    .action-button svg {
+      width: 34px;
+      height: 34px;
+      color: #fff8e7;
+      filter: none;
+    }
+
+    .button-label {
+      display: block;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <button type="button" class="action-button btn-progress" onclick="openMissionProgress()" aria-label="진행률 열기">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M9 24a15 15 0 1 1 30 0 15 15 0 0 1-30 0Z" fill="none" stroke="currentColor" stroke-width="4" opacity="0.45" />
+      <path d="M24 9a15 15 0 0 1 13.5 21.5" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+      <path d="M16 25h5l3-8 4 14 3-6h3" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <span class="button-label">진행률</span>
+  </button>
+  <button type="button" class="action-button btn-inventory" onclick="openInventory()" aria-label="인벤토리 열기">
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M12 17h24l-2.5 23h-19L12 17Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+      <path d="M18 17v-2a6 6 0 0 1 12 0v2" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+      <path d="M18 27h12M18 33h8" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" />
+    </svg>
+    <span class="button-label">인벤토리</span>
+  </button>
+  <script>
+    function openInventory() {
+      window.parent.postMessage({ openInventory: true }, "*");
+    }
+
+    function openMissionProgress() {
+      window.parent.postMessage({ openMissionProgress: true }, "*");
+    }
+  </script>
+</body>
+
+</html>
