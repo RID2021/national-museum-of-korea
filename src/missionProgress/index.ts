@@ -16,7 +16,8 @@ const OVERALL_MISSION_TITLE = "전체 미션 진행률";
 const MUSEUM_BUTTON_LABEL = "국립중앙박물관으로 이동하기";
 const MUSEUM_LOCKED_MESSAGE =
   "거울의 방에서 청동거울 완성 영상을 확인한 후 이동할 수 있습니다.";
-const NATIONAL_MUSEUM_MAP_HASH_ID = "KweYXO";
+const NATIONAL_MUSEUM_SPACE_HASH_ID = "nLP9zE";
+const NATIONAL_MUSEUM_ENTRY_MAP_HASH_ID = "R57laZ";
 
 const MISSION_PROGRESS_WIDGET_DIMENSIONS = Object.freeze({
   desktop: { width: 390, height: 450 },
@@ -887,7 +888,10 @@ function openNationalMuseum(player: ScriptPlayer): void {
     return;
   }
 
-  player.spawnAtMap(ScriptApp.spaceHashID, NATIONAL_MUSEUM_MAP_HASH_ID);
+  player.spawnAtMap(
+    NATIONAL_MUSEUM_SPACE_HASH_ID,
+    NATIONAL_MUSEUM_ENTRY_MAP_HASH_ID
+  );
 }
 
 export function handleMissionProgressTrigger(
