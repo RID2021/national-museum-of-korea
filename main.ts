@@ -8,6 +8,7 @@ import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
 import type { ScriptWidget } from "zep-script";
 
 import {
+  addInventoryItem,
   addInventoryItemByMapName,
   addInventoryItemByEarnItemName,
   clearInventoryItems,
@@ -378,6 +379,15 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   const mapName = ScriptMap.name;
   setFinalTitle(player, mapName);
   ensureInventory(player, DEFAULT_INVENTORY_SIZE);
+  const inventory = getInventory(player);
+  if (!inventory.items.some((item) => item.name === "테스트 열쇠")) {
+    addInventoryItem(player, {
+      name: "테스트 열쇠",
+      imageUrl: "https://rid.gcdn.ntruss.com/countries/gold_A.png",
+      description: "테스트 용으로 지급된 아이템입니다.",
+      quantity: 1,
+    });
+  }
   if (mapName == "가평교육원") {
     checkPassport(player);
   }
