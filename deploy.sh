@@ -49,4 +49,5 @@ cat <<EOF > "$FLAG_FILE"
 export const DEBUG_FLAG = ${ZEP_DEBUG:-true};
 EOF
 
+# Includes NPC tests, build/archive, and the confirmed museum-app target guard.
 npm run deploy

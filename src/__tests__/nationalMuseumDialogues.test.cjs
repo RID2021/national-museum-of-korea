@@ -1,0 +1,220 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+const vm = require("node:vm");
+const ts = require("typescript");
+
+const root = path.resolve(__dirname, "../..");
+const dataSource = fs.readFileSync(path.join(root, "src/nationalMuseum/npcs.ts"), "utf8");
+const data = {};
+vm.runInNewContext(ts.transpileModule(dataSource, {
+  compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
+}).outputText, { exports: data });
+
+// Exercise the registered museum data against the actual existing router.
+const engineSource = fs.readFileSync(path.join(root, "src/missionNpc/index.ts"), "utf8");
+const file = ts.createSourceFile("engine.ts", engineSource, ts.ScriptTarget.Latest, true);
+const names = new Set([
+  "normalizeTrigger", "normalizeAliasKey", "resolveNpcIdAlias", "resolveSceneIdAlias",
+  "doesNpcMatchCurrentMap", "parseSceneOnlyTrigger", "isGenericSceneOnlyAlias",
+  "getNpcLocationAliases", "getSceneLocationAliases", "parseNpcTrigger",
+  "getNpcDefinition", "getNpcScene", "handleMissionNpcTrigger",
+  "handleMissionNpcObjectKey", "addNpcLocationTrigger", "registerMissionNpcLocations",
+  "buildNpcPayload", "runSceneAfterAction",
+]);
+const functions = file.statements.filter(node => ts.isFunctionDeclaration(node) && names.has(node.name.text))
+  .map(node => node.getText(file).replace(/^export /, "")).join("\n");
+
+function setup() {
+  const opened = [];
+  const entered = new Map();
+  const touched = new Map();
+  const timers = [];
+  const player = { tag: {}, storage: "unchanged" };
+  const context = {
+    NPC_TRIGGER_PREFIXES: ["npc:", "dialog:"], DEFAULT_SCENE_ID: "intro",
+    NPC_ID_ALIASES: data.NATIONAL_MUSEUM_NPC_ALIASES,
+    NPC_SCENE_ALIASES: data.NATIONAL_MUSEUM_SCENE_ALIASES,
+    MISSION_NPCS: data.NATIONAL_MUSEUM_NPCS,
+    registeredMissionNpcLocationNames: new Set(),
+    ScriptMap: { name: "국립중앙박물관" },
+    ScriptApp: {
+      addOnLocationEnter: (key, fn) => entered.set(key, fn),
+      addOnLocationTouched: (key, fn) => touched.set(key, fn),
+    },
+    preparePlayerTag: p => p.tag,
+    resolveProgressScene: (_p, _n, scene) => scene,
+    isSceneOpenOrPending: (tag, n, s) => tag.missionNpcId === n.id && tag.missionNpcSceneId === s.id,
+    areSceneRequirementsComplete: () => true,
+    hasSeenOncePerPlayerScene: () => false,
+    markOncePerPlayerSceneSeen: () => {},
+    runSceneImmediateAction: () => false,
+    runScenePreDialogueCamera: () => false,
+    requestMissionNpcAdvance: () => { context.advances++; return true; },
+    buildDynamicSceneForPlayer: (_p, scene) => scene,
+    advances: 0,
+    openMissionNpc(p, n, s) {
+      p.tag.missionNpcId = n.id;
+      p.tag.missionNpcSceneId = s.id;
+      p.tag.missionNpcWidget = {};
+      opened.push({ npc: n, scene: s });
+    },
+    setTimeout: fn => timers.push(fn),
+  };
+  vm.runInNewContext(ts.transpileModule(functions, {
+    compilerOptions: { target: ts.ScriptTarget.ES2019 },
+  }).outputText, context);
+  return { context, player, opened, entered, touched, timers };
+}
+
+test("the script has eight distinct speakers and 29 nonempty dialogue scenes", () => {
+  const npcs = data.NATIONAL_MUSEUM_NPCS;
+  assert.equal(npcs.length, 8);
+  assert.equal(new Set(npcs.map(n => n.id)).size, 8);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 29);
+  for (const n of npcs) {
+    assert.ok(n.scenes.some(s => s.id === "intro"));
+    assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
+    for (const s of n.scenes) {
+      const lines = s.speakerLines?.map(l => l.text) ?? s.lines;
+      assert.ok(lines.length > 0);
+      assert.ok(lines.every(line => typeof line === "string" && line.trim()));
+    }
+  }
+});
+
+test("all 29 fully qualified object triggers route to the intended NPC and scene", () => {
+  for (const npc of data.NATIONAL_MUSEUM_NPCS) {
+    for (const scene of npc.scenes) {
+      const { context, player, opened } = setup();
+      assert.equal(context.handleMissionNpcObjectKey(player, `npc:${npc.id}:${scene.id}`), true);
+      assert.equal(opened[0].npc.id, npc.id);
+      assert.equal(opened[0].scene.id, scene.id);
+    }
+  }
+});
+
+test("Korean aliases, default intros, and dialog prefix resolve correctly", () => {
+  const { context, player, opened } = setup();
+  for (const [alias, npcId] of Object.entries(data.NATIONAL_MUSEUM_NPC_ALIASES)) {
+    player.tag = {};
+    assert.equal(context.handleMissionNpcTrigger(player, `dialog:${alias}`), true);
+    assert.equal(opened.at(-1).npc.id, npcId);
+    assert.equal(opened.at(-1).scene.id, "intro");
+  }
+  player.tag = {};
+  assert.equal(context.handleMissionNpcTrigger(player, "npc:판갑옷과투구:성공|label"), true);
+  assert.equal(opened.at(-1).scene.id, "success");
+  assert.equal(opened.at(-1).npc.id, "museum-gaya-armor-helmet");
+});
+
+test("location entry/touch registration is idempotent and opens the same dialogue", () => {
+  const { context, player, opened, entered, touched } = setup();
+  context.registerMissionNpcLocations();
+  const count = entered.size;
+  context.registerMissionNpcLocations();
+  assert.equal(entered.size, count);
+  assert.equal(touched.size, count);
+  for (const npc of data.NATIONAL_MUSEUM_NPCS) {
+    const key = `npc:${npc.id}:intro`;
+    player.tag = {};
+    entered.get(key)(player);
+    assert.equal(opened.at(-1).npc.id, npc.id);
+    player.tag = {};
+    touched.get(key)(player);
+    assert.equal(opened.at(-1).npc.id, npc.id);
+  }
+});
+
+test("repeated F advances the current dialogue; another NPC switches speaker", () => {
+  const { context, player, opened } = setup();
+  context.handleMissionNpcObjectKey(player, "npc:반가사유상1");
+  context.handleMissionNpcObjectKey(player, "npc:반가사유상1");
+  assert.equal(opened.length, 1);
+  assert.equal(context.advances, 1);
+  context.handleMissionNpcObjectKey(player, "npc:안내로봇");
+  assert.equal(opened.length, 2);
+  assert.equal(opened.at(-1).npc.name, "안내 로봇");
+});
+
+test("unknown NPCs and unknown scenes do not open a substitute dialogue", () => {
+  const { context, player, opened } = setup();
+  for (const key of [null, "", "npc:missing", "npc:안내로봇:missing", "npc:진흥왕", "npc:김정희"]) {
+    assert.equal(context.handleMissionNpcTrigger(player, key), false);
+  }
+  assert.equal(opened.length, 0);
+});
+
+test("intro and meeting switch names and portraits in original script order", () => {
+  const { context, player } = setup();
+  const statue = data.NATIONAL_MUSEUM_NPCS[0];
+  const intro = context.buildNpcPayload(player, statue, statue.scenes.find(s => s.id === "intro"));
+  assert.equal(intro.speakerLines[0].speakerless, true);
+  assert.deepEqual(Array.from(intro.speakerLines.slice(1).map(l => l.speakerName)), [
+    "반가사유상 ①", "반가사유상 ②", "반가사유상 ①", "반가사유상 ②", "반가사유상 ①", "반가사유상 ②",
+  ]);
+  const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
+  const meeting = context.buildNpcPayload(player, robot, robot.scenes.find(s => s.id === "meeting"));
+  assert.deepEqual(Array.from(meeting.speakerLines.map(l => l.speakerName)), [
+    "안내 로봇", "호우총 청동 그릇", "산수무늬 벽돌", "진흥왕 순수비", "황남대총 금관", "판갑옷과 투구",
+  ]);
+  const ending = context.buildNpcPayload(player, robot, robot.scenes.find(s => s.id === "ending"));
+  assert.equal(ending.speakerlessLineTexts.length, 3);
+});
+
+test("meeting completion queues the emergency dialogue and resolves its target", () => {
+  const { context, player, opened, timers } = setup();
+  const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
+  context.runSceneAfterAction(player, robot.scenes.find(s => s.id === "meeting"));
+  assert.equal(opened.length, 0);
+  timers.shift()();
+  assert.equal(opened[0].npc.id, robot.id);
+  assert.equal(opened[0].scene.id, "emergency");
+});
+
+test("all linked portraits exist; dialogue previews cannot grant puzzle completion", () => {
+  for (const npc of data.NATIONAL_MUSEUM_NPCS) {
+    const urls = [npc.profileImageUrl];
+    for (const scene of npc.scenes) {
+      for (const field of ["missionId", "stepId", "stepIds", "rewardItems", "afterGameTrigger", "afterTeleport", "afterMapTeleport"]) {
+        assert.equal(scene[field], undefined);
+      }
+      urls.push(...(scene.speakerLines ?? []).map(l => l.profileImageUrl).filter(Boolean));
+    }
+    for (const url of urls) {
+      assert.equal(fs.existsSync(path.resolve(root, "res/html", url)), true, url);
+    }
+  }
+});
+
+test("the separate museum app registers the new NPCs and targets the confirmed app", () => {
+  assert.match(engineSource, /from ["']\.\.\/nationalMuseum/);
+  assert.match(engineSource, /\.\.\.NATIONAL_MUSEUM_NPCS/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(root, "zep-script.json"), "utf8")).appId, "53Xe2L");
+  const target = JSON.parse(fs.readFileSync(path.join(root, "zep-space.json"), "utf8"));
+  assert.equal(target.spaceHashId, "nLP9zE");
+  assert.equal(target.entryMapHashId, "R57laZ");
+});
+
+test("actual lobby and Silla map labels match the museum map editor", () => {
+  const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
+  for (let i = 1; i <= 5; i++) assert.ok(robot.mapNames.includes(`로비(${i})`));
+  assert.ok(data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-hwangnam-gold-crown").mapNames.includes("신라실(1)"));
+  assert.ok(data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-jinheung-stele").mapNames.includes("신라실(2)"));
+});
+
+test("generated widget embeds all eight original PNGs without relative-image requests", () => {
+  const html = fs.readFileSync(path.join(root, "res/html/museum-npc-widget-v1.html"), "utf8");
+  const match = html.match(/const MUSEUM_PORTRAITS = (\{[^\n]+\});/);
+  assert.ok(match);
+  const portraits = JSON.parse(match[1]);
+  assert.equal(Object.keys(portraits).length, 8);
+  for (const npc of data.NATIONAL_MUSEUM_NPCS) {
+    const uri = portraits[npc.profileImageUrl];
+    assert.ok(uri.startsWith("data:image/png;base64,"));
+    assert.deepEqual(Buffer.from(uri.split(",")[1], "base64"), fs.readFileSync(path.resolve(root, "res/html", npc.profileImageUrl)));
+  }
+  assert.match(html, /profileImageElement.src = MUSEUM_PORTRAITS\[portraitUrl\] \|\| portraitUrl/);
+  assert.doesNotMatch(html, /data:video\/mp4;base64/);
+});

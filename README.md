@@ -1,4 +1,10 @@
-# ZEP Script Webpack Template
+# National Museum of Korea — ZEP
+
+국립중앙박물관 「밤의 지키미」 전용 프로젝트입니다. NPC 대화 8종·29장면의 트리거와 배포 대상은 [박물관 대화 안내](src/nationalMuseum/README.md)를 참고하세요.
+
+현재 앱 ID는 `53Xe2L`, 스페이스는 `nLP9zE`, 입장 맵은 `R57laZ`입니다. `seoul_2` 고분 앱과 별도 저장소·배포 대상입니다.
+
+## 기존 템플릿 사용 안내
 
 ## 🇰🇷 한국어
 

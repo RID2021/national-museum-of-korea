@@ -1,5 +1,10 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 
+import {
+  NATIONAL_MUSEUM_NPCS,
+  NATIONAL_MUSEUM_NPC_ALIASES,
+  NATIONAL_MUSEUM_SCENE_ALIASES,
+} from "../nationalMuseum/npcs";
 import { handleMissionGameTrigger } from "../missionGame";
 import { addInventoryItem, refreshInventoryWidget } from "../inventory";
 import type { InventoryItem } from "../inventory/interfaces";
@@ -18,6 +23,7 @@ import {
 } from "../utils/player";
 
 const MISSION_NPC_WIDGET_TEMPLATE = "html/mission-npc-widget-v17.html";
+const MUSEUM_NPC_WIDGET_TEMPLATE = "html/museum-npc-widget-v1.html";
 
 const MISSION_NPC_WIDGET_DIMENSIONS = Object.freeze({
   desktop: { width: 1020, height: 660 },
@@ -46,6 +52,7 @@ const DAESEONGDONG_ARTIFACT_STEP_IDS = [
 ];
 
 const NPC_ID_ALIASES: Record<string, string> = {
+  ...NATIONAL_MUSEUM_NPC_ALIASES,
   ending: "time-grandfather",
   "시간할아버지": "time-grandfather",
   timegrandfather: "time-grandfather",
@@ -78,6 +85,7 @@ const NPC_ID_ALIASES: Record<string, string> = {
 };
 
 const NPC_SCENE_ALIASES: Record<string, Record<string, string>> = {
+  ...NATIONAL_MUSEUM_SCENE_ALIASES,
   "time-grandfather": {
     "1": "ending",
     "trigger1": "ending",
@@ -682,6 +690,7 @@ type MissionNpcPlayerTag = PlayerTagRecord & {
   missionNpcJustCompletedSceneId?: string;
   missionNpcJustCompletedStepId?: string;
   missionNpcWidget?: ScriptWidget | null;
+  missionNpcWidgetTemplate?: string;
   missionNpcId?: string;
   missionNpcSceneId?: string;
   missionNpcPreDialogueCameraKey?: string;
@@ -732,6 +741,7 @@ interface ParsedNpcTrigger {
 }
 
 const MISSION_NPCS: MissionNpcDefinition[] = [
+  ...NATIONAL_MUSEUM_NPCS,
   {
     id: "time-grandfather",
     name: "시간 할아버지",
@@ -2811,6 +2821,7 @@ function hasVisibleNpcPayload(payload: MissionNpcPayload): boolean {
 function teardownMissionNpcWidget(tag: MissionNpcPlayerTag): void {
   const existing = tag.missionNpcWidget;
   tag.missionNpcWidget = null;
+  tag.missionNpcWidgetTemplate = undefined;
   tag.missionNpcId = undefined;
   tag.missionNpcSceneId = undefined;
   tag.missionNpcLastAdvanceAt = undefined;
@@ -3273,6 +3284,13 @@ function openMissionNpc(
     return null;
   }
 
+  const template = npc.id.startsWith("museum-")
+    ? MUSEUM_NPC_WIDGET_TEMPLATE
+    : MISSION_NPC_WIDGET_TEMPLATE;
+  if (tag.missionNpcWidget && tag.missionNpcWidgetTemplate !== template) {
+    teardownMissionNpcWidget(tag);
+  }
+
   if (tag.missionNpcWidget) {
     if (isSameNpcScene(tag, npc, scene)) {
       sendNpcInit(player, tag.missionNpcWidget, npc, scene);
@@ -3289,19 +3307,23 @@ function openMissionNpc(
   const retryCountAtOpen = Number(tag.missionNpcRetryCount ?? 0);
   const { width, height } = pickWidgetDimensions(player);
   const widget = player.showWidget(
-    MISSION_NPC_WIDGET_TEMPLATE,
+    template,
     "middle",
     width,
     height
   );
 
   tag.missionNpcWidget = widget;
+  tag.missionNpcWidgetTemplate = template;
   tag.missionNpcId = npc.id;
   tag.missionNpcSceneId = scene.id;
   tag.missionNpcReadyAt = undefined;
   tag.missionNpcRetryCount = retryCountAtOpen;
 
   widget.onMessage.Add(function (_sender, data) {
+    if (tag.missionNpcWidget !== widget) {
+      return;
+    }
     const type = (data as MissionNpcIncomingMessage | undefined)?.type;
 
     if (type === "mission-npc:close") {
