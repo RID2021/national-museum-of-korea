@@ -87,3 +87,21 @@ test('ending remains resumable until its last page; restart preserves unrelated 
   h.api.startMuseumExperience(h.player,h.open);const hud=h.widgets.at(-1);hud.receive(h.player,{type:'museum:restart-confirmed'});
   const saved=JSON.parse(h.player.storage);assert.deepEqual(saved.inventory,['existing']);assert.equal(saved.other,'keep');assert.equal(saved.museumJourney.completed.length,0);assert.deepEqual(h.moves.at(-1),['nLP9zE','R57laZ']);
 });
+test('mobile answer buttons work without keyboard, preserve drafts and ignore IME Enter',()=>{
+  const html=fs.readFileSync(path.resolve(base,'../../res/html/museum-game-v1.html'),'utf8');
+  const elements={}, messages=[], timers=[];
+  function element(){return {value:'',children:[],append(...items){this.children.push(...items);for(const item of items)if(item.id)elements[item.id]=item;},replaceChildren(){this.children=[];},setAttribute(){},classList:{add(){}}};}
+  for(const id of ['title','number','prompt','hint','note','feedback','board','submit','close'])elements[id]=element();
+  const parent={postMessage:m=>messages.push(m)};
+  const context={document:{getElementById:id=>elements[id],createElement:element},parent,window:{addEventListener(){}},setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){}};
+  vm.createContext(context);vm.runInContext(html.match(/<script>([\s\S]*)<\/script>/)[1],context);
+  const payload={type:'museum:game',token:'t',revision:0,mission:1,kind:'answer',title:'test'};
+  context.render(payload);
+  elements.submit.onclick();assert.equal(messages.filter(m=>m.type==='museum:action').length,0);
+  const keys=elements.board.children.at(-1).children;
+  keys.find(k=>k.textContent==='교').onclick();keys.find(k=>k.textContent==='류').onclick();assert.equal(elements.answer.value,'교류');
+  elements.answer.oncompositionstart();elements.answer.onkeydown({key:'Enter',isComposing:true,keyCode:229});assert.equal(messages.filter(m=>m.type==='museum:action').length,0);
+  elements.answer.oncompositionend();elements.submit.onclick();assert.equal(messages.at(-1).action.text,'교류');
+  context.render({...payload,revision:1,feedback:'다시 도전'});assert.equal(elements.answer.value,'교류');
+  elements.board.children.at(-1).children.find(k=>k.textContent==='모두 지우기').onclick();assert.equal(elements.answer.value,'');
+});
