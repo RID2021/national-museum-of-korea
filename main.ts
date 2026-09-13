@@ -3,6 +3,8 @@
  */
 
 import "zep-script";
+import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
+import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
 import type { ScriptWidget } from "zep-script";
@@ -337,7 +339,7 @@ function handleActionButton(player: ScriptPlayer): void {
   handleNearbyInteractionLocation(player);
 }
 
-ScriptApp.onInit.Add(function () {
+ScriptApp.onInit.Add(() => runMuseumDiagnosticPhase("onInit", function () {
   // register task key
   ScriptApp.addOnKeyDown(KeyCodeType.T, function (player) {
     debugMessage("T: key Pressed");
@@ -363,11 +365,11 @@ ScriptApp.onInit.Add(function () {
   registerMissionGameCompletionNpcFeedback();
 
   registerConfiguredTileMessages();
-});
+}));
 
 
 
-ScriptApp.onJoinPlayer.Add(function (player) {
+ScriptApp.onJoinPlayer.Add((player) => runMuseumDiagnosticPhase("onJoinPlayer", function () {
   loadPCButtonGroup(player);
   preparePlayerTag(player);
   preparePlayerStorage(player, {
@@ -411,7 +413,7 @@ ScriptApp.onJoinPlayer.Add(function (player) {
   if (mapName === FIX_GAME_MAP_NAME) {
     handleFixGameJoin(player, mapName);
   }
-});
+}));
 
 ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
   loadTaskWidget(ScriptMap.name, player, "after");
@@ -456,9 +458,14 @@ ScriptApp.onObjectTouched.Add(function (
 
 ScriptApp.onTriggerObject.Add(
   (player: ScriptPlayer, _layerId: number, _x: number, _y: number, key: string) => {
-    handleInteractionKeyOrObjectParam(player, key, {
+    traceMuseumObject(player, _layerId, _x, _y, key);
+    const handled = handleInteractionKeyOrObjectParam(player, key, {
       isObjectInteraction: true,
     });
+    if (!handled) {
+      const value = getEditorInteractionValue(_layerId, _x, _y);
+      if (value) handleInteractionKey(player, value, { isObjectInteraction: true });
+    }
   },
 );
 
@@ -623,6 +630,7 @@ function resetOneTimeTriggerHistory(player: ScriptPlayer): void {
 }
 
 ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {
+  if (handleMuseumDiagnosticCommand(player, text.trim())) return;
   if (player.role > 1000) {
     const trimmedText = text.trim();
     const debugNpcTrigger = normalizeMissionNpcDebugTrigger(text.trim());

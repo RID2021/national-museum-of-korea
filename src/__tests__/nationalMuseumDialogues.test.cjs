@@ -6,6 +6,71 @@ const vm = require("node:vm");
 const ts = require("typescript");
 
 const root = path.resolve(__dirname, "../..");
+test("maps without task artwork do not create invisible widgets", () => {
+  const source = fs.readFileSync(path.join(root, "src/task/index.ts"), "utf8");
+  const exports = {};
+  let created = 0, destroyed = 0;
+  vm.runInNewContext(ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
+  }).outputText, { exports, require: () => ({
+    debugMessage() {}, doubleTaskMap: {}, loadPlayerStorage: () => ({}),
+    preparePlayerTag: p => p.tag, savePlayerStorage() {},
+  }) });
+  const player = { tag: { taskWidget: { destroy() { destroyed++; } } },
+    showWidget() { created++; } };
+  assert.equal(exports.loadTaskWidget("신라실(1)", player), null);
+  assert.equal(destroyed, 1);
+  assert.equal(created, 0);
+  assert.equal(player.tag.taskWidget, null);
+});
+test("editor F with no key resolves exact coordinates on the correct layer", () => {
+  const source = fs.readFileSync(path.join(root, "src/nationalMuseum/editorInteraction.ts"), "utf8");
+  const exports = {};
+  vm.runInNewContext(ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
+  }).outputText, { exports, ScriptMap: {
+    getObjectsByType: () => [{ tileX: 39, tileY: 27, param1: "npc:object" }],
+    getTopObjectsByType: () => [{ tileX: 39, tileY: 27, param1: " npc:museum-jinheung-stele " }],
+  } });
+  assert.equal(exports.getEditorInteractionValue(5, 39, 27), "npc:museum-jinheung-stele");
+  assert.equal(exports.getEditorInteractionValue(3, 39, 27), "npc:object");
+  assert.equal(exports.getEditorInteractionValue(5, 40, 27), null);
+  assert.equal(exports.getEditorInteractionValue(2, 39, 27), null);
+});
+test("portal map lookup uses the ZEP-compatible direct global property", () => {
+  const source = fs.readFileSync(path.join(root, "src/portal/portalGates.ts"), "utf8");
+  assert.doesNotMatch(source, /=\s*ScriptApp\s+as/);
+  assert.match(source, /const mapHashId: unknown = ScriptApp\.mapHashID/);
+});
+
+test("museum diagnostic positioning is restricted to opted-in museum administrators", () => {
+  const source = fs.readFileSync(path.join(root, "src/nationalMuseum/diagnostics.ts"), "utf8");
+  const exports = {};
+  const moves = [];
+  const context = {
+    exports,
+    require: () => ({ debugMessage() {}, preparePlayerTag: p => p.tag }),
+    ScriptApp: { spaceHashID: "nLP9zE", mapHashID: "test" },
+    ScriptMap: { name: "test", width: 50, height: 50, getTile: (_l, x) => x === 5 ? 1 : -1,
+      getObjectsByType: () => [], getTopObjectsByType: () => [] },
+  };
+  vm.runInNewContext(ts.transpileModule(source, {
+    compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
+  }).outputText, context);
+  const player = { role: 100, tag: {}, spawnAt: (x, y) => moves.push([x, y]) };
+  const run = text => exports.handleMuseumDiagnosticCommand(player, text);
+  assert.equal(run("#museum-check"), false);
+  player.role = 3000;
+  assert.equal(run("#museum-at 3 4"), false);
+  run("#museum-check");
+  run("#museum-at 3 4");
+  run("#museum-at 5 4");
+  run("#museum-at 99 4");
+  context.ScriptApp.spaceHashID = "other";
+  assert.equal(run("#museum-at 3 4"), false);
+  assert.deepEqual(moves, [[3, 4]]);
+  assert.throws(() => exports.runMuseumDiagnosticPhase("test", () => { throw new Error("failure"); }), /failure/);
+});
 const dataSource = fs.readFileSync(path.join(root, "src/nationalMuseum/npcs.ts"), "utf8");
 const data = {};
 vm.runInNewContext(ts.transpileModule(dataSource, {

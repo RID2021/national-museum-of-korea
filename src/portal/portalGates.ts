@@ -86,9 +86,10 @@ function parseGateBlockKey(
 }
 
 function getCurrentMapHashId(): string {
-  const scriptAppWithMapHashId = ScriptApp as unknown as { mapHashID?: unknown };
-  return typeof scriptAppWithMapHashId.mapHashID === "string"
-    ? scriptAppWithMapHashId.mapHashID.trim()
+  // ZEP's builder rewrites ScriptApp.member to App.member, not bare aliases.
+  const mapHashId: unknown = ScriptApp.mapHashID;
+  return typeof mapHashId === "string"
+    ? mapHashId.trim()
     : "";
 }
 

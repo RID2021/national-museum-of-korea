@@ -119,6 +119,12 @@ export function loadTaskWidget(
   const imageUrl = resolveTaskImage(mapName, targetStage);
   debugMessage({ type: "task:load", mapName, stage: targetStage, imageUrl });
 
+  // Maps without a task image must not retain an invisible, focusable iframe.
+  if (!imageUrl) {
+    teardownTaskWidget(tag);
+    return null;
+  }
+
   if (tag.taskWidget) {
     tag.taskStage = targetStage;
     tag.lastWidgetMapName = mapName;
