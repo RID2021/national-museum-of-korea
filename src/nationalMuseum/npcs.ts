@@ -85,6 +85,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
   npc("pensive-1", "사유의 방", "지키미 후보 선정과 밤의 회의 안내", [
     {
       id: "prologue",
+      museumTransitionId: "prologue",
       title: "국립중앙박물관: 밤의 지키미",
       lines: [],
       speakerLines: [
@@ -95,6 +96,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "intro",
       title: "반가사유상과의 첫 만남",
+      museumTransitionId: "introduction",
       lines: [],
       // Existing speakerLines support switches name and portrait per line.
       speakerLines: [
@@ -125,6 +127,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "intro",
       title: "오늘의 회의 참석 명단",
+      museumTransitionId: "goguryeo",
       lines: [
         "안녕하세요! 예비 박물관 지키미님. 오늘 회의에 참석할 유물 명단입니다.",
         "호우총 청동 그릇, 산수무늬 벽돌, 판갑옷과 투구, 황남대총 금관, 진흥왕 순수비",
@@ -132,7 +135,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       ],
       nextAction: "고구려실에서 호우총 청동 그릇을 만나세요.",
     },
-    { id: "gwanggaeto", title: "디지털 광개토대왕릉비", lines: GWANGGAETO_LINES },
+    { id: "gwanggaeto", title: "디지털 광개토대왕릉비", lines: GWANGGAETO_LINES, museumTransitionId: "goguryeo" },
     {
       id: "etiquette-intro",
       title: "관람 예절 미션 안내",
@@ -140,6 +143,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     },
     {
       id: "etiquette-success",
+      museumTransitionId: "museum-etiquette",
       title: "관람 예절 미션 후 안내",
       lines: [
         "특히 음식물은 유물 보존을 위해 전시실에 반입할 수 없다는 것, 기본 중의 기본이죠.",
@@ -213,6 +217,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "success",
       title: "호우총 청동 그릇 미션 후 대화",
+      museumTransitionId: "museum-hou-relations",
       lines: [
         "고구려의 그릇이 신라의 무덤에서 발견되었다는 점에서 고구려와 신라 사이의 정치적 관계와 교류가 있었음을 알 수 있어.",
         "이제 내 소개를 했으니 나는 회의장으로 가볼게.",
@@ -233,6 +238,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "success",
       title: "산수무늬 벽돌 미션 후 대화",
+      museumTransitionId: "museum-baekje-bricks",
       lines: ["잘했어! 벽돌에 담긴 산과 물, 구름과 봉황 무늬는 백제인의 자연관과 세련된 미술 감각을 보여준다고!"],
     },
     meetingScene("baekje-landscape-brick"),
@@ -255,7 +261,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
         "① 나무판 ② 철판 ③ 돌판",
       ],
     },
-    { id: "success", title: "판갑옷과 투구 미션 후 대화", lines: ["훌륭해! 이제 회의에 참석할 준비가 되었어."] },
+    { id: "success", title: "판갑옷과 투구 미션 후 대화", lines: ["훌륭해! 이제 회의에 참석할 준비가 되었어."], museumTransitionId: "museum-gaya-iron" },
     meetingScene("gaya-armor-helmet"),
   ]),
   npc("hwangnam-gold-crown", "신라실(1)", "황남대총 금관의 특징과 식별 안내", [
@@ -275,7 +281,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       lines: [],
       speakerLines: [narrator("나무 모양 세움 장식, 사슴뿔 모양 장식, 굽은옥")],
     },
-    { id: "success", title: "황남대총 금관 미션 후 대화", lines: ["정답! 역시 박물관 예비 지키미답게 나를 세심하게 알아보는구나."] },
+    { id: "success", title: "황남대총 금관 미션 후 대화", lines: ["정답! 역시 박물관 예비 지키미답게 나를 세심하게 알아보는구나."], museumTransitionId: "museum-hwangnam-crown" },
     meetingScene("hwangnam-gold-crown"),
   ]),
   npc("jinheung-stele", "신라실(2)", "진흥왕 순수비와 신라 영토 확장 안내", [
@@ -289,7 +295,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
         "나와 함께 진흥왕 시기 세워진 다른 비석들의 위치를 찾아보겠니?",
       ],
     },
-    { id: "success", title: "한반도 지도 퍼즐 후 대화", lines: ["진흥왕 때 세워진 여러 비석의 위치를 보며 신라가 어느 방향으로 세력을 넓혔는지 살펴보자."] },
+    { id: "success", title: "한반도 지도 퍼즐 후 대화", lines: ["진흥왕 때 세워진 여러 비석의 위치를 보며 신라가 어느 방향으로 세력을 넓혔는지 살펴보자."], museumTransitionId: "museum-jinheung-locations" },
     meetingScene("jinheung-stele"),
   ]),
 ];

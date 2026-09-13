@@ -5,6 +5,7 @@
 import "zep-script";
 import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
 import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
+import { handleMuseumArrival, handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
 import type { ScriptWidget } from "zep-script";
@@ -413,6 +414,7 @@ ScriptApp.onJoinPlayer.Add((player) => runMuseumDiagnosticPhase("onJoinPlayer", 
   if (mapName === FIX_GAME_MAP_NAME) {
     handleFixGameJoin(player, mapName);
   }
+  handleMuseumArrival(player, handleMissionNpcObjectKey);
 }));
 
 ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
@@ -580,6 +582,7 @@ function normalizeMissionGameDebugTrigger(text: string): string | null {
 
 function registerMissionGameCompletionNpcFeedback(): void {
   addMissionGameCompleteHandler(function (player, gameId) {
+    if (handleMuseumMissionCompletion(player, gameId, handleMissionNpcObjectKey)) return;
     if (gameId === "muyongchong-hunting") {
       handleMissionNpcObjectKey(player, "npc:godu:hunting-success");
       syncMuyongchongGate(player, ScriptMap.name);

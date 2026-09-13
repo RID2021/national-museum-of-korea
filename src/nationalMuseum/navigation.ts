@@ -1,0 +1,95 @@
+import type { ScriptPlayer } from "zep-script";
+import { loadPlayerStorage, savePlayerStorage } from "../utils/player";
+
+// Verified against the live editor's map URLs and portal destinations, 2026-09-14.
+export const MUSEUM_MAPS = {
+  night: "R57laZ", pensive: "WarEng", lobby1: "LB6MNd", goguryeo: "0EAV9k",
+  lobby2: "pnNepx", baekje: "kP0x5B", lobby3: "xEOeqz", gaya: "7RE0Ea",
+  lobby4: "eXY3Yx", silla1: "r7aeam", silla2: "dJzqzn", lobby5: "pnNeN3", day: "XWA4Aj",
+};
+const SPACE = "nLP9zE";
+type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string };
+const MISSIONS = [
+  { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
+  { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
+  { id: "museum-gaya-iron", map: MUSEUM_MAPS.gaya, destination: MUSEUM_MAPS.lobby4, npc: "museum-gaya-armor-helmet" },
+  { id: "museum-hwangnam-crown", map: MUSEUM_MAPS.silla1, destination: MUSEUM_MAPS.silla2, npc: "museum-hwangnam-gold-crown" },
+  // Emit this only AFTER the puzzle AND every stele-location confirmation.
+  { id: "museum-jinheung-locations", map: MUSEUM_MAPS.silla2, destination: MUSEUM_MAPS.lobby5, npc: "museum-jinheung-stele" },
+  { id: "museum-etiquette", map: MUSEUM_MAPS.lobby5, destination: "", npc: "museum-guide-robot" },
+  { id: "museum-artifact-cards", map: MUSEUM_MAPS.lobby5, destination: MUSEUM_MAPS.day, npc: "museum-guide-robot" },
+];
+
+function journey(player: ScriptPlayer): Journey {
+  const value = loadPlayerStorage(player).museumJourney as Journey | undefined;
+  return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
+    pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined };
+}
+
+function persist(player: ScriptPlayer, value: Journey): void {
+  savePlayerStorage(player, { ...loadPlayerStorage(player), museumJourney: value }, { persist: true });
+}
+
+// Server-side completion callback only. Not registered as a chat/object/widget
+// "success" command: viewing a success dialogue cannot complete a mission.
+export function handleMuseumMissionCompletion(player: ScriptPlayer, gameId: string, open: OpenDialogue): boolean {
+  if (ScriptApp.spaceHashID !== SPACE) return false;
+  const index = MISSIONS.findIndex(mission => mission.id === gameId);
+  if (index < 0) return false;
+  const mission = MISSIONS[index];
+  const state = journey(player);
+  if (ScriptApp.mapHashID !== mission.map || !MISSIONS.slice(0, index).every(item => state.completed.includes(item.id))) return true;
+  if (state.completed.includes(gameId)) return true;
+  state.completed.push(gameId);
+  if (gameId === "museum-artifact-cards") {
+    state.pendingEnding = true;
+    persist(player, state);
+    player.spawnAtMap(ScriptApp.spaceHashID, MUSEUM_MAPS.day);
+    return true;
+  }
+  state.pendingCompletion = gameId;
+  persist(player, state);
+  open(player, `npc:${mission.npc}:${gameId === "museum-etiquette" ? "etiquette-success" : "success"}`);
+  return true;
+}
+
+export function runMuseumSceneTransition(player: ScriptPlayer, transition: string, open: OpenDialogue): void {
+  if (ScriptApp.spaceHashID !== SPACE) return;
+  const direct: Record<string, [string, string]> = {
+    prologue: [MUSEUM_MAPS.night, MUSEUM_MAPS.pensive],
+    introduction: [MUSEUM_MAPS.pensive, MUSEUM_MAPS.lobby1],
+    goguryeo: [MUSEUM_MAPS.lobby1, MUSEUM_MAPS.goguryeo],
+  };
+  const route = direct[transition];
+  if (route) {
+    if (ScriptApp.mapHashID === route[0]) player.spawnAtMap(ScriptApp.spaceHashID, route[1]);
+    return;
+  }
+  const mission = MISSIONS.find(item => item.id === transition);
+  const state = journey(player);
+  if (!mission || ScriptApp.mapHashID !== mission.map || state.pendingCompletion !== transition || !state.completed.includes(transition)) return;
+  state.pendingCompletion = undefined;
+  persist(player, state);
+  if (transition === "museum-etiquette") open(player, "npc:museum-guide-robot:meeting");
+  else if (mission.destination) player.spawnAtMap(ScriptApp.spaceHashID, mission.destination);
+}
+
+export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): void {
+  if (ScriptApp.spaceHashID !== SPACE) return;
+  const map = ScriptApp.mapHashID;
+  const state = journey(player);
+  let trigger = "";
+  const pending = MISSIONS.find(item => item.id === state.pendingCompletion && item.map === map);
+  if (pending) trigger = `npc:${pending.npc}:${pending.id === "museum-etiquette" ? "etiquette-success" : "success"}`;
+  if (map === MUSEUM_MAPS.night) trigger = "npc:museum-pensive-1:prologue";
+  if (map === MUSEUM_MAPS.day && state.pendingEnding) {
+    trigger = "npc:museum-guide-robot:ending";
+    state.pendingEnding = false;
+    persist(player, state);
+  }
+  if (map === MUSEUM_MAPS.lobby5 && MISSIONS.slice(0, 5).every(item => state.completed.includes(item.id)) && !state.completed.includes("museum-etiquette")) {
+    trigger = "npc:museum-guide-robot:etiquette-intro";
+  }
+  if (trigger) setTimeout(function () { open(player, trigger); }, 700);
+}

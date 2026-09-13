@@ -1,4 +1,5 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
+import { runMuseumSceneTransition } from "../nationalMuseum/navigation";
 
 import {
   NATIONAL_MUSEUM_NPCS,
@@ -584,6 +585,7 @@ type MissionNpcStorage = PlayerStorageRecord & {
 };
 
 interface MissionNpcScene {
+  museumTransitionId?: string;
   id: string;
   title: string;
   lines: string[];
@@ -3098,6 +3100,9 @@ function runSceneAfterAction(
   player: ScriptPlayer,
   scene: MissionNpcScene | null
 ): void {
+  if (scene?.museumTransitionId) {
+    runMuseumSceneTransition(player, scene.museumTransitionId, handleMissionNpcTrigger);
+  }
   const afterMapTeleport = scene?.afterMapTeleport;
   if (afterMapTeleport) {
     setTimeout(function () {

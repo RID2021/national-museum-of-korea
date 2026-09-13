@@ -6,6 +6,84 @@ const vm = require("node:vm");
 const ts = require("typescript");
 
 const root = path.resolve(__dirname, "../..");
+function navigationHarness() {
+  const exports = {}, moves = [], opened = [], timers = [];
+  const player = { storage: JSON.stringify({ keep: "existing" }), tag: {}, spawnAtMap: (...args) => moves.push(args) };
+  const context = { exports, ScriptApp: { spaceHashID: "nLP9zE", mapHashID: "R57laZ" },
+    setTimeout: fn => timers.push(fn), require: () => ({
+      loadPlayerStorage: p => JSON.parse(p.storage),
+      savePlayerStorage: (p, data) => { p.storage = JSON.stringify(data); },
+    }) };
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, "src/nationalMuseum/navigation.ts"), "utf8"), {
+    compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
+  }).outputText, context);
+  const open = (_p, trigger) => opened.push(trigger);
+  return { api: exports, context, player, moves, opened, timers, open };
+}
+
+test("dialogue completion routes match live map portals and reject wrong source maps", () => {
+  const h = navigationHarness();
+  for (const [id, source, target] of [["prologue", "R57laZ", "WarEng"], ["introduction", "WarEng", "LB6MNd"], ["goguryeo", "LB6MNd", "0EAV9k"]]) {
+    h.context.ScriptApp.mapHashID = "wrong";
+    const before = h.moves.length;
+    h.api.runMuseumSceneTransition(h.player, id, h.open);
+    assert.equal(h.moves.length, before);
+    h.context.ScriptApp.mapHashID = source;
+    h.api.runMuseumSceneTransition(h.player, id, h.open);
+    assert.deepEqual(h.moves.at(-1), ["nLP9zE", target]);
+  }
+});
+
+test("all seven mission transitions require genuine ordered completion and are idempotent", () => {
+  const h = navigationHarness();
+  const routes = [
+    ["museum-hou-relations", "0EAV9k", "pnNepx"], ["museum-baekje-bricks", "kP0x5B", "xEOeqz"],
+    ["museum-gaya-iron", "7RE0Ea", "eXY3Yx"], ["museum-hwangnam-crown", "r7aeam", "dJzqzn"],
+    ["museum-jinheung-locations", "dJzqzn", "pnNeN3"], ["museum-etiquette", "pnNeN3", null],
+    ["museum-artifact-cards", "pnNeN3", "XWA4Aj"],
+  ];
+  h.context.ScriptApp.mapHashID = "pnNeN3";
+  h.api.handleMuseumMissionCompletion(h.player, "museum-artifact-cards", h.open);
+  assert.equal(h.moves.length, 0);
+  for (const [id, source, target] of routes) {
+    h.context.ScriptApp.mapHashID = source;
+    let before = h.moves.length;
+    h.api.runMuseumSceneTransition(h.player, id, h.open);
+    assert.equal(h.moves.length, before, "preview must not teleport");
+    h.api.handleMuseumMissionCompletion(h.player, id, h.open);
+    if (id !== "museum-artifact-cards") {
+      assert.equal(h.moves.length, before, "wait for success dialogue completion");
+      h.api.runMuseumSceneTransition(h.player, id, h.open);
+    }
+    if (target) assert.deepEqual(h.moves.at(-1), ["nLP9zE", target]);
+    else assert.equal(h.opened.at(-1), "npc:museum-guide-robot:meeting");
+    before = h.moves.length;
+    h.api.handleMuseumMissionCompletion(h.player, id, h.open);
+    h.api.runMuseumSceneTransition(h.player, id, h.open);
+    assert.equal(h.moves.length, before);
+  }
+  h.context.ScriptApp.mapHashID = "XWA4Aj";
+  h.api.handleMuseumArrival(h.player, h.open);
+  h.timers.shift()();
+  assert.equal(h.opened.at(-1), "npc:museum-guide-robot:ending");
+  assert.equal(JSON.parse(h.player.storage).keep, "existing");
+});
+
+test("closing a dialogue has no completion side effects; pending success survives reconnect", () => {
+  const source = fs.readFileSync(path.join(root, "src/missionNpc/index.ts"), "utf8");
+  const close = source.slice(source.indexOf('if (type === "mission-npc:close")'), source.indexOf('if (type === "mission-npc:complete")'));
+  assert.doesNotMatch(close, /runSceneAfterAction|runMuseumSceneTransition/);
+  const h = navigationHarness();
+  h.context.ScriptApp.mapHashID = "0EAV9k";
+  h.api.handleMuseumMissionCompletion(h.player, "museum-hou-relations", h.open);
+  h.player.tag = {};
+  h.api.handleMuseumArrival(h.player, h.open);
+  h.timers.shift()();
+  assert.equal(h.opened.at(-1), "npc:museum-hou-bronze-bowl:success");
+  assert.equal(h.moves.length, 0);
+  h.api.runMuseumSceneTransition(h.player, "museum-hou-relations", h.open);
+  assert.deepEqual(h.moves[0], ["nLP9zE", "pnNepx"]);
+});
 test("maps without task artwork do not create invisible widgets", () => {
   const source = fs.readFileSync(path.join(root, "src/task/index.ts"), "utf8");
   const exports = {};

@@ -15,6 +15,7 @@ export interface MuseumNpcScene {
   playerRole?: string;
   nextAction?: string;
   afterNpcTrigger?: string;
+  museumTransitionId?: string;
 }
 
 export interface MuseumNpcDefinition {
