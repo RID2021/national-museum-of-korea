@@ -9,8 +9,8 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string };
-const MISSIONS = [
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; endingSeen?: boolean };
+export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
   { id: "museum-gaya-iron", map: MUSEUM_MAPS.gaya, destination: MUSEUM_MAPS.lobby4, npc: "museum-gaya-armor-helmet" },
@@ -21,14 +21,22 @@ const MISSIONS = [
   { id: "museum-artifact-cards", map: MUSEUM_MAPS.lobby5, destination: MUSEUM_MAPS.day, npc: "museum-guide-robot" },
 ];
 
-function journey(player: ScriptPlayer): Journey {
+export function journey(player: ScriptPlayer): Journey {
   const value = loadPlayerStorage(player).museumJourney as Journey | undefined;
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
-    pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined };
+    pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
+    story: value?.story, endingSeen: value?.endingSeen === true };
 }
 
 function persist(player: ScriptPlayer, value: Journey): void {
   savePlayerStorage(player, { ...loadPlayerStorage(player), museumJourney: value }, { persist: true });
+}
+
+export function saveMuseumStory(player: ScriptPlayer, story: string): void {
+  const state = journey(player);
+  state.story = story;
+  if (story === "ending") { state.endingSeen = true; state.pendingEnding = false; }
+  persist(player, state);
 }
 
 // Server-side completion callback only. Not registered as a chat/object/widget
@@ -85,11 +93,9 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
   if (map === MUSEUM_MAPS.night) trigger = "npc:museum-pensive-1:prologue";
   if (map === MUSEUM_MAPS.day && state.pendingEnding) {
     trigger = "npc:museum-guide-robot:ending";
-    state.pendingEnding = false;
-    persist(player, state);
   }
   if (map === MUSEUM_MAPS.lobby5 && MISSIONS.slice(0, 5).every(item => state.completed.includes(item.id)) && !state.completed.includes("museum-etiquette")) {
     trigger = "npc:museum-guide-robot:etiquette-intro";
   }
-  if (trigger) setTimeout(function () { open(player, trigger); }, 700);
+  if (trigger) setTimeout(function () { if (ScriptApp.mapHashID === map) open(player, trigger); }, 700);
 }

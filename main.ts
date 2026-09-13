@@ -5,7 +5,8 @@
 import "zep-script";
 import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
 import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
-import { handleMuseumArrival, handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
+import { handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
+import { startMuseumExperience, leaveMuseumExperience } from "./src/nationalMuseum/gameplay";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
 import type { ScriptWidget } from "zep-script";
@@ -414,7 +415,7 @@ ScriptApp.onJoinPlayer.Add((player) => runMuseumDiagnosticPhase("onJoinPlayer", 
   if (mapName === FIX_GAME_MAP_NAME) {
     handleFixGameJoin(player, mapName);
   }
-  handleMuseumArrival(player, handleMissionNpcObjectKey);
+  startMuseumExperience(player, handleMissionNpcObjectKey);
 }));
 
 ScriptApp.addOnLocationEnter(REFRESH_TASK_TILE_NAME, function (player) {
@@ -472,6 +473,7 @@ ScriptApp.onTriggerObject.Add(
 );
 
 ScriptApp.onLeavePlayer.Add((player: ScriptPlayer) => {
+  leaveMuseumExperience(player);
   handlePlayerLeave(player);
 });
 

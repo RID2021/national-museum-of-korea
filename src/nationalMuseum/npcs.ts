@@ -300,6 +300,20 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
   ]),
 ];
 
+// Finishing an introduction starts its playable MVP. Closing never starts it.
+const GAME_SCENES: Record<string, Record<string, string>> = {
+  "museum-hou-bronze-bowl": { intro: "game:museum-hou-relations", quiz: "game:museum-hou-relations", hint: "game:museum-hou-relations" },
+  "museum-baekje-landscape-brick": { intro: "game:museum-baekje-bricks" },
+  "museum-gaya-armor-helmet": { intro: "game:museum-gaya-iron", quiz: "game:museum-gaya-iron" },
+  "museum-hwangnam-gold-crown": { intro: "game:museum-hwangnam-crown", hint: "game:museum-hwangnam-crown" },
+  "museum-jinheung-stele": { intro: "game:museum-jinheung-locations" },
+  "museum-guide-robot": { "etiquette-intro": "game:museum-etiquette", emergency: "emergency", ending: "ending" },
+};
+NATIONAL_MUSEUM_NPCS.forEach(character => character.scenes.forEach(scene => {
+  const action = GAME_SCENES[character.id]?.[scene.id];
+  if (action) scene.museumTransitionId = action;
+}));
+
 export const NATIONAL_MUSEUM_NPC_ALIASES: Record<string, string> = {};
 const KOREAN_ALIASES: Record<MuseumCharacterId, string[]> = {
   "pensive-1": ["반가사유상1", "반가사유상①"],

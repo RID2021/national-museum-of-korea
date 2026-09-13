@@ -6,7 +6,7 @@
     "pack": "npm run build && npm run archive",
     "archive": "node scripts/archive-museum.cjs",
     "publish:zep": "node scripts/check-museum-deploy.cjs && zep-script publish",
-    "test:npc": "node scripts/build-museum-widget.cjs && node --test src/__tests__/nationalMuseumDialogues.test.cjs",
+    "test:npc": "node scripts/build-museum-widget.cjs && node --test src/__tests__/nationalMuseumDialogues.test.cjs src/__tests__/museumGameplay.test.cjs",
     "deploy": "npm run test:npc && npm run build && npm run archive && npm run publish:zep",
     "cdn:upload": "node scripts/upload-cdn-asset.js"
   },

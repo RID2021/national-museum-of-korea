@@ -1,5 +1,5 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
-import { runMuseumSceneTransition } from "../nationalMuseum/navigation";
+import { handleMuseumAction, closeMuseumGame } from "../nationalMuseum/gameplay";
 
 import {
   NATIONAL_MUSEUM_NPCS,
@@ -3101,7 +3101,7 @@ function runSceneAfterAction(
   scene: MissionNpcScene | null
 ): void {
   if (scene?.museumTransitionId) {
-    runMuseumSceneTransition(player, scene.museumTransitionId, handleMissionNpcTrigger);
+    handleMuseumAction(player, scene.museumTransitionId, handleMissionNpcTrigger);
   }
   const afterMapTeleport = scene?.afterMapTeleport;
   if (afterMapTeleport) {
@@ -3278,6 +3278,7 @@ function openMissionNpc(
   npc: MissionNpcDefinition,
   scene: MissionNpcScene
 ): ScriptWidget | null {
+  if (npc.id.startsWith("museum-")) closeMuseumGame(player);
   markSceneProgress(player, scene);
   runSceneOpenAction(player, scene);
 
