@@ -1,8 +1,9 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 import { loadPlayerStorage, preparePlayerStorage, preparePlayerTag, savePlayerStorage } from "../utils/player";
-import { GAME_IDS, GAME_TITLES, createGameState, applyGameAction, gameView, GameState, GameAction } from "./games";
+import { GAME_IDS, createGameState, applyGameAction, gameView, GameState, GameAction } from "./games";
 import { MUSEUM_MAPS, MISSIONS, journey, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
 import { nearbyMuseumNpc } from "./exploration";
+import { closeMuseumProgress, refreshMuseumProgress } from "./progress";
 
 type Open = (player: ScriptPlayer, trigger: string) => unknown;
 type Session = { widget: ScriptWidget; id: string; token: string; revision: number; promptOpen?: boolean };
@@ -66,7 +67,7 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
     if (next.done) {
       closeMuseumGame(player);
       handleMuseumMissionCompletion(player, id, open);
-      refreshMuseumHud(player);
+      refreshMuseumProgress(player);
     } else send();
   });
   send();
@@ -82,7 +83,7 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
     open(player, "npc:museum-pensive-1:intro");
     return;
   }
-  if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumHud(player); return; }
+  if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return; }
   if (action === "emergency") { saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return; }
   runMuseumSceneTransition(player, action, open);
 }
@@ -111,40 +112,19 @@ export function interactMuseumNearby(player: ScriptPlayer, open: Open): boolean 
   return true;
 }
 
-function refreshMuseumHud(player: ScriptPlayer): void {
-  const state = journey(player);
-  const index = MISSIONS.findIndex(m => !state.completed.includes(m.id));
-  tag(player).museumHud?.sendMessage({ type: "museum:hud", title: index < 0 ? "정식 박물관 지키미" : GAME_TITLES[index], count: state.completed.length, complete: state.endingSeen });
-}
 export function startMuseumExperience(player: ScriptPlayer, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
   preparePlayerStorage(player, { museumGames: {} });
   const t = tag(player);
   t.museumHud?.destroy();
-  const hud = player.showWidget("html/museum-hud-v1.html", "topright", player.isMobile ? 180 : 250, 100);
-  t.museumHud = hud;
-  hud.onMessage.Add(function (_sender, raw) {
-    if (tag(player).museumHud !== hud) return;
-    const type = (raw as { type?: string })?.type;
-    if (type === "museum:ready") refreshMuseumHud(player);
-    if (type === "museum:continue") continueMuseum(player, open);
-    if (type === "museum:interact" && !interactMuseumNearby(player, open)) player.showCenterLabel("NPC 가까이 걸어간 뒤 눌러주세요.");
-    if (type === "museum:restart-confirmed") {
-      // Only this player's museum progress changes; preserve other storage.
-      if (tag(player).missionNpcWidget) return;
-      closeMuseumGame(player);
-      const data = loadPlayerStorage(player);
-      savePlayerStorage(player, { ...data, museumJourney: { completed: [] }, museumGames: {} }, { persist: true });
-      player.spawnAtMap(ScriptApp.spaceHashID, MUSEUM_MAPS.night);
-    }
-  });
-  refreshMuseumHud(player);
+  t.museumHud = undefined;
   handleMuseumArrival(player, open);
 }
 export function leaveMuseumExperience(player: ScriptPlayer): void {
   const t = tag(player);
   t.museumArrival = false;
   closeMuseumGame(player);
+  closeMuseumProgress(player);
   t.museumHud?.destroy();
   t.museumHud = undefined;
 }

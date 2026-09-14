@@ -1,4 +1,5 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
+import { showMuseumProgress } from "../nationalMuseum/progress";
 
 import {
   type PlayerTagRecord,
@@ -963,6 +964,7 @@ export function showMissionProgress(
   player: ScriptPlayer,
   mapName: string
 ): void {
+  if (ScriptApp.spaceHashID === "nLP9zE") { showMuseumProgress(player); return; }
   const tag = preparePlayerTag(player) as MissionProgressPlayerTag;
   const payload = buildWidgetPayload(player, mapName);
 

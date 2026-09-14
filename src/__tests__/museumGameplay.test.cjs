@@ -9,7 +9,7 @@ function harness() {
   const cache = {}, moves = [], opened = [], widgets = [], timers = [];
   const app = { spaceHashID: 'nLP9zE', mapHashID: '0EAV9k' };
   const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel() {}, spawnAtMap: (...args) => moves.push(args),
-    showWidget(file) { const w = { file, destroyed: false, messages: [], destroy() { this.destroyed = true; }, sendMessage(m) { this.messages.push(m); }, onMessage: { Add(fn) { w.receive = fn; } } }; widgets.push(w); return w; } };
+    showWidget(file,align,width,height) { const w = { file, align, width, height, destroyed: false, messages: [], destroy() { this.destroyed = true; }, sendMessage(m) { this.messages.push(m); }, onMessage: { Add(fn) { w.receive = fn; } } }; widgets.push(w); return w; } };
   const utils = { preparePlayerTag: p => p.tag, loadPlayerStorage: p => JSON.parse(p.storage), savePlayerStorage: (p, s) => p.storage = JSON.stringify(s), preparePlayerStorage: p => JSON.parse(p.storage) };
   function load(name) {
     if (cache[name]) return cache[name];
@@ -18,7 +18,7 @@ function harness() {
       { exports, ScriptApp: app, setTimeout: fn => timers.push(fn), require: id => id.includes('utils/player') ? utils : load(id.replace('./', '')) });
     return exports;
   }
-  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), player, app, moves, opened, widgets, timers, open: (_p, s) => opened.push(s) };
+  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), player, app, moves, opened, widgets, timers, open: (_p, s) => opened.push(s) };
 }
 function solve(game, id, state) {
   state = JSON.parse(JSON.stringify(state));
@@ -81,11 +81,33 @@ test('mission guide never teleports or opens dialogue and rejects out of order g
   const h=harness();h.app.mapHashID='r7aeam';h.api.openMuseumGame(h.player,h.game.GAME_IDS[3],h.open);assert.equal(h.widgets.length,0);
   h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.api.continueMuseum(h.player,h.open);assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
 });
-test('ending remains resumable until its last page; restart preserves unrelated storage',()=>{
+test('ending remains resumable until its last page; no custom HUD is created',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
   h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.equal(h.nav.journey(h.player).pendingEnding,true);
-  h.api.startMuseumExperience(h.player,h.open);const hud=h.widgets.at(-1);hud.receive(h.player,{type:'museum:restart-confirmed'});
-  const saved=JSON.parse(h.player.storage);assert.deepEqual(saved.inventory,['existing']);assert.equal(saved.other,'keep');assert.equal(saved.museumJourney.completed.length,0);assert.deepEqual(h.moves.at(-1),['nLP9zE','R57laZ']);
+  h.api.startMuseumExperience(h.player,h.open);assert.equal(h.widgets.length,0);
+  const saved=JSON.parse(h.player.storage);assert.deepEqual(saved.inventory,['existing']);assert.equal(saved.other,'keep');assert.equal(saved.museumJourney.completed.length,7);
+});
+test('progress uses the unchanged tomb widget and counts only genuine museum missions',()=>{
+  const h=harness();h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0],h.game.GAME_IDS[0],'unknown']}});
+  h.progress.showMuseumProgress(h.player);const w=h.widgets.at(-1);assert.equal(w.file,'html/mission-progress-widget.html');assert.equal(w.width,390);assert.equal(w.height,450);
+  const p=w.messages.at(-1).payload;assert.equal(p.detail,'1/7');assert.equal(p.percent,14);assert.equal(p.title,'전체 미션 진행률');
+  const hash=require('node:crypto').createHash('sha256').update(fs.readFileSync(path.resolve(base,'../../res/html/mission-progress-widget.html'))).digest('hex');assert.equal(hash,'8b03f3ba369c3ac8ec8371f90fd357a1bf3729bf56fc07c13f39e855bcf280be');
+  h.progress.closeMuseumProgress(h.player);h.player.isMobile=true;h.progress.showMuseumProgress(h.player);assert.equal(h.widgets.at(-1).width,330);
+});
+test('travel unlocks only after actual dialogue completion or cleared mission success dialogue',()=>{
+  const h=harness();h.app.mapHashID='LB6MNd';assert.equal(h.progress.travelFromMuseumProgress(h.player),false);
+  h.nav.runMuseumSceneTransition(h.player,'goguryeo',h.open);assert.equal(h.nav.journey(h.player).travel.includes('0EAV9k'),true);
+  h.app.mapHashID='LB6MNd';h.moves.length=0;assert.equal(h.progress.travelFromMuseumProgress(h.player),true);assert.deepEqual(h.moves[0],['nLP9zE','0EAV9k']);
+  h.app.mapHashID='0EAV9k';h.nav.handleMuseumMissionCompletion(h.player,h.game.GAME_IDS[0],h.open);h.moves.length=0;assert.equal(h.progress.travelFromMuseumProgress(h.player),false);assert.equal(h.moves.length,0);
+  h.nav.runMuseumSceneTransition(h.player,h.game.GAME_IDS[0],h.open);h.app.mapHashID='pnNepx';h.moves.length=0;
+  h.progress.showMuseumProgress(h.player);const w=h.widgets.at(-1);assert.equal(w.messages.at(-1).payload.museumButtonLabel,'백제실로 이동하기');
+  w.receive(h.player,{type:'mission-progress:open-museum'});assert.deepEqual(h.moves[0],['nLP9zE','kP0x5B']);assert.equal(w.destroyed,true);
+  h.moves.length=0;w.receive(h.player,{type:'mission-progress:open-museum'});assert.equal(h.moves.length,0);
+});
+test('travel is rechecked after UI rendering and cannot leave an unfinished active mission',()=>{
+  const h=harness();h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.progress.showMuseumProgress(h.player);const w=h.widgets.at(-1);assert.equal(w.messages.at(-1).payload.museumUnlocked,true);
+  h.player.tag.museumGame={};w.receive(h.player,{type:'mission-progress:open-museum'});assert.equal(h.moves.length,0);
+  delete h.player.tag.museumGame;h.player.storage=JSON.stringify({museumJourney:{completed:[]}});w.receive(h.player,{type:'mission-progress:open-museum'});assert.equal(h.moves.length,0);
 });
 test('real text input receives synchronous touch focus, remains mounted, and ignores IME Enter',()=>{
   const html=fs.readFileSync(path.resolve(base,'../../res/html/museum-game-v1.html'),'utf8');

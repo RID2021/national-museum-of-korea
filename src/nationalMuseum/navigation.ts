@@ -9,7 +9,7 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; endingSeen?: boolean };
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; endingSeen?: boolean; travel?: string[] };
 export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
@@ -25,7 +25,7 @@ export function journey(player: ScriptPlayer): Journey {
   const value = loadPlayerStorage(player).museumJourney as Journey | undefined;
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
     pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
-    story: value?.story, endingSeen: value?.endingSeen === true };
+    story: value?.story, endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
 }
 
 function persist(player: ScriptPlayer, value: Journey): void {
@@ -71,7 +71,12 @@ export function runMuseumSceneTransition(player: ScriptPlayer, transition: strin
   };
   const route = direct[transition];
   if (route) {
-    if (ScriptApp.mapHashID === route[0]) player.spawnAtMap(ScriptApp.spaceHashID, route[1]);
+    if (ScriptApp.mapHashID === route[0]) {
+      const state = journey(player);
+      if (!state.travel?.includes(route[1])) state.travel = [...(state.travel || []), route[1]];
+      persist(player, state);
+      player.spawnAtMap(ScriptApp.spaceHashID, route[1]);
+    }
     return;
   }
   const mission = MISSIONS.find(item => item.id === transition);
