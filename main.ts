@@ -6,7 +6,8 @@ import "zep-script";
 import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
 import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
 import { handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
-import { startMuseumExperience, leaveMuseumExperience } from "./src/nationalMuseum/gameplay";
+import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby } from "./src/nationalMuseum/gameplay";
+import { registerMuseumExploration } from "./src/nationalMuseum/exploration";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
 import type { ScriptWidget } from "zep-script";
@@ -330,6 +331,11 @@ function handleActionButton(player: ScriptPlayer): void {
     return;
   }
 
+  if (ScriptApp.spaceHashID === "nLP9zE") {
+    interactMuseumNearby(player, handleMissionNpcObjectKey);
+    return;
+  }
+
   if (handleRecentInteractionKey(player)) {
     return;
   }
@@ -367,6 +373,7 @@ ScriptApp.onInit.Add(() => runMuseumDiagnosticPhase("onInit", function () {
   registerMissionGameCompletionNpcFeedback();
 
   registerConfiguredTileMessages();
+  registerMuseumExploration();
 }));
 
 

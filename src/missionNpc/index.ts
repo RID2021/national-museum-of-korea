@@ -1,5 +1,6 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 import { handleMuseumAction, closeMuseumGame } from "../nationalMuseum/gameplay";
+import { resolveMuseumSceneId } from "../nationalMuseum/exploration";
 
 import {
   NATIONAL_MUSEUM_NPCS,
@@ -3403,7 +3404,7 @@ export function handleMissionNpcTrigger(
     return false;
   }
 
-  const requestedScene = getNpcScene(npc, parsed.sceneId);
+  const requestedScene = getNpcScene(npc, resolveMuseumSceneId(player, npc.id, parsed.sceneId));
   if (!requestedScene) {
     return false;
   }
@@ -3446,7 +3447,7 @@ export function handleMissionNpcObjectKey(
   }
 
   const npc = getNpcDefinition(parsed.npcId);
-  const requestedScene = npc ? getNpcScene(npc, parsed.sceneId) : null;
+  const requestedScene = npc ? getNpcScene(npc, resolveMuseumSceneId(player, npc.id, parsed.sceneId)) : null;
   const targetScene = npc && requestedScene
     ? resolveProgressScene(player, npc, requestedScene)
     : null;

@@ -88,14 +88,10 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
   const map = ScriptApp.mapHashID;
   const state = journey(player);
   let trigger = "";
-  const pending = MISSIONS.find(item => item.id === state.pendingCompletion && item.map === map);
-  if (pending) trigger = `npc:${pending.npc}:${pending.id === "museum-etiquette" ? "etiquette-success" : "success"}`;
-  if (map === MUSEUM_MAPS.night) trigger = "npc:museum-pensive-1:prologue";
+  // Ordinary map arrivals never start an NPC dialogue. Pending success is
+  // resumed by interacting with that NPC. Only the earned ending is automatic.
   if (map === MUSEUM_MAPS.day && state.pendingEnding) {
     trigger = "npc:museum-guide-robot:ending";
-  }
-  if (map === MUSEUM_MAPS.lobby5 && MISSIONS.slice(0, 5).every(item => state.completed.includes(item.id)) && !state.completed.includes("museum-etiquette")) {
-    trigger = "npc:museum-guide-robot:etiquette-intro";
   }
   if (trigger) setTimeout(function () { if (ScriptApp.mapHashID === map) open(player, trigger); }, 700);
 }

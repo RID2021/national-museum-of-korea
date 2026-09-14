@@ -18,7 +18,7 @@ function harness() {
       { exports, ScriptApp: app, setTimeout: fn => timers.push(fn), require: id => id.includes('utils/player') ? utils : load(id.replace('./', '')) });
     return exports;
   }
-  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), player, app, moves, opened, widgets, timers, open: (_p, s) => opened.push(s) };
+  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), player, app, moves, opened, widgets, timers, open: (_p, s) => opened.push(s) };
 }
 function solve(game, id, state) {
   state = JSON.parse(JSON.stringify(state));
@@ -77,9 +77,9 @@ test('widget-driven full journey completes seven missions, dialogues, moves and 
   assert.deepEqual(h.moves.at(-1),['nLP9zE','XWA4Aj']);h.app.mapHashID='XWA4Aj';h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.match(h.opened.at(-1),/:ending$/);
   h.api.handleMuseumAction(h.player,'ending',h.open);assert.equal(h.nav.journey(h.player).endingSeen,true);
 });
-test('current mission button bridges lobby 4 to Silla and rejects out of order games',()=>{
+test('mission guide never teleports or opens dialogue and rejects out of order games',()=>{
   const h=harness();h.app.mapHashID='r7aeam';h.api.openMuseumGame(h.player,h.game.GAME_IDS[3],h.open);assert.equal(h.widgets.length,0);
-  h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.api.continueMuseum(h.player,h.open);assert.deepEqual(h.moves.at(-1),['nLP9zE','r7aeam']);
+  h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.api.continueMuseum(h.player,h.open);assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
 });
 test('ending remains resumable until its last page; restart preserves unrelated storage',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
@@ -87,10 +87,10 @@ test('ending remains resumable until its last page; restart preserves unrelated 
   h.api.startMuseumExperience(h.player,h.open);const hud=h.widgets.at(-1);hud.receive(h.player,{type:'museum:restart-confirmed'});
   const saved=JSON.parse(h.player.storage);assert.deepEqual(saved.inventory,['existing']);assert.equal(saved.other,'keep');assert.equal(saved.museumJourney.completed.length,0);assert.deepEqual(h.moves.at(-1),['nLP9zE','R57laZ']);
 });
-test('mobile answer buttons work without keyboard, preserve drafts and ignore IME Enter',()=>{
+test('real text input receives synchronous touch focus, remains mounted, and ignores IME Enter',()=>{
   const html=fs.readFileSync(path.resolve(base,'../../res/html/museum-game-v1.html'),'utf8');
   const elements={}, messages=[], timers=[];
-  function element(){return {value:'',children:[],append(...items){this.children.push(...items);for(const item of items)if(item.id)elements[item.id]=item;},replaceChildren(){this.children=[];},setAttribute(){},classList:{add(){}}};}
+  function element(){return {value:'',children:[],focus(){this.focused=true;},append(...items){this.children.push(...items);for(const item of items)if(item.id)elements[item.id]=item;},replaceChildren(){this.children=[];},setAttribute(){},classList:{add(){}}};}
   for(const id of ['title','number','prompt','hint','note','feedback','board','submit','close'])elements[id]=element();
   const parent={postMessage:m=>messages.push(m)};
   const context={document:{getElementById:id=>elements[id],createElement:element},parent,window:{addEventListener(){}},setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){}};
@@ -98,10 +98,24 @@ test('mobile answer buttons work without keyboard, preserve drafts and ignore IM
   const payload={type:'museum:game',token:'t',revision:0,mission:1,kind:'answer',title:'test'};
   context.render(payload);
   elements.submit.onclick();assert.equal(messages.filter(m=>m.type==='museum:action').length,0);
-  const keys=elements.board.children.at(-1).children;
-  keys.find(k=>k.textContent==='교').onclick();keys.find(k=>k.textContent==='류').onclick();assert.equal(elements.answer.value,'교류');
+  const originalInput=elements.answer;originalInput.ontouchend();assert.equal(originalInput.focused,true);assert.equal(originalInput.inputMode,'text');
+  originalInput.value='교류';originalInput.oninput();
   elements.answer.oncompositionstart();elements.answer.onkeydown({key:'Enter',isComposing:true,keyCode:229});assert.equal(messages.filter(m=>m.type==='museum:action').length,0);
   elements.answer.oncompositionend();elements.submit.onclick();assert.equal(messages.at(-1).action.text,'교류');
-  context.render({...payload,revision:1,feedback:'다시 도전'});assert.equal(elements.answer.value,'교류');
-  elements.board.children.at(-1).children.find(k=>k.textContent==='모두 지우기').onclick();assert.equal(elements.answer.value,'');
+  context.render({...payload,revision:1,feedback:'다시 도전'});assert.equal(elements.answer.value,'교류');assert.equal(elements.answer,originalInput);
+  assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
+});
+test('arriving in every ordinary map stays in world; NPC interaction requires proximity',()=>{
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+  h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
+  h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
+  h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');
+});
+test('mobile field opens ZEP text prompt, keeps answer as draft and ignores stale callbacks',()=>{
+  const h=harness();h.player.isMobile=true;let callback;let prompts=0;h.player.showPrompt=(_text,fn)=>{callback=fn;prompts++;};
+  h.player.storage=JSON.stringify({museumGames:{'museum-hou-relations':{...h.game.createGameState(),stage:1,collected:[1,4,7]}}});
+  h.api.openMuseumGame(h.player,h.game.GAME_IDS[0],h.open);const w=h.widgets.at(-1);const m=w.messages.at(-1);assert.equal(m.mobile,true);
+  w.receive(h.player,{type:'museum:input',token:'invalid'});assert.equal(prompts,0);
+  w.receive(h.player,{type:'museum:input',token:m.token});assert.equal(prompts,1);callback('교류');assert.equal(w.messages.at(-1).type,'museum:answer-draft');assert.equal(w.messages.at(-1).text,'교류');assert.equal(h.nav.journey(h.player).completed.length,0);
+  w.receive(h.player,{type:'museum:input',token:m.token});const count=w.messages.length;h.api.closeMuseumGame(h.player);callback('교류');assert.equal(w.messages.length,count);
 });

@@ -78,8 +78,8 @@ test("closing a dialogue has no completion side effects; pending success survive
   h.api.handleMuseumMissionCompletion(h.player, "museum-hou-relations", h.open);
   h.player.tag = {};
   h.api.handleMuseumArrival(h.player, h.open);
-  h.timers.shift()();
-  assert.equal(h.opened.at(-1), "npc:museum-hou-bronze-bowl:success");
+  assert.equal(h.timers.length, 0, "arrival must not reopen an NPC remotely");
+  assert.equal(JSON.parse(h.player.storage).museumJourney.pendingCompletion, "museum-hou-relations");
   assert.equal(h.moves.length, 0);
   h.api.runMuseumSceneTransition(h.player, "museum-hou-relations", h.open);
   assert.deepEqual(h.moves[0], ["nLP9zE", "pnNepx"]);
@@ -187,6 +187,7 @@ function setup() {
       addOnLocationTouched: (key, fn) => touched.set(key, fn),
     },
     preparePlayerTag: p => p.tag,
+    resolveMuseumSceneId: (_p, _npc, id) => id,
     resolveProgressScene: (_p, _n, scene) => scene,
     isSceneOpenOrPending: (tag, n, s) => tag.missionNpcId === n.id && tag.missionNpcSceneId === s.id,
     areSceneRequirementsComplete: () => true,
