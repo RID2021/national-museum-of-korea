@@ -6,7 +6,7 @@ import "zep-script";
 import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
 import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
 import { handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
-import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby } from "./src/nationalMuseum/gameplay";
+import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby, resetMuseumExperience } from "./src/nationalMuseum/gameplay";
 import { registerMuseumExploration } from "./src/nationalMuseum/exploration";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
@@ -672,8 +672,12 @@ ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {
     } else if (text === "!진행률") {
       showMissionProgress(player, ScriptMap.name);
     } else if (text === "!미션리셋") {
-      resetMissionProgress(player);
-      showMissionProgress(player, ScriptMap.name);
+      if (ScriptApp.spaceHashID === "nLP9zE") {
+        resetMuseumExperience(player, handleMissionNpcObjectKey);
+      } else {
+        resetMissionProgress(player);
+        showMissionProgress(player, ScriptMap.name);
+      }
     } else if (trimmedText === "!트리거리셋") {
       resetOneTimeTriggerHistory(player);
     } else if (trimmedText === "!트리거리셋 전체") {

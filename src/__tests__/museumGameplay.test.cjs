@@ -147,6 +147,26 @@ test('first entry narration opens once, persists across rejoin, and never chains
   h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;
   assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-pensive-1','intro'),'intro');
 });
+test('museum reset clears narrative, missions and games, preserves unrelated data and restarts narration',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;
+  h.player.storage=JSON.stringify({other:'keep',inventory:['keep'],missionProgress:{missions:{tomb:true}},museumJourney:{completed:h.game.GAME_IDS,prologueSeen:true,story:'ending',endingSeen:true,pendingEnding:true,travel:['0EAV9k']},museumGames:{saved:{done:true}},missionNpc:{seenSceneKeys:['museum-pensive-1:prologue','other:intro']}});
+  let destroyed=false;h.player.tag.missionNpcWidget={destroy(){destroyed=true;}};h.player.tag.missionNpcId='museum-guide-robot';
+  h.api.resetMuseumExperience(h.player,h.open);
+  const data=JSON.parse(h.player.storage);
+  assert.deepEqual(data.museumJourney,{completed:[]});assert.deepEqual(data.museumGames,{});
+  assert.deepEqual(data.inventory,['keep']);assert.deepEqual(data.missionProgress,{missions:{tomb:true}});assert.equal(data.other,'keep');
+  assert.deepEqual(data.missionNpc.seenSceneKeys,['other:intro']);assert.equal(destroyed,true);assert.equal(h.player.tag.missionNpcId,undefined);
+  while(h.timers.length)h.timers.shift()();assert.deepEqual(h.opened,['npc:museum-pensive-1:prologue']);
+  h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,1);
+});
+test('museum reset returns other rooms to entrance and invalidates the old game widget',()=>{
+  const h=harness();h.api.openMuseumGame(h.player,h.game.GAME_IDS[0],h.open);const w=h.widgets.at(-1), m=w.messages.at(-1);
+  h.api.resetMuseumExperience(h.player,h.open);assert.equal(w.destroyed,true);assert.deepEqual(h.moves,[['nLP9zE','R57laZ']]);
+  w.receive(h.player,{type:'museum:action',token:m.token,revision:m.revision,action:{kind:'answer',text:'교류'}});
+  assert.deepEqual(JSON.parse(h.player.storage).museumGames,{});
+  h.app.mapHashID='R57laZ';h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.at(-1),'npc:museum-pensive-1:prologue');
+  h.app.spaceHashID='other';const before=h.player.storage;h.api.resetMuseumExperience(h.player,h.open);assert.equal(h.player.storage,before);
+});
 test('entry narration skips existing progress and cancels when leaving before its timer',()=>{
   for(const state of [{story:'introduced',completed:[]},{completed:['museum-hou-relations']},{completed:[],prologueSeen:true}]){
     const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;h.player.storage=JSON.stringify({museumJourney:state});

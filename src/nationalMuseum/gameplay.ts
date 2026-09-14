@@ -117,6 +117,26 @@ export function startMuseumExperience(player: ScriptPlayer, open: Open): void {
   t.museumHud = undefined;
   handleMuseumArrival(player, open);
 }
+export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
+  if (ScriptApp.spaceHashID !== "nLP9zE") return;
+  leaveMuseumExperience(player);
+  const playerTag = preparePlayerTag(player);
+  const dialogue = playerTag.missionNpcWidget as ScriptWidget | undefined;
+  dialogue?.destroy();
+  if (playerTag.missionNpcPreDialogueCameraKey) player.setCameraTarget("");
+  // Invalidate old widget/retry callbacks without granting their completion.
+  Object.keys(playerTag).filter(key => key.indexOf("missionNpc") === 0).forEach(key => { delete playerTag[key]; });
+  const storage = loadPlayerStorage(player);
+  const npc = storage.missionNpc as { seenSceneKeys?: string[] } | undefined;
+  savePlayerStorage(player, {
+    ...storage,
+    museumJourney: { completed: [] },
+    museumGames: {},
+    ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
+  }, { persist: true });
+  if (ScriptApp.mapHashID === MUSEUM_MAPS.night) startMuseumExperience(player, open);
+  else player.spawnAtMap(ScriptApp.spaceHashID, MUSEUM_MAPS.night);
+}
 export function leaveMuseumExperience(player: ScriptPlayer): void {
   const t = tag(player);
   t.museumArrival = false;
