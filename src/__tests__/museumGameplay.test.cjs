@@ -128,10 +128,33 @@ test('real text input receives synchronous touch focus, remains mounted, and ign
   assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
 });
 test('arriving in every ordinary map stays in world; NPC interaction requires proximity',()=>{
-  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
   h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
   h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
   h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');
+});
+test('first entry narration opens once, persists across rejoin, and never chains or teleports',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;
+  h.api.startMuseumExperience(h.player,h.open);h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();
+  assert.deepEqual(h.opened,['npc:museum-pensive-1:prologue']);
+  assert.equal(h.nav.journey(h.player).prologueSeen,true);
+  h.api.handleMuseumAction(h.player,'prologue',h.open);
+  h.api.leaveMuseumExperience(h.player);h.player.tag={};h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();
+  assert.equal(h.opened.length,1);assert.equal(h.moves.length,0);
+  assert.equal(JSON.parse(h.player.storage).other,'keep');
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-pensive-1','intro'),'intro');
+});
+test('entry narration skips existing progress and cancels when leaving before its timer',()=>{
+  for(const state of [{story:'introduced',completed:[]},{completed:['museum-hou-relations']},{completed:[],prologueSeen:true}]){
+    const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;h.player.storage=JSON.stringify({museumJourney:state});
+    h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0);
+  }
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;h.api.startMuseumExperience(h.player,h.open);
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;while(h.timers.length)h.timers.shift()();
+  assert.equal(h.opened.length,0);assert.equal(h.nav.journey(h.player).prologueSeen,false);
 });
 test('mobile field opens ZEP text prompt, keeps answer as draft and ignores stale callbacks',()=>{
   const h=harness();h.player.isMobile=true;let callback;let prompts=0;h.player.showPrompt=(_text,fn)=>{callback=fn;prompts++;};

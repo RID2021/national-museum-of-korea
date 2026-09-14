@@ -9,7 +9,7 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; endingSeen?: boolean; travel?: string[] };
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; endingSeen?: boolean; travel?: string[] };
 export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
@@ -25,7 +25,7 @@ export function journey(player: ScriptPlayer): Journey {
   const value = loadPlayerStorage(player).museumJourney as Journey | undefined;
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
     pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
-    story: value?.story, endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
+    story: value?.story, prologueSeen: value?.prologueSeen === true, endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
 }
 
 function persist(player: ScriptPlayer, value: Journey): void {
@@ -65,7 +65,6 @@ export function handleMuseumMissionCompletion(player: ScriptPlayer, gameId: stri
 export function runMuseumSceneTransition(player: ScriptPlayer, transition: string, open: OpenDialogue): void {
   if (ScriptApp.spaceHashID !== SPACE) return;
   const direct: Record<string, [string, string]> = {
-    prologue: [MUSEUM_MAPS.night, MUSEUM_MAPS.pensive],
     introduction: [MUSEUM_MAPS.pensive, MUSEUM_MAPS.lobby1],
     goguryeo: [MUSEUM_MAPS.lobby1, MUSEUM_MAPS.goguryeo],
   };
@@ -93,8 +92,19 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
   const map = ScriptApp.mapHashID;
   const state = journey(player);
   let trigger = "";
-  // Ordinary map arrivals never start an NPC dialogue. Pending success is
-  // resumed by interacting with that NPC. Only the earned ending is automatic.
+  // Only the first entry narration and earned ending are automatic. Finishing
+  // the narration leaves the player in the world; NPCs still require interaction.
+  if (map === MUSEUM_MAPS.night && !state.prologueSeen && !state.story && !state.completed.length) {
+    setTimeout(function () {
+      if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;
+      const current = journey(player);
+      if (current.prologueSeen || current.story || current.completed.length) return;
+      current.prologueSeen = true;
+      persist(player, current);
+      open(player, "npc:museum-pensive-1:prologue");
+    }, 700);
+    return;
+  }
   if (map === MUSEUM_MAPS.day && state.pendingEnding) {
     trigger = "npc:museum-guide-robot:ending";
   }

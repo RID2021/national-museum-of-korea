@@ -23,7 +23,10 @@ function navigationHarness() {
 
 test("dialogue completion routes match live map portals and reject wrong source maps", () => {
   const h = navigationHarness();
-  for (const [id, source, target] of [["prologue", "R57laZ", "WarEng"], ["introduction", "WarEng", "LB6MNd"], ["goguryeo", "LB6MNd", "0EAV9k"]]) {
+  h.context.ScriptApp.mapHashID = "R57laZ";
+  h.api.runMuseumSceneTransition(h.player, "prologue", h.open);
+  assert.equal(h.moves.length, 0, "Entry narration leaves the player free to explore");
+  for (const [id, source, target] of [["introduction", "WarEng", "LB6MNd"], ["goguryeo", "LB6MNd", "0EAV9k"]]) {
     h.context.ScriptApp.mapHashID = "wrong";
     const before = h.moves.length;
     h.api.runMuseumSceneTransition(h.player, id, h.open);

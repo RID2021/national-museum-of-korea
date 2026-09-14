@@ -78,11 +78,8 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
 export function handleMuseumAction(player: ScriptPlayer, action: string, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
   if (action.indexOf("game:") === 0) { openMuseumGame(player, action.slice(5), open); return; }
-  if (action === "prologue" && ScriptApp.mapHashID === MUSEUM_MAPS.pensive) {
-    saveMuseumStory(player, "introduced");
-    open(player, "npc:museum-pensive-1:intro");
-    return;
-  }
+  // Narration must not chain into NPC dialogue or move the player automatically.
+  if (action === "prologue") return;
   if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return; }
   if (action === "emergency") { saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return; }
   runMuseumSceneTransition(player, action, open);
@@ -95,7 +92,7 @@ export function continueMuseum(player: ScriptPlayer, open: Open): void {
   const next = MISSIONS.findIndex(m => !state.completed.includes(m.id));
   const directions: Record<string, string> = {
     [MUSEUM_MAPS.night]: "박물관 입구의 이동 지점으로 걸어가 사유의 방에 들어가세요.",
-    [MUSEUM_MAPS.pensive]: "반가사유상 가까이 가서 F 또는 ‘주변 NPC 대화’를 눌러주세요.",
+    [MUSEUM_MAPS.pensive]: "반가사유상 가까이 가서 F를 눌러 대화하세요.",
     [MUSEUM_MAPS.lobby1]: "광개토대왕릉비 옆 안내 로봇을 찾아가세요.",
     [MUSEUM_MAPS.lobby2]: "백제실 입구로 걸어가세요.",
     [MUSEUM_MAPS.lobby3]: "가야실 입구로 걸어가세요.",
