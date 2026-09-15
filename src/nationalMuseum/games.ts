@@ -15,7 +15,7 @@ export const PAIRS = [
   ["판갑옷과 투구", "가야 철기 문화"], ["황남대총 금관", "신라 황금 문화"], ["진흥왕 순수비", "신라 영토 확장"],
 ];
 export type GameState = { stage: number; collected: number[]; order: number[]; selected: number; visited: number[]; removed: number[]; deck: number[]; face: number[]; matched: number[]; moves: number; done: boolean; feedback: string };
-export type GameAction = { kind?: string; index?: number; text?: string };
+export type GameAction = { kind?: string; index?: number; target?: number; text?: string };
 export function createGameState(random: () => number = Math.random): GameState {
   const deck = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
@@ -42,6 +42,10 @@ export function applyGameAction(id: string, state: GameState, action: GameAction
       if (!s.done) s.feedback = "다시 생각해 보세요. 서로 오가며 관계를 맺는 것을 뜻하는 두 글자, ㄱㄹ입니다.";
     }
   } else if (id === GAME_IDS[1]) {
+    if (action.kind === "swap" && valid(8) && Number.isInteger(action.target) && action.target! >= 0 && action.target! < 8 && action.target !== i) {
+      [s.order[i!], s.order[action.target!]] = [s.order[action.target!], s.order[i!]];
+      s.selected = -1;
+    }
     if (action.kind === "pick" && valid(8)) toggleSwap(s, i!);
     if (action.kind === "submit") { s.done = s.order.every((value, index) => value === index); if (!s.done) s.feedback = "아직 다른 자리가 있어요. 복원 안내의 이름과 위→아래, 왼쪽→오른쪽 순서를 비교하세요."; }
   } else if (id === GAME_IDS[2] || id === GAME_IDS[3]) {
@@ -85,7 +89,7 @@ export function gameView(id: string, s: GameState): Record<string, unknown> {
   const n = GAME_IDS.indexOf(id);
   const view: Record<string, unknown> = { title: GAME_TITLES[n], mission: n + 1, stage: s.stage, feedback: s.feedback, selected: s.selected, kind: "choices" };
   if (n === 0) Object.assign(view, s.stage === 0 ? { prompt: "전시 단서 속 廣(광)·開(개)·土(토)를 찾아 누르세요.", items: ["王", "廣", "山", "川", "開", "月", "日", "土", "水"], disabled: s.collected } : { kind: "answer", prompt: "고구려와 신라 사이에 정치적 관계와 [ ㄱ ㄹ ]가 있었음을 보여 준다.", hint: "광개토대왕은 고구려 왕이고 호우총은 신라 무덤이에요. 고구려는 왜의 침략을 받은 신라를 도왔어요." });
-  if (n === 1) Object.assign(view, { kind: "order", prompt: "두 벽돌을 차례로 눌러 자리를 바꾸세요. 8개를 맞춘 뒤 복원 확인!", reference: BRICKS.map(x => x + "무늬").join(" → "), note: "학습용 복원 배열입니다. 실제 출토 배열을 재현한 것은 아닙니다.", items: s.order.map(i => BRICKS[i] + "무늬"), submit: "복원 확인" });
+  if (n === 1) Object.assign(view, { kind: "order", prompt: "벽돌 그림을 다른 자리로 끌어 놓으세요. 두 번 눌러 교환해도 돼요. 8개를 맞춘 뒤 복원 확인!", reference: BRICKS.map(x => x + "무늬").join(" → "), hint: "모바일: 벽돌 그림을 끌어 이동하고, 이름·빈 여백에서 위아래로 스크롤하세요.", note: "학습용 복원 배열입니다. 실제 출토 배열을 재현한 것은 아닙니다.", items: s.order.map(i => BRICKS[i] + "무늬"), submit: "복원 확인" });
   if (n === 2) Object.assign(view, { prompt: "고령 지산동 고분군에서 출토된 가야 판갑옷은 무엇을 이어 만들었을까요?", items: ["나무판", "철판", "돌판"] });
   if (n === 3) Object.assign(view, { prompt: "회의에 참석할 황남대총의 금관을 찾아 주세요.", hint: "나무 모양 세움 장식·사슴뿔 모양 장식·굽은옥. 출토 장소도 확인하세요.", note: "MVP는 실물 사진 대신 이름·특징 카드로 식별합니다.", items: CROWNS });
   if (n === 4) Object.assign(view, s.stage === 0 ? { kind: "mapPuzzle", prompt: "지도 조각 두 개를 눌러 교환하세요. 참고 지도처럼 복원해 주세요.", items: s.order.length === 6 ? s.order : [3, 0, 5, 1, 2, 4], submit: "지도 복원 확인" } : { kind: "locations", prompt: `비석 설명 확인 ${s.visited.length}/5 — 다섯 곳을 모두 확인하세요.`, places: PLACES, visited: s.visited, submit: "위치 확인 완료" });

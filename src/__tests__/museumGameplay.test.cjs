@@ -5,6 +5,23 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 const base = path.resolve(__dirname, '../nationalMuseum');
+test('brick drag swaps atomically and rejects invalid destinations', () => {
+  const {game}=harness(), id=game.GAME_IDS[1], initial=game.createGameState();
+  initial.selected=4;
+  const swapped=game.applyGameAction(id,initial,{kind:'swap',index:0,target:7});
+  assert.equal(swapped.order[0],initial.order[7]);
+  assert.equal(swapped.order[7],initial.order[0]);
+  assert.equal(swapped.selected,-1);
+  assert.equal(swapped.done,false);
+  for(const target of [-1,8,1.5,'2',undefined]) {
+    const result=game.applyGameAction(id,initial,{kind:'swap',index:0,target});
+    assert.deepEqual(Array.from(result.order),Array.from(initial.order));
+  }
+  let state=initial;
+  for(let i=0;i<8;i++)if(state.order[i]!==i)state=game.applyGameAction(id,state,{kind:'swap',index:i,target:state.order.indexOf(i)});
+  assert.equal(state.done,false);
+  assert.equal(game.applyGameAction(id,state,{kind:'submit'}).done,true);
+});
 test('brick artwork covers every label and follows reordered game items', () => {
   const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
   const match = html.match(/const BRICK_ASSETS = (\{[^\n]+\});/);
