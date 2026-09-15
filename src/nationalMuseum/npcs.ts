@@ -142,6 +142,11 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       lines: ["다음은 백제실입니다. 백제실은 1층에 위치해 있습니다. 화살표를 따라가세요."],
     },
     {
+      id: "gaya-guide",
+      title: "가야실 안내",
+      lines: ["다음은 가야실입니다. 가야실은 1층에 위치해 있습니다. 화살표를 따라가세요."],
+    },
+    {
       id: "etiquette-intro",
       title: "관람 예절 미션 안내",
       lines: ["회의를 시작하기 전에 예비 지키미님은 관람객 기초 상식 미션을 통과해야 회의에 참석하실 수 있습니다."],

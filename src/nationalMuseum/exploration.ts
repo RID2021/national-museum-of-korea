@@ -25,6 +25,7 @@ export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requeste
   const pending = MISSIONS.find(m => m.id === state.pendingCompletion && m.npc === npc && m.map === ScriptApp.mapHashID);
   if (pending) return pending.id === GAME_IDS[5] ? "etiquette-success" : "success";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby2) return "baekje-guide";
+  if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby3) return "gaya-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby5) {
     if (!state.completed.includes(GAME_IDS[5])) return "etiquette-intro";
     return state.story === "emergency" ? "emergency" : "meeting";

@@ -215,11 +215,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 30 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 31 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 30);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 31);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -231,7 +231,7 @@ test("the script has eight distinct speakers and 30 nonempty dialogue scenes", (
   }
 });
 
-test("all 30 fully qualified object triggers route to the intended NPC and scene", () => {
+test("all 31 fully qualified object triggers route to the intended NPC and scene", () => {
   for (const npc of data.NATIONAL_MUSEUM_NPCS) {
     for (const scene of npc.scenes) {
       const { context, player, opened } = setup();

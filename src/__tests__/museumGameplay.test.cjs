@@ -124,6 +124,13 @@ test('lobby two robot gives walking directions without automatic travel',()=>{
   h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby1;
   assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-guide-robot','intro'),'intro');
 });
+test('lobby three robot gives Gaya walking directions without automatic travel',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby3;
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-guide-robot','intro'),'gaya-guide');
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-guide-robot','gaya-guide'),'gaya-guide');
+  h.api.handleMuseumAction(h.player,'gaya-guide',h.open);
+  assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
+});
 test('ending remains resumable until its last page; no custom HUD is created',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
   h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.equal(h.nav.journey(h.player).pendingEnding,true);
