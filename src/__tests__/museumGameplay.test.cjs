@@ -81,6 +81,14 @@ test('mission guide never teleports or opens dialogue and rejects out of order g
   const h=harness();h.app.mapHashID='r7aeam';h.api.openMuseumGame(h.player,h.game.GAME_IDS[3],h.open);assert.equal(h.widgets.length,0);
   h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.api.continueMuseum(h.player,h.open);assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
 });
+test('lobby two robot gives walking directions without automatic travel',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby2;
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-guide-robot','intro'),'baekje-guide');
+  h.api.handleMuseumAction(h.player,'baekje-guide',h.open);
+  assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby1;
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-guide-robot','intro'),'intro');
+});
 test('ending remains resumable until its last page; no custom HUD is created',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
   h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.equal(h.nav.journey(h.player).pendingEnding,true);
