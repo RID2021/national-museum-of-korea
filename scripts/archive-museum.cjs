@@ -21,6 +21,8 @@ function appendDirectory(relative = "") {
       appendDirectory(name);
     } else if (entry.isFile()) {
       if (name === "html/museum-npc-widget.template.html") continue;
+      if (name === "html/museum-game.template.html") continue;
+      if (name.startsWith("images/baekje-bricks/")) continue;
       // These source PNGs are already embedded, byte-for-byte, in the generated
       // widget. Do not package a second copy and exceed ZEP's upload limit.
       if (/^images\/npc\/national-museum\/night-guard\/[^/]+-portrait-v1\.png$/.test(name)) continue;

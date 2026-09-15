@@ -5,6 +5,24 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 const base = path.resolve(__dirname, '../nationalMuseum');
+test('brick artwork covers every label and follows reordered game items', () => {
+  const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
+  const match = html.match(/const BRICK_ASSETS = (\{[^\n]+\});/);
+  assert.ok(match);
+  const assets = JSON.parse(match[1]);
+  const { game } = harness();
+  assert.deepEqual(Object.keys(assets), Array.from(game.BRICKS, name => name + '무늬'));
+  assert.equal(new Set(Object.values(assets)).size, 8);
+  for (const value of Object.values(assets)) assert.ok(value.startsWith('data:image/png;base64,'));
+  let state = game.createGameState();
+  const before = game.gameView(game.GAME_IDS[1], state).items;
+  state = game.applyGameAction(game.GAME_IDS[1], state, { kind: 'pick', index: 0 });
+  state = game.applyGameAction(game.GAME_IDS[1], state, { kind: 'pick', index: 1 });
+  const after = game.gameView(game.GAME_IDS[1], state).items;
+  assert.equal(after[0], before[1]);
+  assert.equal(after[1], before[0]);
+  for (const label of after) assert.ok(assets[label]);
+});
 function harness() {
   const cache = {}, moves = [], opened = [], widgets = [], timers = [];
   const app = { spaceHashID: 'nLP9zE', mapHashID: '0EAV9k' };

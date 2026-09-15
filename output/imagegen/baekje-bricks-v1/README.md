@@ -1,6 +1,6 @@
 # 백제 무늬 벽돌 v1
 
-내장 이미지 생성 도구로 제작한 학습용 스타일 이미지입니다. 실제 유물의 정밀 복제품이 아닙니다. 아직 게임 UI나 맵 오브젝트에 연결하지 않았습니다. 배포 용량 증가를 피하기 위해 원본은 output에 보관합니다.
+내장 이미지 생성 도구로 제작한 학습용 스타일 이미지입니다. 실제 유물의 정밀 복제품이 아닙니다. 백제 문양전 복원 게임 UI에 8종 모두 연결했습니다. 맵 에디터의 전시 오브젝트 이미지는 별개이며 교체하지 않았습니다. 원본은 이 폴더에 보존하고, res/images/baekje-bricks의 256px PNG를 게임 위젯에 포함합니다.
 
 ## 산수무늬
 
@@ -65,5 +65,4 @@ Use case: stylized-concept. Create ONE isolated game sprite of a Baekje-inspired
 프롬프트:
 
 Use case: stylized-concept. Create ONE isolated game sprite of a Baekje-inspired patterned brick, 봉황무늬. Reference image is STYLE ONLY: match its warm ochre terracotta, thick soft brown outline, simple hand-painted 2.5D museum game look. Subject: a single upright rectangular clay brick with clipped upper corners, thick raised double rim, narrow visible top and right edge, near-frontal face like the reference. Carved monochrome shallow bas-relief motif: one elegant crested phoenix in profile with spread feathered wings and long curling tail, no mountains. All motifs are carved from the SAME warm tan clay, not colored symbols or applied objects. Large clear relief lines readable at small game size. Center the entire brick with generous empty margin, consistent straight-on slightly elevated view. Genuine transparent background with alpha, no floor, no pedestal, no cast shadow outside brick. No text, letters, UI, F icon, labels, watermark, other bricks or museum background. Educational stylized interpretation, not an exact artifact reproduction. Output square image.
-
 
