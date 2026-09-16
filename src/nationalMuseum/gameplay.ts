@@ -147,10 +147,10 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
     ...storage,
     museumJourney: { completed: [] },
     museumGames: {},
+    museumClues: [],
     ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
   }, { persist: true });
-  if (ScriptApp.mapHashID === MUSEUM_MAPS.night) startMuseumExperience(player, open);
-  else player.spawnAtMap(ScriptApp.spaceHashID, MUSEUM_MAPS.night);
+  player.showCenterLabel("박물관 미션이 초기화되었습니다. 현재 위치에서 다시 시작하세요.");
 }
 export function leaveMuseumExperience(player: ScriptPlayer): void {
   preparePlayerTag(player).museumAnsweredQuiz = undefined;

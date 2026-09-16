@@ -255,12 +255,12 @@ test('museum reset clears narrative, missions and games, preserves unrelated dat
   assert.deepEqual(data.museumJourney,{completed:[]});assert.deepEqual(data.museumGames,{});
   assert.deepEqual(data.inventory,['keep']);assert.deepEqual(data.missionProgress,{missions:{tomb:true}});assert.equal(data.other,'keep');
   assert.deepEqual(data.missionNpc.seenSceneKeys,['other:intro']);assert.equal(destroyed,true);assert.equal(h.player.tag.missionNpcId,undefined);
-  while(h.timers.length)h.timers.shift()();assert.deepEqual(h.opened,['npc:museum-pensive-1:prologue']);
+  while(h.timers.length)h.timers.shift()();assert.deepEqual(h.opened,[]);
   h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,1);
 });
-test('museum reset returns other rooms to entrance and invalidates the old game widget',()=>{
+test('museum reset stays in place and invalidates the old game widget',()=>{
   const h=harness();h.api.openMuseumGame(h.player,h.game.GAME_IDS[0],h.open);const w=h.widgets.at(-1), m=w.messages.at(-1);
-  h.api.resetMuseumExperience(h.player,h.open);assert.equal(w.destroyed,true);assert.deepEqual(h.moves,[['nLP9zE','R57laZ']]);
+  h.api.resetMuseumExperience(h.player,h.open);assert.equal(w.destroyed,true);assert.deepEqual(h.moves,[]);
   w.receive(h.player,{type:'museum:action',token:m.token,revision:m.revision,action:{kind:'answer',text:'교류'}});
   assert.deepEqual(JSON.parse(h.player.storage).museumGames,{});
   h.app.mapHashID='R57laZ';h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.at(-1),'npc:museum-pensive-1:prologue');

@@ -3110,6 +3110,11 @@ function runSceneAfterAction(
   player: ScriptPlayer,
   scene: MissionNpcScene | null
 ): void {
+  const playerTag = preparePlayerTag(player) as MissionNpcPlayerTag & { museumCluesComplete?: boolean };
+  if (playerTag.museumCluesComplete) {
+    playerTag.museumCluesComplete = undefined;
+    handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
+  }
   if (scene?.museumTransitionId) {
     handleMuseumAction(player, scene.museumTransitionId, handleMissionNpcTrigger);
   }
@@ -3433,7 +3438,7 @@ export function handleMissionNpcTrigger(
       if (typeof player.save === "function") player.save();
     }
     if (["gwang", "gae", "to"].every(item => clues.includes(item) || item === clue)) {
-      scene = { ...scene, museumTransitionId: "game:museum-hou-relations" };
+      (preparePlayerTag(player) as MissionNpcPlayerTag & { museumCluesComplete?: boolean }).museumCluesComplete = true;
     }
   }
 
