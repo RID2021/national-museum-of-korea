@@ -22,6 +22,15 @@ export function nearbyMuseumNpc(player: ScriptPlayer): string | undefined {
 export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requested: string): string {
   if (ScriptApp.spaceHashID !== "nLP9zE" || requested !== "intro") return requested;
   const state = journey(player);
+  if (npc === "museum-hou-bronze-bowl") {
+    let clues: string[] = [];
+    try {
+      const storage = player.storage ? JSON.parse(player.storage) as Record<string, unknown> : {};
+      clues = Array.isArray(storage.museumClues) ? storage.museumClues as string[] : [];
+    } catch (_error) { clues = []; }
+    if (clues.length > 0 && clues.length < 3) return "clues-incomplete";
+    if (clues.length >= 3) return "quiz";
+  }
   const pending = MISSIONS.find(m => m.id === state.pendingCompletion && m.npc === npc && m.map === ScriptApp.mapHashID);
   if (pending) return pending.id === GAME_IDS[5] ? "etiquette-success" : "success";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby2) return "baekje-guide";

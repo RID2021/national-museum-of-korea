@@ -223,6 +223,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     { id: "clue-gwang", title: "廣(광) 글자 확인", lines: ["전시 단서에서 광개토의 廣(광)이라는 글자가 보인다."] },
     { id: "clue-gae", title: "開(개) 글자 확인", lines: ["전시 단서에서 광개토의 開(개)라는 글자가 보인다."] },
     { id: "clue-to", title: "土(토) 글자 확인", lines: ["전시 단서에서 광개토의 土(토)라는 글자가 보인다."] },
+    { id: "clues-incomplete", title: "아직 찾지 못한 글자", lines: ["아직 글자 3개를 다 찾지 못한 것 같은데?", "잘 찾아봐."] },
     {
       id: "hint",
       title: "관계 추론 힌트",

@@ -164,6 +164,15 @@ test('lobby four robot gives Silla walking directions without automatic travel',
   h.api.handleMuseumAction(h.player,'silla-guide',h.open);
   assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
 });
+test('Goguryeo bowl intro branches on discovered clue count',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.goguryeo;
+  h.player.storage=JSON.stringify({museumClues:['gwang']});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'clues-incomplete');
+  h.player.storage=JSON.stringify({museumClues:['gwang','gae','to']});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'quiz');
+  h.player.storage=JSON.stringify({});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'intro');
+});
 test('ending remains resumable until its last page; no custom HUD is created',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
   h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.equal(h.nav.journey(h.player).pendingEnding,true);
