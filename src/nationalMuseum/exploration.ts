@@ -26,6 +26,7 @@ export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requeste
   if (pending) return pending.id === GAME_IDS[5] ? "etiquette-success" : "success";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby2) return "baekje-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby3) return "gaya-guide";
+  if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby4) return "silla-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby5) {
     if (!state.completed.includes(GAME_IDS[5])) return "etiquette-intro";
     return state.story === "emergency" ? "emergency" : "meeting";
