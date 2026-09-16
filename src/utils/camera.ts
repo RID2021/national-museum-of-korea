@@ -32,8 +32,9 @@ interface CameraRouteConfig {
 interface CameraFocusConfig {
   x: number;
   y: number;
-  durationMs: number;
+  holdDurationMs: number;
   moveDuration?: number;
+  returnDuration?: number;
 }
 
 const DEFAULT_MOVE_DURATION = 1.5;
@@ -45,8 +46,9 @@ const cameraFocusRoutes: Record<string, CameraFocusConfig> = {
   "로비(5)": {
     x: 52,
     y: 40,
-    durationMs: 3000,
-    moveDuration: 0.45,
+    holdDurationMs: 3000,
+    moveDuration: 0.8,
+    returnDuration: 0.8,
   },
 };
 
@@ -336,16 +338,22 @@ export function cameraMoveByMapName(
 ): void {
   const focus = cameraFocusRoutes[mapName];
   if (focus) {
+    const moveDuration = focus.moveDuration ?? 0.8;
+    const returnDuration = focus.returnDuration ?? 0.8;
     player.setCameraTarget(
       focus.x,
       focus.y,
-      focus.moveDuration ?? 0.45
+      moveDuration
     );
     player.sendUpdated();
     setTimeout(() => {
-      player.setCameraTarget("");
+      player.setCameraTarget(player.tileX, player.tileY, returnDuration);
       player.sendUpdated();
-    }, focus.durationMs);
+      setTimeout(() => {
+        player.setCameraTarget("");
+        player.sendUpdated();
+      }, returnDuration * 1000);
+    }, moveDuration * 1000 + focus.holdDurationMs);
     return;
   }
 
