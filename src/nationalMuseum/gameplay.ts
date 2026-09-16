@@ -99,6 +99,12 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
     savePlayerStorage(player, { ...storage, museumGayaIntroComplete: true }, { persist: true });
     return;
   }
+  if (action === "hwangnam-crown:correct") {
+    if (ScriptApp.mapHashID !== MUSEUM_MAPS.silla1) return;
+    handleMuseumMissionCompletion(player, GAME_IDS[3], open);
+    refreshMuseumProgress(player);
+    return;
+  }
   if (action.indexOf("baekje-brick:") === 0) {
     if (ScriptApp.mapHashID !== MUSEUM_MAPS.baekje) return;
     const brick = action.slice("baekje-brick:".length);

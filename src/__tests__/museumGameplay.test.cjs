@@ -5,8 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 const base = path.resolve(__dirname, '../nationalMuseum');
-test('dialogue quizzes validate answers and wait for explanation completion',()=>{
-  for(const n of [2,3]){
+test('Gaya dialogue quiz validates answers and waits for explanation completion',()=>{
+  for(const n of [2]){
     const h=harness(),id=h.game.GAME_IDS[n];
     h.app.mapHashID=h.nav.MISSIONS[n].map;
     h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,n)}});
@@ -137,13 +137,14 @@ test('widget-driven full journey completes seven missions, dialogues, moves and 
   for(let n=0;n<7;n++){
     const mission=h.nav.MISSIONS[n];h.app.mapHashID=mission.map;
     if(n===6)h.nav.saveMuseumStory(h.player,'emergency');
-    h.api.openMuseumGame(h.player,mission.id,h.open);
+    if(n===3)h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
+    else h.api.openMuseumGame(h.player,mission.id,h.open);
     const w=h.widgets.at(-1);
     function act(action){const m=w.messages.at(-1);w.receive(h.player,{type:'museum:action',token:m.token,revision:m.revision,action});}
     const state=()=>JSON.parse(h.player.storage).museumGames[mission.id];
     if(n===0){[1,4,7].forEach(index=>act({kind:'pick',index}));act({kind:'answer',text:'교류'});}
     if(n===1||n===4){for(let i=0;i<state().order.length;i++){const j=state().order.indexOf(i);if(i!==j){act({kind:'pick',index:i});act({kind:'pick',index:j});}}act({kind:'submit'});if(n===4){for(let i=0;i<5;i++)act({kind:'pick',index:i});act({kind:'submit'});}}
-    if(n===2||n===3){h.api.handleMuseumDialogueChoice(h.player,mission.id,1);h.api.handleMuseumAction(h.player,'quiz-complete:'+mission.id,h.open);}
+    if(n===2){h.api.handleMuseumDialogueChoice(h.player,mission.id,1);h.api.handleMuseumAction(h.player,'quiz-complete:'+mission.id,h.open);}
     if(n===5)[1,3,5].forEach(index=>act({kind:'pick',index}));
     if(n===6){const deck=state().deck;for(let i=0;i<5;i++){act({kind:'pick',index:deck.indexOf(i*2)});act({kind:'pick',index:deck.indexOf(i*2+1)});}}
     if(n!==2&&n!==3)assert.equal(w.destroyed,true);assert.equal(h.nav.journey(h.player).completed.length,n+1);
@@ -267,7 +268,7 @@ test('real text input receives synchronous touch focus, remains mounted, and ign
   assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
 });
 test('arriving in ordinary maps stays in world; NPC interaction requires proximity',()=>{
-  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.baekje)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
   h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
   h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
   h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');
@@ -287,6 +288,27 @@ test('Baekje intro opens once on room entry and all eight brick dialogues unlock
     assert.equal(h.widgets.length,i===ids.length-1?1:0);
   }
   assert.deepEqual(JSON.parse(h.player.storage).museumBaekjeBricks,ids);
+});
+test('Silla crown hunt opens once on entry and only the Hwangnam north crown completes',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.silla1;
+  h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});
+  h.api.startMuseumExperience(h.player,h.open);h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();
+  assert.deepEqual(h.opened,['npc:museum-hwangnam-gold-crown:intro']);
+  assert.equal(h.nav.journey(h.player).sillaCrownIntroSeen,true);
+  h.api.leaveMuseumExperience(h.player);h.player.tag={};h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,1);
+  h.api.handleMuseumAction(h.player,'hwangnam-crown:wrong',h.open);
+  assert.equal(h.nav.journey(h.player).completed.length,3);
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.silla2;
+  h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
+  assert.equal(h.nav.journey(h.player).completed.length,3);
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.silla1;
+  h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
+  assert.equal(h.nav.journey(h.player).completed.length,4);
+  assert.equal(h.opened.at(-1),'npc:museum-hwangnam-gold-crown:success');
+  h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
+  assert.equal(h.nav.journey(h.player).completed.length,4);
 });
 test('first entry narration opens once, persists across rejoin, and never chains or teleports',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;

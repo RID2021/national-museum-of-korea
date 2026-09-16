@@ -219,11 +219,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 49 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 54 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 49);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 54);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -235,7 +235,7 @@ test("the script has eight distinct speakers and 49 nonempty dialogue scenes", (
   }
 });
 
-test("all 49 fully qualified object triggers route to the intended NPC and scene", () => {
+test("all fully qualified object triggers route to the intended NPC and scene", () => {
   for (const npc of data.NATIONAL_MUSEUM_NPCS) {
     for (const scene of npc.scenes) {
       const { context, player, opened } = setup();
@@ -262,6 +262,18 @@ test("Gaya has three lightweight exhibit clues before its dialogue quiz", () => 
   assert.deepEqual(Array.from(clues.map(scene => scene.museumTransitionId)), ["gaya-clue:iron-plate", "gaya-clue:rivet", "gaya-clue:helmet"]);
   assert.equal(gaya.scenes.find(scene => scene.id === "intro").museumTransitionId, "gaya-intro-complete");
   assert.equal(gaya.scenes.find(scene => scene.id === "quiz").choices.length, 3);
+});
+test("Silla has six crown exhibit triggers and only Hwangnam north completes the hunt", () => {
+  const silla = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-hwangnam-gold-crown");
+  const crowns = silla.scenes.filter(scene => scene.id.startsWith("crown-"));
+  assert.deepEqual(Array.from(crowns.map(scene => scene.id)), [
+    "crown-gyodong", "crown-hwangnam-north", "crown-geumgwanchong",
+    "crown-cheonmachong", "crown-geumnyeongchong", "crown-seobongchong",
+  ]);
+  assert.deepEqual(Array.from(crowns.map(scene => scene.museumTransitionId || "")), [
+    "", "hwangnam-crown:correct", "", "", "", "",
+  ]);
+  assert.equal(silla.scenes.some(scene => scene.id === "quiz"), false);
 });
 
 test("Goguryeo clue triggers persist the exact gwang, gae and to identifiers", () => {

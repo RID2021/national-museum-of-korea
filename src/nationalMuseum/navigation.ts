@@ -9,7 +9,7 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; baekjeIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; baekjeIntroSeen?: boolean; sillaCrownIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
 export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
@@ -26,6 +26,7 @@ export function journey(player: ScriptPlayer): Journey {
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
     pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
     story: value?.story, prologueSeen: value?.prologueSeen === true, baekjeIntroSeen: value?.baekjeIntroSeen === true,
+    sillaCrownIntroSeen: value?.sillaCrownIntroSeen === true,
     endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
 }
 
@@ -117,6 +118,17 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
       current.baekjeIntroSeen = true;
       persist(player, current);
       open(player, "npc:museum-baekje-landscape-brick:intro");
+    }, 700);
+    return;
+  }
+  if (map === MUSEUM_MAPS.silla1 && !state.sillaCrownIntroSeen && !state.completed.includes("museum-hwangnam-crown")) {
+    setTimeout(function () {
+      if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;
+      const current = journey(player);
+      if (current.sillaCrownIntroSeen || current.completed.includes("museum-hwangnam-crown")) return;
+      current.sillaCrownIntroSeen = true;
+      persist(player, current);
+      open(player, "npc:museum-hwangnam-gold-crown:intro");
     }, 700);
     return;
   }

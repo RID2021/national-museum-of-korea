@@ -2,8 +2,6 @@ import type {
   MuseumNpcDefinition as MissionNpcDefinition,
   MuseumNpcScene as MissionNpcScene,
 } from "./types";
-import { CROWNS } from "./games";
-
 // Source: user-provided museum synopsis, storyboard pp. 3-8.
 // These are dialogue scenes, not puzzle-completion or reward triggers.
 const PORTRAIT_BASE = "../images/npc/national-museum/night-guard";
@@ -321,24 +319,13 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
   ]),
   npc("hwangnam-gold-crown", "신라실(1)", "황남대총 금관의 특징과 식별 안내", [
     {
-      id: "quiz", title: "황남대총 금관 찾기",
-      museumQuizId: "museum-hwangnam-crown",
-      museumTransitionId: "quiz-complete:museum-hwangnam-crown",
-      lines: ["나무 모양 세움 장식, 사슴뿔 모양 장식, 굽은옥을 떠올려 보렴. 회의에 참석할 황남대총의 금관은 어느 것일까? 출토 장소도 확인해 봐."],
-      choices: CROWNS.map((label, index) => ({
-        id: `answer-${index}`, label, museumQuizIndex: index,
-        repeatOnComplete: index !== 1,
-        lines: [index === 1 ? "정답이야! 황남대총 북분에서 출토된 금관을 정확히 찾았구나." : "출토 장소가 황남대총 북분인 금관을 찾아보렴. 이름을 다시 살펴보고 골라 봐."],
-      })),
-    },
-    {
       id: "intro",
       title: "황남대총 금관 찾기",
       lines: [
         "나는 황남대총에서 발견된 신라 금관이다.",
         "머리띠 위에는 나무를 닮은 장식과 사슴뿔 모양 장식이 세워져 있어. 푸른빛 굽은옥이 수십 개 달려 있어 매우 화려하지.",
         "신라 금관의 전형적인 모습을 잘 보여주는 유물로 알려져 있단다. 나뿐만 아니라 유명한 신라 금관들이 정말 많거든.",
-        "회의에 참석하려면 나를 정확히 찾아낼 수 있어야 해.",
+        "회의에 참석하려면 나를 정확히 찾아낼 수 있어야 해. 전시실에 있는 여섯 금관 중 나를 찾아봐.",
       ],
     },
     {
@@ -347,6 +334,20 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       lines: [],
       speakerLines: [narrator("나무 모양 세움 장식, 사슴뿔 모양 장식, 굽은옥")],
     },
+    { id: "crown-gyodong", title: "교동 금관 확인", lines: ["나는 교동 금관이야. 황남대총 북분 금관을 계속 찾아봐."] },
+    {
+      id: "crown-hwangnam-north",
+      title: "황남대총 북분 금관 확인",
+      lines: [
+        "잘 찾았어! 내가 바로 황남대총 북분 금관이야.",
+        "나무 모양 세움 장식과 사슴뿔 모양 장식, 푸른빛 굽은옥을 세심하게 알아보았구나.",
+      ],
+      museumTransitionId: "hwangnam-crown:correct",
+    },
+    { id: "crown-geumgwanchong", title: "금관총 금관 확인", lines: ["나는 금관총 금관이야. 황남대총 북분 금관을 계속 찾아봐."] },
+    { id: "crown-cheonmachong", title: "천마총 금관 확인", lines: ["나는 천마총 금관이야. 황남대총 북분 금관을 계속 찾아봐."] },
+    { id: "crown-geumnyeongchong", title: "금령총 금관 확인", lines: ["나는 금령총 금관이야. 황남대총 북분 금관을 계속 찾아봐."] },
+    { id: "crown-seobongchong", title: "서봉총 금관 확인", lines: ["나는 서봉총 금관이야. 황남대총 북분 금관을 계속 찾아봐."] },
     { id: "success", title: "황남대총 금관 미션 후 대화", lines: ["정답! 역시 박물관 예비 지키미답게 나를 세심하게 알아보는구나."], museumTransitionId: "museum-hwangnam-crown" },
     meetingScene("hwangnam-gold-crown"),
   ]),
@@ -371,7 +372,7 @@ const GAME_SCENES: Record<string, Record<string, string>> = {
   "museum-hou-bronze-bowl": { quiz: "game:museum-hou-relations", hint: "game:museum-hou-relations" },
   "museum-baekje-landscape-brick": {},
   "museum-gaya-armor-helmet": {},
-  "museum-hwangnam-gold-crown": { intro: "game:museum-hwangnam-crown", hint: "game:museum-hwangnam-crown" },
+  "museum-hwangnam-gold-crown": {},
   "museum-jinheung-stele": { intro: "game:museum-jinheung-locations" },
   "museum-guide-robot": { "etiquette-intro": "game:museum-etiquette", emergency: "emergency", ending: "ending" },
 };
