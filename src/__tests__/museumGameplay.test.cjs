@@ -178,6 +178,20 @@ test('mission guide never teleports, while direct room URLs allow their own game
   h.api.leaveMuseumExperience(h.player);h.app.mapHashID='r7aeam';h.api.openMuseumGame(h.player,h.game.GAME_IDS[4],h.open);assert.equal(h.widgets.length,1);
   h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.api.continueMuseum(h.player,h.open);assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
 });
+test('Jinheung dialogue unlocks a separate map-puzzle object trigger',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.silla2;
+  const trigger='npc:museum-jinheung-stele:map-puzzle';
+  assert.equal(h.api.handleMuseumSpecialObjectKey(h.player,trigger,h.open),true);
+  assert.equal(h.widgets.length,0);
+  assert.notEqual(JSON.parse(h.player.storage).museumJinheungIntroComplete,true);
+  h.api.handleMuseumAction(h.player,'jinheung-intro-complete',h.open);
+  assert.equal(JSON.parse(h.player.storage).museumJinheungIntroComplete,true);
+  assert.equal(h.widgets.length,0,'intro completion must not open the map puzzle');
+  assert.equal(h.api.handleMuseumSpecialObjectKey(h.player,trigger,h.open),true);
+  assert.equal(h.widgets.length,1,'only the second object opens the map puzzle');
+  h.api.resetMuseumExperience(h.player,h.open);
+  assert.equal(JSON.parse(h.player.storage).museumJinheungIntroComplete,false);
+});
 test('a directly opened exhibition can complete and show its success dialogue',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.baekje;
   assert.equal(h.nav.handleMuseumMissionCompletion(h.player,h.game.GAME_IDS[1],h.open),true);

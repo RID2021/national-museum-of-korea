@@ -6,7 +6,7 @@ import "zep-script";
 import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
 import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
 import { handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
-import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby, resetMuseumExperience } from "./src/nationalMuseum/gameplay";
+import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby, resetMuseumExperience, handleMuseumSpecialObjectKey } from "./src/nationalMuseum/gameplay";
 import { registerMuseumExploration } from "./src/nationalMuseum/exploration";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
@@ -181,6 +181,9 @@ function handleInteractionKey(
     handleMissionProgressObjectKey(player, normalized, ScriptMap.name) ||
     handled;
   handled = handleMissionQuizObjectKey(player, normalized) || handled;
+  handled =
+    handleMuseumSpecialObjectKey(player, normalized, handleMissionNpcObjectKey) ||
+    handled;
   handled = handleMissionNpcObjectKey(player, normalized) || handled;
   handled = handleMissionGameObjectKey(player, normalized) || handled;
   handled =

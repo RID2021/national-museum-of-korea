@@ -373,7 +373,9 @@ const GAME_SCENES: Record<string, Record<string, string>> = {
   "museum-baekje-landscape-brick": {},
   "museum-gaya-armor-helmet": {},
   "museum-hwangnam-gold-crown": {},
-  "museum-jinheung-stele": { intro: "game:museum-jinheung-locations" },
+  // The stele explanation and the map puzzle live on separate objects.
+  // Finishing all four pages only unlocks the dedicated puzzle trigger.
+  "museum-jinheung-stele": { intro: "jinheung-intro-complete" },
   "museum-guide-robot": { "etiquette-intro": "game:museum-etiquette", emergency: "emergency", ending: "ending" },
 };
 NATIONAL_MUSEUM_NPCS.forEach(character => character.scenes.forEach(scene => {

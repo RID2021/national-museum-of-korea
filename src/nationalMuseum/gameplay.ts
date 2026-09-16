@@ -10,6 +10,7 @@ type Open = (player: ScriptPlayer, trigger: string) => unknown;
 type Session = { widget: ScriptWidget; id: string; token: string; revision: number; promptOpen?: boolean };
 type MuseumTag = { museumGame?: Session; museumHud?: ScriptWidget; museumArrival?: boolean; missionNpcWidget?: ScriptWidget };
 const BAEKJE_BRICK_IDS = ["yeondaegwi", "sansu", "waun", "sansubonghwang", "bonghwang", "sansugwi", "banryong", "yeonhwa"];
+const JINHEUNG_MAP_TRIGGER = "npc:museum-jinheung-stele:map-puzzle";
 function tag(player: ScriptPlayer): MuseumTag { return preparePlayerTag(player) as MuseumTag; }
 function saveGame(player: ScriptPlayer, id: string, state: GameState): void {
   const data = loadPlayerStorage(player);
@@ -105,6 +106,13 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
     refreshMuseumProgress(player);
     return;
   }
+  if (action === "jinheung-intro-complete") {
+    if (ScriptApp.mapHashID !== MUSEUM_MAPS.silla2) return;
+    const storage = loadPlayerStorage(player);
+    savePlayerStorage(player, { ...storage, museumJinheungIntroComplete: true }, { persist: true });
+    player.showCenterLabel("지도 미션 비석이 활성화되었습니다.");
+    return;
+  }
   if (action.indexOf("baekje-brick:") === 0) {
     if (ScriptApp.mapHashID !== MUSEUM_MAPS.baekje) return;
     const brick = action.slice("baekje-brick:".length);
@@ -148,6 +156,22 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
   if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return; }
   if (action === "emergency") { saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return; }
   runMuseumSceneTransition(player, action, open);
+}
+
+/**
+ * Handle museum-only object keys that intentionally bypass the dialogue
+ * widget. The map puzzle remains locked until the four-page stele dialogue
+ * has been completed, including its final page.
+ */
+export function handleMuseumSpecialObjectKey(player: ScriptPlayer, key: unknown, open: Open): boolean {
+  if (ScriptApp.spaceHashID !== "nLP9zE" || ScriptApp.mapHashID !== MUSEUM_MAPS.silla2) return false;
+  if (typeof key !== "string" || key.trim() !== JINHEUNG_MAP_TRIGGER) return false;
+  if (loadPlayerStorage(player).museumJinheungIntroComplete !== true) {
+    player.showCenterLabel("먼저 진흥왕 순수비의 이야기를 4/4까지 들어 주세요.");
+    return true;
+  }
+  openMuseumGame(player, GAME_IDS[4], open);
+  return true;
 }
 
 export function continueMuseum(player: ScriptPlayer, open: Open): void {
@@ -202,6 +226,7 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
     museumBaekjeBricks: [],
     museumGayaIntroComplete: false,
     museumGayaClues: [],
+    museumJinheungIntroComplete: false,
     ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
   }, { persist: true });
   (preparePlayerTag(player) as Record<string, unknown>).museumHouClues = [];
