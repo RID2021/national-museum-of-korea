@@ -1,4 +1,5 @@
 import type { ScriptPlayer } from "zep-script";
+import { loadPlayerStorage, savePlayerStorage } from "../utils/player";
 import { GAME_IDS } from "./games";
 import { journey, MISSIONS, MUSEUM_MAPS } from "./navigation";
 
@@ -19,17 +20,40 @@ export function nearbyMuseumNpc(player: ScriptPlayer): string | undefined {
   return MUSEUM_NPC_SPOTS.find(spot => spot.map === ScriptApp.mapHashID &&
     Math.abs(player.tileX - spot.x) <= 2 && Math.abs(player.tileY - spot.y) <= 2)?.npc;
 }
+
+const HOU_CLUE_IDS = ["gwang", "gae", "to"] as const;
+
+/** Read and normalize the three persistent 호우총 단서 flags. */
+export function getMuseumHouClues(player: ScriptPlayer): string[] {
+  const stored = loadPlayerStorage(player).museumClues;
+  if (!Array.isArray(stored)) return [];
+  return Array.from(new Set(stored.filter((value): value is string =>
+    typeof value === "string" && HOU_CLUE_IDS.includes(value as (typeof HOU_CLUE_IDS)[number]))));
+}
+
+export function hasAllMuseumHouClues(player: ScriptPlayer): boolean {
+  const clues = getMuseumHouClues(player);
+  return HOU_CLUE_IDS.every(clue => clues.includes(clue));
+}
+
+export function recordMuseumHouClue(player: ScriptPlayer, clue: string): string[] {
+  const clues = getMuseumHouClues(player);
+  if (!HOU_CLUE_IDS.includes(clue as (typeof HOU_CLUE_IDS)[number])) return clues;
+  const next = Array.from(new Set([...clues, clue]));
+  if (next.length !== clues.length) {
+    const storage = loadPlayerStorage(player);
+    savePlayerStorage(player, { ...storage, museumClues: next }, { persist: true });
+  }
+  return next;
+}
+
 export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requested: string): string {
   if (ScriptApp.spaceHashID !== "nLP9zE" || requested !== "intro") return requested;
   const state = journey(player);
   if (npc === "museum-hou-bronze-bowl") {
-    let clues: string[] = [];
-    try {
-      const storage = player.storage ? JSON.parse(player.storage) as Record<string, unknown> : {};
-      clues = Array.isArray(storage.museumClues) ? storage.museumClues as string[] : [];
-    } catch (_error) { clues = []; }
-    if (clues.length > 0 && clues.length < 3) return "clues-incomplete";
-    if (clues.length >= 3) return "quiz";
+    const clues = getMuseumHouClues(player);
+    if (clues.length > 0 && clues.length < HOU_CLUE_IDS.length) return "clues-incomplete";
+    if (hasAllMuseumHouClues(player)) return "quiz";
   }
   const pending = MISSIONS.find(m => m.id === state.pendingCompletion && m.npc === npc && m.map === ScriptApp.mapHashID);
   if (pending) return pending.id === GAME_IDS[5] ? "etiquette-success" : "success";

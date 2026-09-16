@@ -52,7 +52,6 @@ const DAESEONGDONG_ARTIFACT_STEP_IDS = [
   "horse-gear",
   "armor",
 ];
-
 const NPC_ID_ALIASES: Record<string, string> = {
   ...NATIONAL_MUSEUM_NPC_ALIASES,
   ending: "time-grandfather",
@@ -2845,6 +2844,18 @@ function teardownMissionNpcWidget(tag: MissionNpcPlayerTag): void {
   }
 }
 
+function closeMuseumDialogueBeforeGame(player: ScriptPlayer): void {
+  const tag = preparePlayerTag(player) as MissionNpcPlayerTag;
+  const widget = tag.missionNpcWidget;
+  if (widget && typeof widget.destroy === "function") widget.destroy();
+  tag.missionNpcWidget = null;
+  tag.missionNpcWidgetTemplate = undefined;
+  tag.missionNpcId = undefined;
+  tag.missionNpcSceneId = undefined;
+  tag.missionNpcReadyAt = undefined;
+  tag.missionNpcRetryCount = undefined;
+}
+
 function scheduleNpcReadyRetry(
   player: ScriptPlayer,
   npc: MissionNpcDefinition,
@@ -3110,11 +3121,6 @@ function runSceneAfterAction(
   player: ScriptPlayer,
   scene: MissionNpcScene | null
 ): void {
-  const playerTag = preparePlayerTag(player) as MissionNpcPlayerTag & { museumCluesComplete?: boolean };
-  if (playerTag.museumCluesComplete) {
-    playerTag.museumCluesComplete = undefined;
-    handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
-  }
   if (scene?.museumTransitionId) {
     handleMuseumAction(player, scene.museumTransitionId, handleMissionNpcTrigger);
   }
@@ -3426,21 +3432,38 @@ export function handleMissionNpcTrigger(
   if (!requestedScene) {
     return false;
   }
+
+  // The bowl itself is the resume point: once all three characters are found,
+  // opening its intro trigger must launch the game directly, even on a fresh
+  // visit to the map. Do this before the dialogue once-per-player guard.
+  let houCluesBefore: string[] = [];
+  if (npc.id === "museum-hou-bronze-bowl") {
+    try {
+      const stored = player.storage ? JSON.parse(player.storage) as Record<string, unknown> : {};
+      houCluesBefore = Array.isArray(stored.museumClues) ? stored.museumClues.filter((value): value is string =>
+        typeof value === "string" && ["gwang", "gae", "to"].includes(value)) : [];
+    } catch (_error) { houCluesBefore = []; }
+  }
+  if (npc.id === "museum-hou-bronze-bowl" && parsed.sceneId === "intro" && ["gwang", "gae", "to"].every(clue => houCluesBefore.includes(clue))) {
+    closeMuseumDialogueBeforeGame(player);
+    handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
+    return true;
+  }
   let scene = resolveProgressScene(player, npc, requestedScene);
 
   if (npc.id === "museum-hou-bronze-bowl" && scene.id.indexOf("clue-") === 0) {
     const clue = scene.id.slice(6);
-    let storage: Record<string, unknown> = {};
-    try { storage = player.storage ? JSON.parse(player.storage) as Record<string, unknown> : {}; } catch (_error) { storage = {}; }
-    const clues = Array.isArray(storage.museumClues) ? storage.museumClues as string[] : [];
-    if (!clues.includes(clue)) {
-      player.storage = JSON.stringify({ ...storage, museumClues: [...clues, clue] });
+    const clues = Array.from(new Set([...houCluesBefore, clue]));
+    if (clues.length !== houCluesBefore.length) {
+      let storage: Record<string, unknown> = {};
+      try { storage = player.storage ? JSON.parse(player.storage) as Record<string, unknown> : {}; } catch (_error) { storage = {}; }
+      player.storage = JSON.stringify({ ...storage, museumClues: clues });
       if (typeof player.save === "function") player.save();
     }
-    if (["gwang", "gae", "to"].every(item => clues.includes(item) || item === clue)) {
-      (preparePlayerTag(player) as MissionNpcPlayerTag & { museumCluesComplete?: boolean }).museumCluesComplete = true;
+    if (clues.length === 3) {
       // Start the relation puzzle immediately after the third clue trigger.
       // Do not depend on the dialogue iframe's final-page callback.
+      closeMuseumDialogueBeforeGame(player);
       handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
       return true;
     }
