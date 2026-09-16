@@ -75,9 +75,9 @@ export function applyGameAction(id: string, state: GameState, action: GameAction
     if (action.kind === "pick" && valid(7)) {
       if (ETIQUETTE_ALLOWED_INDICES.includes(i!)) {
         if (!s.removed.includes(i!)) s.removed.push(i!);
-        s.feedback = `${ETIQUETTE_ITEMS[i!]}은(는) 반입 가능한 물품입니다. 획득했어요!`;
+        s.feedback = `‘${ETIQUETTE_ITEMS[i!]}’ 항목은 반입 가능한 물품입니다. 획득했어요!`;
       } else {
-        s.feedback = `${ETIQUETTE_ITEMS[i!]}은(는) 반입 금지 물품입니다. 반입 가능한 물품을 골라 주세요.`;
+        s.feedback = `‘${ETIQUETTE_ITEMS[i!]}’ 항목은 반입 금지 물품입니다. 반입 가능한 물품을 골라 주세요.`;
       }
       s.done = ETIQUETTE_ALLOWED_INDICES.every(index => s.removed.includes(index));
     }
