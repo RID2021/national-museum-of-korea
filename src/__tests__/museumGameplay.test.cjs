@@ -127,9 +127,12 @@ test('bag check artwork covers all seven belongings in game order', () => {
   assert.match(html, /v\.kind==='conveyor'&&BAG_ITEM_ASSETS\[item\]/);
   assert.match(html, /className='bag-item-art'/);
   assert.match(html, /@keyframes bag-flow\{from\{left:-92px\}to\{left:calc\(100% \+ 10px\)\}\}/);
-  assert.match(html, /const BAG_FLOW_SLOTS=\(\(\)=>\{/);
+  assert.match(html, /const BAG_FLOW=\(\(\)=>\{/);
   assert.match(html, /Math\.random\(\)/);
-  assert.match(html, /setProperty\('--bag-delay',String\(-BAG_FLOW_SLOTS\[i\]\*18\/7\)\+'s'\)/);
+  assert.match(html, /dataset\.bagLane=String\(BAG_FLOW\.lanes\[i\]\)/);
+  assert.match(html, /setProperty\('--bag-delay',String\(-BAG_FLOW\.slots\[i\]\*10\/7\)\+'s'\)/);
+  assert.match(html, /\.conveyor\{position:relative;display:block;height:320px/);
+  assert.match(html, /\.conveyor button\[data-bag-lane="2"\]\{top:206px\}/);
   assert.match(html, /\.conveyor:hover button,\.conveyor:focus-within button\{animation-play-state:paused\}/);
   assert.doesNotMatch(html, /className='bag-item-name'/);
 });

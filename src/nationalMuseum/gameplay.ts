@@ -51,7 +51,7 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
   }
   if (id === GAME_IDS[6] && progress.story !== "emergency") { open(player, "npc:museum-guide-robot:meeting"); return; }
   closeMuseumGame(player);
-  const widget = player.showWidget("html/museum-game-v1.html", "middle", player.isMobile ? 340 : 740, player.isMobile ? 520 : 590);
+  const widget = player.showWidget("html/museum-game-v1.html", "middle", player.isMobile ? 340 : 740, player.isMobile ? 520 : 680);
   const session: Session = { widget, id, token: String(Date.now()) + "-" + String(Math.random()), revision: 0 };
   tag(player).museumGame = session;
   saveGame(player, id, readGame(player, id));
