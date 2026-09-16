@@ -136,6 +136,7 @@ test('bag check artwork covers all seven belongings in game order', () => {
   assert.match(html, /\.conveyor\{position:relative;display:block;height:320px/);
   assert.match(html, /\.conveyor button\[data-bag-lane="2"\]\{top:206px\}/);
   assert.match(html, /@keyframes mission-clear/);
+  assert.match(html, /animation:mission-clear 2s ease-out both/);
   assert.match(html, /class="mission-complete"/);
   assert.match(html, /if\(e\.data\?\.type==='museum:complete'\)showCompletion\(e\.data\)/);
   assert.doesNotMatch(html, /animation-play-state:paused/);

@@ -88,7 +88,7 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
           closeMuseumGame(player);
           handleMuseumMissionCompletion(player, id, open);
           refreshMuseumProgress(player);
-        }, 950);
+        }, 2000);
         return;
       }
       closeMuseumGame(player);
