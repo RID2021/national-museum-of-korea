@@ -3438,7 +3438,7 @@ export function handleMissionNpcTrigger(
   // visit to the map. Do this before the dialogue once-per-player guard.
   let houCluesBefore: string[] = [];
   const runtimeRoot = globalThis as typeof globalThis & {
-    __nationalMuseumRuntime?: { museumHouClues?: Map<string, string[]> };
+    __nationalMuseumRuntime?: { museumHouClues?: Record<string, string[]> };
   };
   if (npc.id === "museum-hou-bronze-bowl") {
     try {
@@ -3454,7 +3454,7 @@ export function handleMissionNpcTrigger(
           typeof value === "string" && ["gwang", "gae", "to"].includes(value)),
       ]));
     }
-    const runtimeClues = runtimeRoot.__nationalMuseumRuntime?.museumHouClues?.get(String(player.id));
+    const runtimeClues = runtimeRoot.__nationalMuseumRuntime?.museumHouClues?.[String(player.id)];
     if (Array.isArray(runtimeClues)) {
       houCluesBefore = Array.from(new Set([...houCluesBefore, ...runtimeClues]));
     }
@@ -3478,8 +3478,8 @@ export function handleMissionNpcTrigger(
     const clueTag = preparePlayerTag(player) as MissionNpcPlayerTag & { museumHouClues?: string[] };
     clueTag.museumHouClues = clues;
     runtimeRoot.__nationalMuseumRuntime ??= {};
-    runtimeRoot.__nationalMuseumRuntime.museumHouClues ??= new Map<string, string[]>();
-    runtimeRoot.__nationalMuseumRuntime.museumHouClues.set(String(player.id), clues);
+    runtimeRoot.__nationalMuseumRuntime.museumHouClues ??= {};
+    runtimeRoot.__nationalMuseumRuntime.museumHouClues[String(player.id)] = clues;
     if (clues.length === 3) {
       // Start the relation puzzle immediately after the third clue trigger.
       // Do not depend on the dialogue iframe's final-page callback.

@@ -152,9 +152,11 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
   }, { persist: true });
   (preparePlayerTag(player) as Record<string, unknown>).museumHouClues = [];
   const runtimeRoot = globalThis as typeof globalThis & {
-    __nationalMuseumRuntime?: { museumHouClues?: Map<string, string[]> };
+    __nationalMuseumRuntime?: { museumHouClues?: Record<string, string[]> };
   };
-  runtimeRoot.__nationalMuseumRuntime?.museumHouClues?.delete(String(player.id));
+  if (runtimeRoot.__nationalMuseumRuntime?.museumHouClues) {
+    delete runtimeRoot.__nationalMuseumRuntime.museumHouClues[String(player.id)];
+  }
   player.showCenterLabel("박물관 미션이 초기화되었습니다. 현재 위치에서 다시 시작하세요.");
 }
 export function leaveMuseumExperience(player: ScriptPlayer): void {
