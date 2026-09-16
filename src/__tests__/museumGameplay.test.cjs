@@ -66,6 +66,8 @@ test('map puzzle drag swaps pieces atomically and keeps click fallback', () => {
   const html=fs.readFileSync(path.resolve(base,'../../res/html/museum-game-v1.html'),'utf8');
   assert.match(html,/b\.dataset\.swapIndex=String\(i\);bindBrickDrag\(b,b,i\)/);
   assert.match(html,/touch-action:none;cursor:grab/);
+  assert.match(html,/aspect-ratio:9\/7/);
+  assert.match(html,/preserveAspectRatio="none"/);
 });
 test('brick artwork covers every label and follows reordered game items', () => {
   const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
