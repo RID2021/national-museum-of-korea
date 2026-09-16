@@ -130,7 +130,9 @@ test('bag check artwork covers all seven belongings in game order', () => {
   assert.match(html, /const BAG_FLOW=\(\(\)=>\{/);
   assert.match(html, /Math\.random\(\)/);
   assert.match(html, /dataset\.bagLane=String\(BAG_FLOW\.lanes\[i\]\)/);
-  assert.match(html, /setProperty\('--bag-delay',String\(-BAG_FLOW\.slots\[i\]\*10\/7\)\+'s'\)/);
+  assert.match(html, /const BAG_FLOW_DURATION=10,BAG_FLOW_STARTED_AT=Date\.now\(\)/);
+  assert.match(html, /function bagFlowDelay\(index\)/);
+  assert.match(html, /setProperty\('--bag-delay',String\(bagFlowDelay\(i\)\)\+'s'\)/);
   assert.match(html, /\.conveyor\{position:relative;display:block;height:320px/);
   assert.match(html, /\.conveyor button\[data-bag-lane="2"\]\{top:206px\}/);
   assert.doesNotMatch(html, /animation-play-state:paused/);
