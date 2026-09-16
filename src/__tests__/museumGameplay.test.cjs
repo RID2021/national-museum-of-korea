@@ -5,6 +5,22 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 const base = path.resolve(__dirname, '../nationalMuseum');
+test('lobby five entry focuses camera on 52,40 for three seconds', () => {
+  const source = fs.readFileSync(path.resolve(base, '../utils/camera.ts'), 'utf8');
+  const output = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2018 } }).outputText;
+  const timers = [];
+  const calls = [];
+  const sandbox = { module: { exports: {} }, exports: {}, require: () => ({}), setTimeout: (fn, ms) => { timers.push({ fn, ms }); } };
+  sandbox.exports = sandbox.module.exports;
+  vm.runInNewContext(output, sandbox);
+  const player = { setCameraTarget: (...args) => calls.push(args), sendUpdated: () => calls.push(['updated']) };
+  sandbox.module.exports.cameraMoveByMapName(player, '로비(5)');
+  assert.deepEqual(calls, [[52, 40, 0.45], ['updated']]);
+  assert.equal(timers.length, 1);
+  assert.equal(timers[0].ms, 3000);
+  timers[0].fn();
+  assert.deepEqual(calls, [[52, 40, 0.45], ['updated'], [''], ['updated']]);
+});
 test('Gaya dialogue quiz validates answers and waits for explanation completion',()=>{
   for(const n of [2]){
     const h=harness(),id=h.game.GAME_IDS[n];

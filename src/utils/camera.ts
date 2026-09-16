@@ -29,10 +29,26 @@ interface CameraRouteConfig {
   options?: CameraMoveOptions;
 }
 
+interface CameraFocusConfig {
+  x: number;
+  y: number;
+  durationMs: number;
+  moveDuration?: number;
+}
+
 const DEFAULT_MOVE_DURATION = 1.5;
 const DEFAULT_RETURN_DURATION = 1;
 const DEFAULT_WAIT_BUFFER = 1;
 const DEFAULT_MOVE_SPEED = 80;
+
+const cameraFocusRoutes: Record<string, CameraFocusConfig> = {
+  "로비(5)": {
+    x: 52,
+    y: 40,
+    durationMs: 3000,
+    moveDuration: 0.45,
+  },
+};
 
 const cameraRoutes: Record<string, CameraRouteConfig> = {
   광화문1: {
@@ -318,6 +334,21 @@ export function cameraMoveByMapName(
   player: ScriptPlayer,
   mapName: string
 ): void {
+  const focus = cameraFocusRoutes[mapName];
+  if (focus) {
+    player.setCameraTarget(
+      focus.x,
+      focus.y,
+      focus.moveDuration ?? 0.45
+    );
+    player.sendUpdated();
+    setTimeout(() => {
+      player.setCameraTarget("");
+      player.sendUpdated();
+    }, focus.durationMs);
+    return;
+  }
+
   const route = cameraRoutes[mapName];
   if (!route) {
     return;
