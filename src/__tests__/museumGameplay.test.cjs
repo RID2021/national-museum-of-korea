@@ -98,6 +98,18 @@ function solve(game, id, state) {
   if (n===6)for(let p=0;p<5;p++){act({kind:'pick',index:state.deck.indexOf(p*2)});act({kind:'pick',index:state.deck.indexOf(p*2+1)});}
   return state;
 }
+test('Goguryeo relation prompt appears only after matching Gwanggaeto letters',()=>{
+  const {game}=harness(), id='museum-hou-relations';
+  let state=game.createGameState();
+  let view=game.gameView(id,state);
+  assert.doesNotMatch(view.prompt,/ㄱ ㄹ/);
+  for(const index of [1,4])state=game.applyGameAction(id,state,{kind:'pick',index});
+  view=game.gameView(id,state);
+  assert.doesNotMatch(view.prompt,/ㄱ ㄹ/);
+  state=game.applyGameAction(id,state,{kind:'pick',index:7});
+  view=game.gameView(id,state);
+  assert.match(view.prompt,/ㄱ ㄹ/);
+});
 test('all seven MVP rule engines can be solved without mutating input',()=>{
   const {game}=harness();
   for(const id of game.GAME_IDS){const initial=game.createGameState();const before=JSON.stringify(initial);assert.equal(solve(game,id,initial).done,true,id);assert.equal(JSON.stringify(initial),before);}

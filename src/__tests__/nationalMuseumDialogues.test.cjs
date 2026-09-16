@@ -324,6 +324,12 @@ test("intro and meeting switch names and portraits in original script order", ()
   assert.equal(ending.speakerlessLineTexts.length, 3);
 });
 
+test("Goguryeo NPC dialogue does not reveal the relation answer prompt", () => {
+  const bowl = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-hou-bronze-bowl");
+  const quiz = bowl.scenes.find(s => s.id === "quiz");
+  assert.equal(quiz.lines.some(line => line.includes("[ ㄱ ㄹ ]")), false);
+});
+
 test("meeting completion queues the emergency dialogue and resolves its target", () => {
   const { context, player, opened, timers } = setup();
   const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
