@@ -144,6 +144,16 @@ test('bag check artwork covers all seven belongings in game order', () => {
   assert.doesNotMatch(html, /animation-play-state:paused/);
   assert.doesNotMatch(html, /className='bag-item-name'/);
 });
+test('artifact memory game renders themed museum cards instead of plain text', () => {
+  const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
+  for (const label of ['호우총 청동 그릇','고구려·신라 관계','산수무늬 벽돌','백제 미술','판갑옷과 투구','가야 철기 문화','황남대총 금관','신라 황금 문화','진흥왕 순수비','신라 영토 확장']) assert.ok(html.includes(label));
+  assert.match(html, /const MEMORY_CARD_ART=/);
+  assert.match(html, /className='memory-card'/);
+  assert.match(html, /classList\.add\('memory-back'\)/);
+  assert.match(html, /dataset\.memoryTheme=art\[0\]/);
+  assert.match(html, /@keyframes card-reveal/);
+  assert.match(html, /\.memory\{grid-template-columns:repeat\(5/);
+});
 function harness() {
   const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [];
   const app = { spaceHashID: 'nLP9zE', mapHashID: '0EAV9k' };
