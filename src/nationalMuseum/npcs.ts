@@ -204,6 +204,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "intro",
       title: "호우총 청동 그릇의 비밀",
+      museumTransitionId: "hou-intro-complete",
       lines: [
         "반갑구나. 나는 경주에서 발견된 고구려 청동 그릇 ‘호우’라고 해.",
         "내가 발견된 무덤은 호우라는 그릇이 발견되었기 때문에 ‘호우총’이라 불리게 되었지. 여기서 ‘총’은 무덤을 뜻한단다.",
@@ -215,6 +216,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       id: "quiz",
       title: "고구려와 신라의 관계 추론",
       lines: [
+        "廣(광)·開(개)·土(토), 세 글자를 모두 잘 찾았구나!",
         "내가 왜 신라의 무덤에서 발견되었는지 사람들은 오랫동안 궁금해했단다.",
         "내 몸에 새겨진 글자와 단서를 보고 고구려와 신라의 관계를 추론해 줄 수 있겠니?",
         "고구려와 신라 사이에 정치적 관계와 [ ㄱ ㄹ ]가 있었음을 보여준다.",

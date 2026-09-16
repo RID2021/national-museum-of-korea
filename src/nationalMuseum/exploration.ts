@@ -22,7 +22,10 @@ export function nearbyMuseumNpc(player: ScriptPlayer): string | undefined {
 }
 
 const HOU_CLUE_IDS = ["gwang", "gae", "to"] as const;
-type MuseumRuntimeState = { museumHouClues?: Record<string, string[]> };
+type MuseumRuntimeState = {
+  museumHouClues?: Record<string, string[]>;
+  museumHouIntroComplete?: Record<string, boolean>;
+};
 
 function runtimeHouClues(): Record<string, string[]> {
   const root = globalThis as typeof globalThis & { __nationalMuseumRuntime?: MuseumRuntimeState };
@@ -50,6 +53,14 @@ export function hasAllMuseumHouClues(player: ScriptPlayer): boolean {
   return HOU_CLUE_IDS.every(clue => clues.includes(clue));
 }
 
+export function hasCompletedMuseumHouIntro(player: ScriptPlayer): boolean {
+  const storage = loadPlayerStorage(player);
+  const tagged = (player.tag as Record<string, unknown> | undefined)?.museumHouIntroComplete;
+  const root = globalThis as typeof globalThis & { __nationalMuseumRuntime?: MuseumRuntimeState };
+  return storage.museumHouIntroComplete === true || tagged === true ||
+    root.__nationalMuseumRuntime?.museumHouIntroComplete?.[String(player.id)] === true;
+}
+
 export function recordMuseumHouClue(player: ScriptPlayer, clue: string): string[] {
   const clues = getMuseumHouClues(player);
   if (!HOU_CLUE_IDS.includes(clue as (typeof HOU_CLUE_IDS)[number])) return clues;
@@ -65,13 +76,14 @@ export function recordMuseumHouClue(player: ScriptPlayer, clue: string): string[
 export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requested: string): string {
   if (ScriptApp.spaceHashID !== "nLP9zE" || requested !== "intro") return requested;
   const state = journey(player);
-  if (npc === "museum-hou-bronze-bowl") {
-    const clues = getMuseumHouClues(player);
-    if (clues.length > 0 && clues.length < HOU_CLUE_IDS.length) return "clues-incomplete";
-    if (hasAllMuseumHouClues(player)) return "quiz";
-  }
   const pending = MISSIONS.find(m => m.id === state.pendingCompletion && m.npc === npc && m.map === ScriptApp.mapHashID);
   if (pending) return pending.id === GAME_IDS[5] ? "etiquette-success" : "success";
+  if (npc === "museum-hou-bronze-bowl") {
+    if (!hasCompletedMuseumHouIntro(player)) return "intro";
+    const clues = getMuseumHouClues(player);
+    if (clues.length < HOU_CLUE_IDS.length) return "clues-incomplete";
+    if (hasAllMuseumHouClues(player)) return "quiz";
+  }
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby2) return "baekje-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby3) return "gaya-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby4) return "silla-guide";

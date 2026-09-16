@@ -164,21 +164,27 @@ test('lobby four robot gives Silla walking directions without automatic travel',
   h.api.handleMuseumAction(h.player,'silla-guide',h.open);
   assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
 });
-test('Goguryeo bowl intro branches on discovered clue count',()=>{
+test('Goguryeo bowl requires intro completion, all three clues, and a return visit',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.goguryeo;
-  h.player.storage=JSON.stringify({museumClues:['gwang']});
-  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'clues-incomplete');
-  h.player.storage=JSON.stringify({museumClues:['gwang','gae','to']});
-  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'quiz');
   h.player.storage=JSON.stringify({});
   assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'intro');
+  h.api.handleMuseumAction(h.player,'hou-intro-complete',h.open);
+  assert.equal(JSON.parse(h.player.storage).museumHouIntroComplete,true);
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'clues-incomplete');
+  h.player.storage=JSON.stringify({museumHouIntroComplete:true,museumClues:['gwang']});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'clues-incomplete');
+  h.player.storage=JSON.stringify({museumHouIntroComplete:true,museumClues:['gwang','gae']});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'clues-incomplete');
+  h.player.storage=JSON.stringify({museumHouIntroComplete:true,museumClues:['gwang','gae','to']});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'quiz');
 });
-test('Goguryeo clue completion is the only path that starts the relation game',()=>{
+test('Goguryeo relation game starts only after the return-visit quiz dialogue completes',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.goguryeo;
-  h.player.storage=JSON.stringify({museumClues:[]});
-  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'intro');
-  h.api.handleMuseumAction(h.player,'museum-hou-relations',h.open);
-  assert.equal(h.opened.length,0);
+  h.player.storage=JSON.stringify({museumHouIntroComplete:true,museumClues:['gwang','gae','to']});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'quiz');
+  assert.equal(h.widgets.length,0);
+  h.api.handleMuseumAction(h.player,'game:museum-hou-relations',h.open);
+  assert.equal(h.widgets.length,1);
 });
 test('ending remains resumable until its last page; no custom HUD is created',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
@@ -253,6 +259,7 @@ test('museum reset clears narrative, missions and games, preserves unrelated dat
   h.api.resetMuseumExperience(h.player,h.open);
   const data=JSON.parse(h.player.storage);
   assert.deepEqual(data.museumJourney,{completed:[]});assert.deepEqual(data.museumGames,{});
+  assert.deepEqual(data.museumClues,[]);assert.equal(data.museumHouIntroComplete,false);
   assert.deepEqual(data.inventory,['keep']);assert.deepEqual(data.missionProgress,{missions:{tomb:true}});assert.equal(data.other,'keep');
   assert.deepEqual(data.missionNpc.seenSceneKeys,['other:intro']);assert.equal(destroyed,true);assert.equal(h.player.tag.missionNpcId,undefined);
   while(h.timers.length)h.timers.shift()();assert.deepEqual(h.opened,[]);

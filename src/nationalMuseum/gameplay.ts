@@ -83,6 +83,21 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
 // its last page, never on close. Server mission completion remains authoritative.
 export function handleMuseumAction(player: ScriptPlayer, action: string, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
+  if (action === "hou-intro-complete") {
+    const storage = loadPlayerStorage(player);
+    savePlayerStorage(player, { ...storage, museumHouIntroComplete: true }, { persist: true });
+    (preparePlayerTag(player) as Record<string, unknown>).museumHouIntroComplete = true;
+    const runtimeRoot = globalThis as typeof globalThis & {
+      __nationalMuseumRuntime?: {
+        museumHouClues?: Record<string, string[]>;
+        museumHouIntroComplete?: Record<string, boolean>;
+      };
+    };
+    runtimeRoot.__nationalMuseumRuntime ??= {};
+    runtimeRoot.__nationalMuseumRuntime.museumHouIntroComplete ??= {};
+    runtimeRoot.__nationalMuseumRuntime.museumHouIntroComplete[String(player.id)] = true;
+    return;
+  }
   if (action.indexOf("quiz-complete:") === 0) {
     const id = action.slice(14), index = GAME_IDS.indexOf(id);
     const playerTag = preparePlayerTag(player);
@@ -148,14 +163,22 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
     museumJourney: { completed: [] },
     museumGames: {},
     museumClues: [],
+    museumHouIntroComplete: false,
     ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
   }, { persist: true });
   (preparePlayerTag(player) as Record<string, unknown>).museumHouClues = [];
+  (preparePlayerTag(player) as Record<string, unknown>).museumHouIntroComplete = false;
   const runtimeRoot = globalThis as typeof globalThis & {
-    __nationalMuseumRuntime?: { museumHouClues?: Record<string, string[]> };
+    __nationalMuseumRuntime?: {
+      museumHouClues?: Record<string, string[]>;
+      museumHouIntroComplete?: Record<string, boolean>;
+    };
   };
   if (runtimeRoot.__nationalMuseumRuntime?.museumHouClues) {
     delete runtimeRoot.__nationalMuseumRuntime.museumHouClues[String(player.id)];
+  }
+  if (runtimeRoot.__nationalMuseumRuntime?.museumHouIntroComplete) {
+    delete runtimeRoot.__nationalMuseumRuntime.museumHouIntroComplete[String(player.id)];
   }
   player.showCenterLabel("박물관 미션이 초기화되었습니다. 현재 위치에서 다시 시작하세요.");
 }

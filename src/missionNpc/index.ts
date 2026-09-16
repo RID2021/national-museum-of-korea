@@ -2844,18 +2844,6 @@ function teardownMissionNpcWidget(tag: MissionNpcPlayerTag): void {
   }
 }
 
-function closeMuseumDialogueBeforeGame(player: ScriptPlayer): void {
-  const tag = preparePlayerTag(player) as MissionNpcPlayerTag;
-  const widget = tag.missionNpcWidget;
-  if (widget && typeof widget.destroy === "function") widget.destroy();
-  tag.missionNpcWidget = null;
-  tag.missionNpcWidgetTemplate = undefined;
-  tag.missionNpcId = undefined;
-  tag.missionNpcSceneId = undefined;
-  tag.missionNpcReadyAt = undefined;
-  tag.missionNpcRetryCount = undefined;
-}
-
 function scheduleNpcReadyRetry(
   player: ScriptPlayer,
   npc: MissionNpcDefinition,
@@ -3433,9 +3421,8 @@ export function handleMissionNpcTrigger(
     return false;
   }
 
-  // The bowl itself is the resume point: once all three characters are found,
-  // opening its intro trigger must launch the game directly, even on a fresh
-  // visit to the map. Do this before the dialogue once-per-player guard.
+  // Keep clue discovery available to the base bowl trigger. The third clue
+  // never starts the puzzle by itself; the player must return to the bowl.
   let houCluesBefore: string[] = [];
   const runtimeRoot = globalThis as typeof globalThis & {
     __nationalMuseumRuntime?: { museumHouClues?: Record<string, string[]> };
@@ -3459,11 +3446,6 @@ export function handleMissionNpcTrigger(
       houCluesBefore = Array.from(new Set([...houCluesBefore, ...runtimeClues]));
     }
   }
-  if (npc.id === "museum-hou-bronze-bowl" && parsed.sceneId === "intro" && ["gwang", "gae", "to"].every(clue => houCluesBefore.includes(clue))) {
-    closeMuseumDialogueBeforeGame(player);
-    handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
-    return true;
-  }
   let scene = resolveProgressScene(player, npc, requestedScene);
 
   if (npc.id === "museum-hou-bronze-bowl" && scene.id.indexOf("clue-") === 0) {
@@ -3480,13 +3462,6 @@ export function handleMissionNpcTrigger(
     runtimeRoot.__nationalMuseumRuntime ??= {};
     runtimeRoot.__nationalMuseumRuntime.museumHouClues ??= {};
     runtimeRoot.__nationalMuseumRuntime.museumHouClues[String(player.id)] = clues;
-    if (clues.length === 3) {
-      // Start the relation puzzle immediately after the third clue trigger.
-      // Do not depend on the dialogue iframe's final-page callback.
-      closeMuseumDialogueBeforeGame(player);
-      handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
-      return true;
-    }
   }
 
   const tag = preparePlayerTag(player) as MissionNpcPlayerTag;
