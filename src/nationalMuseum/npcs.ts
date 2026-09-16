@@ -220,6 +220,9 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
         "고구려와 신라 사이에 정치적 관계와 [ ㄱ ㄹ ]가 있었음을 보여준다.",
       ],
     },
+    { id: "clue-gwang", title: "廣(광) 글자 확인", lines: ["전시 단서에서 광개토의 廣(광)이라는 글자가 보인다."] },
+    { id: "clue-gae", title: "開(개) 글자 확인", lines: ["전시 단서에서 광개토의 開(개)라는 글자가 보인다."] },
+    { id: "clue-to", title: "土(토) 글자 확인", lines: ["전시 단서에서 광개토의 土(토)라는 글자가 보인다."] },
     {
       id: "hint",
       title: "관계 추론 힌트",

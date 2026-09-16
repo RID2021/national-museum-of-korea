@@ -2646,8 +2646,9 @@ function resolveProgressScene(
   scene: MissionNpcScene
 ): MissionNpcScene {
   if (npc.id === "museum-hou-bronze-bowl" && scene.id === "quiz") {
-    const museumGames = loadPlayerStorage(player).museumGames as Record<string, { stage?: number }> | undefined;
-    if (museumGames?.["museum-hou-relations"]?.stage !== 1) {
+    const storage = loadPlayerStorage(player);
+    const clues = storage.museumClues as string[] | undefined;
+    if (!clues || !["gwang", "gae", "to"].every(clue => clues.includes(clue))) {
       return getNpcScene(npc, "intro") ?? scene;
     }
   }
@@ -3421,6 +3422,17 @@ export function handleMissionNpcTrigger(
     return false;
   }
   const scene = resolveProgressScene(player, npc, requestedScene);
+
+  if (npc.id === "museum-hou-bronze-bowl" && scene.id.indexOf("clue-") === 0) {
+    const clue = scene.id.slice(6);
+    let storage: Record<string, unknown> = {};
+    try { storage = player.storage ? JSON.parse(player.storage) as Record<string, unknown> : {}; } catch (_error) { storage = {}; }
+    const clues = Array.isArray(storage.museumClues) ? storage.museumClues as string[] : [];
+    if (!clues.includes(clue)) {
+      player.storage = JSON.stringify({ ...storage, museumClues: [...clues, clue] });
+      if (typeof player.save === "function") player.save();
+    }
+  }
 
   const tag = preparePlayerTag(player) as MissionNpcPlayerTag;
   if (isSceneOpenOrPending(tag, npc, scene)) {
