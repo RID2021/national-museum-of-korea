@@ -206,6 +206,20 @@ test('Goguryeo relation game starts only after the return-visit quiz dialogue co
   h.api.handleMuseumAction(h.player,'game:museum-hou-relations',h.open);
   assert.equal(h.widgets.length,1);
 });
+test('Gaya armor requires its intro and all three exhibit clues before the quiz',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.gaya;
+  h.player.storage=JSON.stringify({});
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-gaya-armor-helmet','intro'),'intro');
+  h.api.handleMuseumAction(h.player,'gaya-intro-complete',h.open);
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-gaya-armor-helmet','intro'),'clues-incomplete');
+  for(const [index,clue] of ['iron-plate','rivet','helmet'].entries()){
+    h.api.handleMuseumAction(h.player,'gaya-clue:'+clue,h.open);
+    assert.equal(JSON.parse(h.player.storage).museumGayaClues.length,index+1);
+    assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-gaya-armor-helmet','intro'),index===2?'quiz':'clues-incomplete');
+  }
+  h.api.handleMuseumAction(h.player,'gaya-clue:helmet',h.open);
+  assert.deepEqual(JSON.parse(h.player.storage).museumGayaClues,['iron-plate','rivet','helmet']);
+});
 test('ending remains resumable until its last page; no custom HUD is created',()=>{
   const h=harness();h.app.mapHashID='XWA4Aj';h.player.storage=JSON.stringify({other:'keep',inventory:['existing'],museumJourney:{completed:h.game.GAME_IDS,pendingEnding:true},museumGames:{}});
   h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.equal(h.nav.journey(h.player).pendingEnding,true);
@@ -296,6 +310,7 @@ test('museum reset clears narrative, missions and games, preserves unrelated dat
   const data=JSON.parse(h.player.storage);
   assert.deepEqual(data.museumJourney,{completed:[]});assert.deepEqual(data.museumGames,{});
   assert.deepEqual(data.museumClues,[]);assert.equal(data.museumHouIntroComplete,false);assert.deepEqual(data.museumBaekjeBricks,[]);
+  assert.equal(data.museumGayaIntroComplete,false);assert.deepEqual(data.museumGayaClues,[]);
   assert.deepEqual(data.inventory,['keep']);assert.deepEqual(data.missionProgress,{missions:{tomb:true}});assert.equal(data.other,'keep');
   assert.deepEqual(data.missionNpc.seenSceneKeys,['other:intro']);assert.equal(destroyed,true);assert.equal(h.player.tag.missionNpcId,undefined);
   while(h.timers.length)h.timers.shift()();assert.deepEqual(h.opened,[]);

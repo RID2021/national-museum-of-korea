@@ -4,6 +4,7 @@ import { GAME_IDS, createGameState, applyGameAction, gameView, GameState, GameAc
 import { MUSEUM_MAPS, MISSIONS, journey, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
 import { nearbyMuseumNpc } from "./exploration";
 import { closeMuseumProgress, refreshMuseumProgress } from "./progress";
+import { recordMuseumGayaClue } from "./exploration";
 
 type Open = (player: ScriptPlayer, trigger: string) => unknown;
 type Session = { widget: ScriptWidget; id: string; token: string; revision: number; promptOpen?: boolean };
@@ -87,6 +88,17 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
 // its last page, never on close. Server mission completion remains authoritative.
 export function handleMuseumAction(player: ScriptPlayer, action: string, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
+  if (action.indexOf("gaya-clue:") === 0) {
+    if (ScriptApp.mapHashID !== MUSEUM_MAPS.gaya) return;
+    const clues = recordMuseumGayaClue(player, action.slice("gaya-clue:".length));
+    player.showCenterLabel(`가야 철기 단서 ${clues.length}/3`);
+    return;
+  }
+  if (action === "gaya-intro-complete") {
+    const storage = loadPlayerStorage(player);
+    savePlayerStorage(player, { ...storage, museumGayaIntroComplete: true }, { persist: true });
+    return;
+  }
   if (action.indexOf("baekje-brick:") === 0) {
     if (ScriptApp.mapHashID !== MUSEUM_MAPS.baekje) return;
     const brick = action.slice("baekje-brick:".length);
@@ -182,6 +194,8 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
     museumClues: [],
     museumHouIntroComplete: false,
     museumBaekjeBricks: [],
+    museumGayaIntroComplete: false,
+    museumGayaClues: [],
     ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
   }, { persist: true });
   (preparePlayerTag(player) as Record<string, unknown>).museumHouClues = [];

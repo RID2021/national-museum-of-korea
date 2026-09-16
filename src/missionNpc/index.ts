@@ -1,6 +1,6 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 import { handleMuseumAction, closeMuseumGame, handleMuseumDialogueChoice } from "../nationalMuseum/gameplay";
-import { resolveMuseumSceneId } from "../nationalMuseum/exploration";
+import { getMuseumGayaClues, hasCompletedMuseumGayaIntro, resolveMuseumSceneId } from "../nationalMuseum/exploration";
 
 import {
   NATIONAL_MUSEUM_NPCS,
@@ -2650,6 +2650,10 @@ function resolveProgressScene(
     if (!clues || !["gwang", "gae", "to"].every(clue => clues.includes(clue))) {
       return getNpcScene(npc, "intro") ?? scene;
     }
+  }
+  if (npc.id === "museum-gaya-armor-helmet" && scene.id === "quiz") {
+    if (!hasCompletedMuseumGayaIntro(player)) return getNpcScene(npc, "intro") ?? scene;
+    if (getMuseumGayaClues(player).length < 3) return getNpcScene(npc, "clues-incomplete") ?? scene;
   }
   if (npc.id !== "gwanghoek" || scene.id !== "intro") {
     return scene;

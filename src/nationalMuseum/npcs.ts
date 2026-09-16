@@ -283,18 +283,31 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "intro",
       title: "판갑옷과 투구의 이야기",
+      museumTransitionId: "gaya-intro-complete",
       lines: [
-        "나는 고령 지산동 고분군에서 출토된 판갑옷과 투구다.",
-        "가야 사람들은 뛰어난 철기 제작 기술을 가지고 있었어. 여러 철판을 이어 만든 판갑옷은 가야 기술의 정수를 보여준단다.",
-        "내가 준비한 문제를 맞혀 보겠니?",
+        "나는 고령 지산동 32호 무덤에서 출토된 판갑옷과 투구다.",
+        "가야 사람들의 뛰어난 철기 제작 기술을 보여 주는 유물이지.",
+        "전시실에 있는 철판, 연결용 못, 투구를 살펴보고 다시 돌아와 줘.",
       ],
     },
+    {
+      id: "clues-incomplete",
+      title: "가야 철기 단서 찾기",
+      lines: [
+        "아직 세 가지 단서를 모두 확인하지 못했구나.",
+        "전시실에 있는 철판, 연결용 못, 투구를 조금 더 살펴봐.",
+      ],
+    },
+    { id: "clue-iron-plate", title: "철판 단서 확인", lines: ["가로로 긴 철판이다. 판갑옷의 몸통을 이루는 재료다."], museumTransitionId: "gaya-clue:iron-plate" },
+    { id: "clue-rivet", title: "연결용 못 단서 확인", lines: ["철판에 작은 못 자국이 남아 있다. 여러 철판을 단단히 고정한 흔적이다."], museumTransitionId: "gaya-clue:rivet" },
+    { id: "clue-helmet", title: "투구 단서 확인", lines: ["씨앗처럼 생긴 가야의 철제 투구다. 목을 가리는 철판도 함께 붙어 있다."], museumTransitionId: "gaya-clue:helmet" },
     {
       id: "quiz",
       title: "가야 철 문화 퀴즈 안내",
       museumQuizId: "museum-gaya-iron",
       museumTransitionId: "quiz-complete:museum-gaya-iron",
       lines: [
+        "잘 찾았어! 이제 가야 판갑옷이 어떻게 만들어졌는지 문제를 풀어 보자.",
         "고령 지산동 고분군에서 출토된 가야 판갑옷은 무엇을 이어 만들어졌을까요?",
       ],
       choices: ["나무판", "철판", "돌판"].map((label, index) => ({
@@ -357,7 +370,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
 const GAME_SCENES: Record<string, Record<string, string>> = {
   "museum-hou-bronze-bowl": { quiz: "game:museum-hou-relations", hint: "game:museum-hou-relations" },
   "museum-baekje-landscape-brick": {},
-  "museum-gaya-armor-helmet": { intro: "game:museum-gaya-iron" },
+  "museum-gaya-armor-helmet": {},
   "museum-hwangnam-gold-crown": { intro: "game:museum-hwangnam-crown", hint: "game:museum-hwangnam-crown" },
   "museum-jinheung-stele": { intro: "game:museum-jinheung-locations" },
   "museum-guide-robot": { "etiquette-intro": "game:museum-etiquette", emergency: "emergency", ending: "ending" },

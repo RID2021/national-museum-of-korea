@@ -22,6 +22,7 @@ export function nearbyMuseumNpc(player: ScriptPlayer): string | undefined {
 }
 
 const HOU_CLUE_IDS = ["gwang", "gae", "to"] as const;
+const GAYA_CLUE_IDS = ["iron-plate", "rivet", "helmet"] as const;
 type MuseumRuntimeState = {
   museumHouClues?: Record<string, string[]>;
   museumHouIntroComplete?: Record<string, boolean>;
@@ -73,6 +74,26 @@ export function recordMuseumHouClue(player: ScriptPlayer, clue: string): string[
   return next;
 }
 
+export function getMuseumGayaClues(player: ScriptPlayer): string[] {
+  const stored = loadPlayerStorage(player).museumGayaClues;
+  return Array.from(new Set((Array.isArray(stored) ? stored : []).filter((value): value is string =>
+    typeof value === "string" && GAYA_CLUE_IDS.includes(value as (typeof GAYA_CLUE_IDS)[number]))));
+}
+
+export function hasCompletedMuseumGayaIntro(player: ScriptPlayer): boolean {
+  return loadPlayerStorage(player).museumGayaIntroComplete === true;
+}
+
+export function recordMuseumGayaClue(player: ScriptPlayer, clue: string): string[] {
+  const clues = getMuseumGayaClues(player);
+  if (!GAYA_CLUE_IDS.includes(clue as (typeof GAYA_CLUE_IDS)[number])) return clues;
+  const next = Array.from(new Set([...clues, clue]));
+  if (next.length !== clues.length) {
+    savePlayerStorage(player, { ...loadPlayerStorage(player), museumGayaClues: next }, { persist: true });
+  }
+  return next;
+}
+
 export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requested: string): string {
   if (ScriptApp.spaceHashID !== "nLP9zE" || requested !== "intro") return requested;
   const state = journey(player);
@@ -83,6 +104,10 @@ export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requeste
     const clues = getMuseumHouClues(player);
     if (clues.length < HOU_CLUE_IDS.length) return "clues-incomplete";
     if (hasAllMuseumHouClues(player)) return "quiz";
+  }
+  if (npc === "museum-gaya-armor-helmet") {
+    if (!hasCompletedMuseumGayaIntro(player)) return "intro";
+    return getMuseumGayaClues(player).length < GAYA_CLUE_IDS.length ? "clues-incomplete" : "quiz";
   }
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby2) return "baekje-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby3) return "gaya-guide";

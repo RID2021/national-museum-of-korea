@@ -219,11 +219,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 45 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 49 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 45);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 49);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -235,7 +235,7 @@ test("the script has eight distinct speakers and 45 nonempty dialogue scenes", (
   }
 });
 
-test("all 45 fully qualified object triggers route to the intended NPC and scene", () => {
+test("all 49 fully qualified object triggers route to the intended NPC and scene", () => {
   for (const npc of data.NATIONAL_MUSEUM_NPCS) {
     for (const scene of npc.scenes) {
       const { context, player, opened } = setup();
@@ -254,6 +254,14 @@ test("Baekje has eight distinct brick triggers with completion actions", () => {
   const intro = baekje.scenes.find(s => s.id === "intro");
   assert.equal(intro.oncePerPlayer, true);
   assert.equal(intro.lines.length, 6);
+});
+test("Gaya has three lightweight exhibit clues before its dialogue quiz", () => {
+  const gaya = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-gaya-armor-helmet");
+  const clues = gaya.scenes.filter(scene => scene.id.startsWith("clue-"));
+  assert.deepEqual(Array.from(clues.map(scene => scene.id)), ["clue-iron-plate", "clue-rivet", "clue-helmet"]);
+  assert.deepEqual(Array.from(clues.map(scene => scene.museumTransitionId)), ["gaya-clue:iron-plate", "gaya-clue:rivet", "gaya-clue:helmet"]);
+  assert.equal(gaya.scenes.find(scene => scene.id === "intro").museumTransitionId, "gaya-intro-complete");
+  assert.equal(gaya.scenes.find(scene => scene.id === "quiz").choices.length, 3);
 });
 
 test("Goguryeo clue triggers persist the exact gwang, gae and to identifiers", () => {
