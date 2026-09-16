@@ -2645,6 +2645,12 @@ function resolveProgressScene(
   npc: MissionNpcDefinition,
   scene: MissionNpcScene
 ): MissionNpcScene {
+  if (npc.id === "museum-hou-bronze-bowl" && scene.id === "quiz") {
+    const museumGames = loadPlayerStorage(player).museumGames as Record<string, { stage?: number }> | undefined;
+    if (museumGames?.["museum-hou-relations"]?.stage !== 1) {
+      return getNpcScene(npc, "intro") ?? scene;
+    }
+  }
   if (npc.id !== "gwanghoek" || scene.id !== "intro") {
     return scene;
   }
