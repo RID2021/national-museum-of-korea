@@ -37,7 +37,7 @@ test("dialogue completion routes match live map portals and reject wrong source 
   }
 });
 
-test("all seven mission transitions require genuine ordered completion and are idempotent", () => {
+test("all seven mission transitions require correct-room completion and are idempotent", () => {
   const h = navigationHarness();
   const routes = [
     ["museum-hou-relations", "0EAV9k", "pnNepx"], ["museum-baekje-bricks", "kP0x5B", "xEOeqz"],
@@ -45,7 +45,7 @@ test("all seven mission transitions require genuine ordered completion and are i
     ["museum-jinheung-locations", "dJzqzn", "pnNeN3"], ["museum-etiquette", "pnNeN3", null],
     ["museum-artifact-cards", "pnNeN3", "XWA4Aj"],
   ];
-  h.context.ScriptApp.mapHashID = "pnNeN3";
+  h.context.ScriptApp.mapHashID = "wrong";
   h.api.handleMuseumMissionCompletion(h.player, "museum-artifact-cards", h.open);
   assert.equal(h.moves.length, 0);
   for (const [id, source, target] of routes) {

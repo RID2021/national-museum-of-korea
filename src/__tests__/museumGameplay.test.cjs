@@ -152,9 +152,16 @@ test('widget-driven full journey completes seven missions, dialogues, moves and 
   assert.deepEqual(h.moves.at(-1),['nLP9zE','XWA4Aj']);h.app.mapHashID='XWA4Aj';h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.match(h.opened.at(-1),/:ending$/);
   h.api.handleMuseumAction(h.player,'ending',h.open);assert.equal(h.nav.journey(h.player).endingSeen,true);
 });
-test('mission guide never teleports or opens dialogue and rejects out of order games',()=>{
-  const h=harness();h.app.mapHashID='r7aeam';h.api.openMuseumGame(h.player,h.game.GAME_IDS[3],h.open);assert.equal(h.widgets.length,0);
+test('mission guide never teleports, while direct room URLs allow their own games',()=>{
+  const h=harness();h.app.mapHashID='dJzqzn';h.api.openMuseumGame(h.player,h.game.GAME_IDS[4],h.open);assert.equal(h.widgets.length,1);
+  h.api.leaveMuseumExperience(h.player);h.app.mapHashID='r7aeam';h.api.openMuseumGame(h.player,h.game.GAME_IDS[4],h.open);assert.equal(h.widgets.length,1);
   h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,3)}});h.app.mapHashID='eXY3Yx';h.api.continueMuseum(h.player,h.open);assert.equal(h.moves.length,0);assert.equal(h.opened.length,0);
+});
+test('a directly opened exhibition can complete and show its success dialogue',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.baekje;
+  assert.equal(h.nav.handleMuseumMissionCompletion(h.player,h.game.GAME_IDS[1],h.open),true);
+  assert.deepEqual(h.nav.journey(h.player).completed,[h.game.GAME_IDS[1]]);
+  assert.equal(h.opened.at(-1),'npc:museum-baekje-landscape-brick:success');
 });
 test('lobby two robot gives walking directions without automatic travel',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby2;

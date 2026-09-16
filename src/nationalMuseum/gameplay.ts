@@ -26,12 +26,15 @@ export function closeMuseumGame(player: ScriptPlayer): void {
   const t = tag(player);
   if (t.museumGame) { t.museumGame.widget.destroy(); t.museumGame = undefined; }
 }
-function canPlay(player: ScriptPlayer, index: number): boolean {
-  return ScriptApp.spaceHashID === "nLP9zE" && ScriptApp.mapHashID === MISSIONS[index].map && MISSIONS.slice(0, index).every(m => journey(player).completed.includes(m.id));
+function canPlay(_player: ScriptPlayer, index: number): boolean {
+  // Every exhibition room has a shareable direct URL. Keep the mission bound
+  // to its room, but never require visitors (or on-site testers) to enter
+  // through the preceding lobby before its interactions can work.
+  return ScriptApp.spaceHashID === "nLP9zE" && ScriptApp.mapHashID === MISSIONS[index].map;
 }
 export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): void {
   const index = GAME_IDS.indexOf(id);
-  if (index < 0 || !canPlay(player, index)) { player.showCenterLabel("먼저 이전 전시실의 미션을 마치고 해당 NPC를 찾아주세요."); return; }
+  if (index < 0 || !canPlay(player, index)) { player.showCenterLabel("해당 전시실의 NPC 가까이에서 미션을 진행해 주세요."); return; }
   const progress = journey(player);
   if (progress.completed.includes(id)) { continueMuseum(player, open); return; }
   if (index === 2 || index === 3) {

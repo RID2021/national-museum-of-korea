@@ -48,7 +48,10 @@ export function handleMuseumMissionCompletion(player: ScriptPlayer, gameId: stri
   if (index < 0) return false;
   const mission = MISSIONS[index];
   const state = journey(player);
-  if (ScriptApp.mapHashID !== mission.map || !MISSIONS.slice(0, index).every(item => state.completed.includes(item.id))) return true;
+  // Direct map links are part of the visitor flow and are also used for
+  // on-site testing. Completing the correct room must therefore be valid even
+  // when an earlier room has not yet been recorded in this browser session.
+  if (ScriptApp.mapHashID !== mission.map) return true;
   if (state.completed.includes(gameId)) return true;
   state.completed.push(gameId);
   if (gameId === "museum-artifact-cards") {
