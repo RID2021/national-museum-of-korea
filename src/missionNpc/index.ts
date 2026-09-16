@@ -3443,6 +3443,14 @@ export function handleMissionNpcTrigger(
       houCluesBefore = Array.isArray(stored.museumClues) ? stored.museumClues.filter((value): value is string =>
         typeof value === "string" && ["gwang", "gae", "to"].includes(value)) : [];
     } catch (_error) { houCluesBefore = []; }
+    const tagged = (player.tag as Record<string, unknown> | undefined)?.museumHouClues;
+    if (Array.isArray(tagged)) {
+      houCluesBefore = Array.from(new Set([
+        ...houCluesBefore,
+        ...tagged.filter((value): value is string =>
+          typeof value === "string" && ["gwang", "gae", "to"].includes(value)),
+      ]));
+    }
   }
   if (npc.id === "museum-hou-bronze-bowl" && parsed.sceneId === "intro" && ["gwang", "gae", "to"].every(clue => houCluesBefore.includes(clue))) {
     closeMuseumDialogueBeforeGame(player);
@@ -3460,6 +3468,8 @@ export function handleMissionNpcTrigger(
       player.storage = JSON.stringify({ ...storage, museumClues: clues });
       if (typeof player.save === "function") player.save();
     }
+    const clueTag = preparePlayerTag(player) as MissionNpcPlayerTag & { museumHouClues?: string[] };
+    clueTag.museumHouClues = clues;
     if (clues.length === 3) {
       // Start the relation puzzle immediately after the third clue trigger.
       // Do not depend on the dialogue iframe's final-page callback.

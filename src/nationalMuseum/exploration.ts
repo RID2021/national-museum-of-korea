@@ -26,8 +26,12 @@ const HOU_CLUE_IDS = ["gwang", "gae", "to"] as const;
 /** Read and normalize the three persistent 호우총 단서 flags. */
 export function getMuseumHouClues(player: ScriptPlayer): string[] {
   const stored = loadPlayerStorage(player).museumClues;
-  if (!Array.isArray(stored)) return [];
-  return Array.from(new Set(stored.filter((value): value is string =>
+  const tagged = (player.tag as Record<string, unknown> | undefined)?.museumHouClues;
+  const values = [
+    ...(Array.isArray(stored) ? stored : []),
+    ...(Array.isArray(tagged) ? tagged : []),
+  ];
+  return Array.from(new Set(values.filter((value): value is string =>
     typeof value === "string" && HOU_CLUE_IDS.includes(value as (typeof HOU_CLUE_IDS)[number]))));
 }
 
