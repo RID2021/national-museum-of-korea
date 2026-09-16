@@ -137,6 +137,8 @@ test('bag check artwork covers all seven belongings in game order', () => {
   assert.match(html, /\.conveyor button\[data-bag-lane="2"\]\{top:206px\}/);
   assert.match(html, /@keyframes mission-clear/);
   assert.match(html, /animation:mission-clear 2s ease-out both/);
+  assert.match(html, /\.mission-complete\.artifact/);
+  assert.match(html, /id="completion-copy"/);
   assert.match(html, /class="mission-complete"/);
   assert.match(html, /if\(e\.data\?\.type==='museum:complete'\)showCompletion\(e\.data\)/);
   assert.doesNotMatch(html, /animation-play-state:paused/);
@@ -231,7 +233,7 @@ test('widget-driven full journey completes seven missions, dialogues, moves and 
     if(n===1||n===4){for(let i=0;i<state().order.length;i++){const j=state().order.indexOf(i);if(i!==j){act({kind:'pick',index:i});act({kind:'pick',index:j});}}act({kind:'submit'});if(n===4){for(let i=0;i<5;i++)act({kind:'pick',index:i});act({kind:'submit'});}}
     if(n===2){h.api.handleMuseumDialogueChoice(h.player,mission.id,1);h.api.handleMuseumAction(h.player,'quiz-complete:'+mission.id,h.open);}
     if(n===5){[0,2,4,6].forEach(index=>act({kind:'pick',index}));assert.equal(w.messages.at(-1).type,'museum:complete');assert.equal(w.destroyed,false);h.timers.shift()();}
-    if(n===6){const deck=state().deck;for(let i=0;i<5;i++){act({kind:'pick',index:deck.indexOf(i*2)});act({kind:'pick',index:deck.indexOf(i*2+1)});}}
+    if(n===6){const deck=state().deck;for(let i=0;i<5;i++){act({kind:'pick',index:deck.indexOf(i*2)});act({kind:'pick',index:deck.indexOf(i*2+1)});}assert.equal(w.messages.at(-1).type,'museum:complete');assert.equal(w.messages.at(-1).theme,'artifact');assert.equal(w.destroyed,false);h.timers.shift()();}
     if(n!==2&&n!==3)assert.equal(w.destroyed,true);assert.equal(h.nav.journey(h.player).completed.length,n+1);
     if(n===5)assert.deepEqual(h.localSpawns.at(-1),[52,40]);
     if(n<6){assert.equal(h.nav.journey(h.player).pendingCompletion,mission.id);h.api.handleMuseumAction(h.player,mission.id,h.open);}

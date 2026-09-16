@@ -81,8 +81,10 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
     saveGame(player, id, next);
     session.revision++;
     if (next.done) {
-      if (id === GAME_IDS[5]) {
-        widget.sendMessage({ type: "museum:complete", token: session.token, title: "검사 통과!" });
+      if (id === GAME_IDS[5] || id === GAME_IDS[6]) {
+        widget.sendMessage(id === GAME_IDS[5]
+          ? { type: "museum:complete", token: session.token, title: "검사 통과!", copy: "박물관 지키미 자격을 획득했어요" }
+          : { type: "museum:complete", token: session.token, title: "유물의 빛 복원 완료!", copy: "모든 유물의 빛이 제자리로 돌아왔어요", theme: "artifact" });
         setTimeout(function () {
           if (tag(player).museumGame !== session || !canPlay(player, index)) return;
           closeMuseumGame(player);
