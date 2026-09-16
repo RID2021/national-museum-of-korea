@@ -49,6 +49,21 @@ test('brick drag swaps atomically and rejects invalid destinations', () => {
   assert.equal(state.done,false);
   assert.equal(game.applyGameAction(id,state,{kind:'submit'}).done,true);
 });
+test('map puzzle drag swaps pieces atomically and keeps click fallback', () => {
+  const {game}=harness(), id=game.GAME_IDS[4];
+  let state=game.createGameState();
+  state.order=[3,0,5,1,2,4];
+  const swapped=game.applyGameAction(id,state,{kind:'swap',index:0,target:5});
+  assert.deepEqual(Array.from(swapped.order),[4,0,5,1,2,3]);
+  assert.equal(swapped.selected,-1);
+  for(const target of [-1,6,1.5,'2',undefined]) {
+    const result=game.applyGameAction(id,state,{kind:'swap',index:0,target});
+    assert.deepEqual(Array.from(result.order),Array.from(state.order));
+  }
+  const selected=game.applyGameAction(id,state,{kind:'pick',index:0});
+  assert.equal(selected.selected,0);
+  assert.match(game.gameView(id,state).hint,/드래그/);
+});
 test('brick artwork covers every label and follows reordered game items', () => {
   const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
   const match = html.match(/const BRICK_ASSETS = (\{[^\n]+\});/);

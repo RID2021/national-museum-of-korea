@@ -54,6 +54,11 @@ export function applyGameAction(id: string, state: GameState, action: GameAction
       if (!s.done) s.feedback = id === GAME_IDS[2] ? "판갑옷은 여러 철판을 이어 만들었어요. 다시 골라 보세요." : "출토 장소가 황남대총 북분인 금관을 찾아보세요. 이름과 특징을 함께 살펴보세요.";
     }
   } else if (id === GAME_IDS[4]) {
+    if (s.stage === 0 && action.kind === "swap" && valid(6) && Number.isInteger(action.target) && action.target! >= 0 && action.target! < 6 && action.target !== i) {
+      if (s.order.length !== 6) s.order = [3, 0, 5, 1, 2, 4];
+      [s.order[i!], s.order[action.target!]] = [s.order[action.target!], s.order[i!]];
+      s.selected = -1;
+    }
     if (s.stage === 0 && action.kind === "pick" && valid(6)) {
       if (s.order.length !== 6) s.order = [3, 0, 5, 1, 2, 4];
       toggleSwap(s, i!);
@@ -92,7 +97,7 @@ export function gameView(id: string, s: GameState): Record<string, unknown> {
   if (n === 1) Object.assign(view, { kind: "order", prompt: "벽돌 그림을 다른 자리로 끌어 놓으세요. 두 번 눌러 교환해도 돼요. 8개를 맞춘 뒤 복원 확인!", reference: BRICKS.join(" → "), hint: "모바일: 벽돌 그림을 끌어 이동하고, 이름·빈 여백에서 위아래로 스크롤하세요.", note: "학습용 복원 배열입니다. 실제 출토 배열을 재현한 것은 아닙니다.", items: s.order.map(i => BRICKS[i]), submit: "복원 확인" });
   if (n === 2) Object.assign(view, { prompt: "고령 지산동 고분군에서 출토된 가야 판갑옷은 무엇을 이어 만들었을까요?", items: ["나무판", "철판", "돌판"] });
   if (n === 3) Object.assign(view, { prompt: "회의에 참석할 황남대총의 금관을 찾아 주세요.", hint: "나무 모양 세움 장식·사슴뿔 모양 장식·굽은옥. 출토 장소도 확인하세요.", note: "MVP는 실물 사진 대신 이름·특징 카드로 식별합니다.", items: CROWNS });
-  if (n === 4) Object.assign(view, s.stage === 0 ? { kind: "mapPuzzle", prompt: "지도 조각 두 개를 눌러 교환하세요. 참고 지도처럼 복원해 주세요.", items: s.order.length === 6 ? s.order : [3, 0, 5, 1, 2, 4], submit: "지도 복원 확인" } : { kind: "locations", prompt: `비석 설명 확인 ${s.visited.length}/5 — 다섯 곳을 모두 확인하세요.`, places: PLACES, visited: s.visited, submit: "위치 확인 완료" });
+  if (n === 4) Object.assign(view, s.stage === 0 ? { kind: "mapPuzzle", prompt: "지도 조각을 끌어서 자리를 바꾸고 참고 지도처럼 복원해 주세요.", hint: "PC와 모바일 모두 드래그할 수 있습니다. 조각 두 개를 차례로 눌러도 교환됩니다.", items: s.order.length === 6 ? s.order : [3, 0, 5, 1, 2, 4], submit: "지도 복원 확인" } : { kind: "locations", prompt: `비석 설명 확인 ${s.visited.length}/5 — 다섯 곳을 모두 확인하세요.`, places: PLACES, visited: s.visited, submit: "위치 확인 완료" });
   if (n === 5) Object.assign(view, { kind: "conveyor", prompt: `반입 금지 음식물만 눌러 수거하세요. ${s.removed.length}/3 수거`, items: ["수첩", "음료수", "펜", "빵", "휴대폰", "과자", "카메라"], disabled: s.removed, note: "MVP: 시간 제한 없이 지나가는 물품을 선택합니다." });
   if (n === 6) Object.assign(view, { kind: "memory", prompt: `유물과 키워드의 짝을 찾아주세요. ${s.matched.length / 2}/5쌍 · ${s.moves}회 시도`, items: s.deck.map((value, index) => s.face.includes(index) || s.matched.includes(index) ? PAIRS[Math.floor(value / 2)][value % 2] : "?"), disabled: s.matched, note: "앞면을 본 뒤 다른 카드를 선택하세요. 틀린 두 장은 다음 선택 때 뒤집힙니다." });
   return view;
