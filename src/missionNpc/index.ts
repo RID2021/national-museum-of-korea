@@ -3439,6 +3439,10 @@ export function handleMissionNpcTrigger(
     }
     if (["gwang", "gae", "to"].every(item => clues.includes(item) || item === clue)) {
       (preparePlayerTag(player) as MissionNpcPlayerTag & { museumCluesComplete?: boolean }).museumCluesComplete = true;
+      // Start the relation puzzle immediately after the third clue trigger.
+      // Do not depend on the dialogue iframe's final-page callback.
+      handleMuseumAction(player, "game:museum-hou-relations", handleMissionNpcTrigger);
+      return true;
     }
   }
 
