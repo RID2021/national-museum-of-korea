@@ -55,7 +55,8 @@ test('brick artwork covers every label and follows reordered game items', () => 
   assert.ok(match);
   const assets = JSON.parse(match[1]);
   const { game } = harness();
-  assert.deepEqual(Object.keys(assets), Array.from(game.BRICKS, name => name + '무늬'));
+  assert.deepEqual(Array.from(game.BRICKS), ['산수문전','산수봉황문전','산수귀문전','연대귀문전','연화문전','와운문전','반룡문전','봉황문전']);
+  assert.deepEqual(Object.keys(assets), Array.from(game.BRICKS));
   assert.equal(new Set(Object.values(assets)).size, 8);
   for (const value of Object.values(assets)) assert.ok(value.startsWith('data:image/png;base64,'));
   let state = game.createGameState();

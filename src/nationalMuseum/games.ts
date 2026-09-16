@@ -1,7 +1,7 @@
 // MVP rule engine. Only this server module decides completion; the widget sends actions.
 export const GAME_IDS = ["museum-hou-relations", "museum-baekje-bricks", "museum-gaya-iron", "museum-hwangnam-crown", "museum-jinheung-locations", "museum-etiquette", "museum-artifact-cards"];
 export const GAME_TITLES = ["광개토의 글자와 교류", "백제 문양전 복원", "가야 철 문화 퀴즈", "황남대총 금관 찾기", "신라의 발자취", "관람 예절 가방 검사", "유물의 빛 돌려보내기"];
-export const BRICKS = ["산수", "산수봉황", "산수도깨비", "연꽃도깨비", "연꽃", "연꽃구름", "용", "봉황"];
+export const BRICKS = ["산수문전", "산수봉황문전", "산수귀문전", "연대귀문전", "연화문전", "와운문전", "반룡문전", "봉황문전"];
 export const CROWNS = ["교동 금관", "황남대총 북분 금관", "금관총 금관", "천마총 금관", "금령총 금관", "서봉총 금관"];
 export const PLACES = [
   { name: "북한산 순수비", description: "서울 북한산 비봉. 한강 유역으로 넓어진 신라의 세력을 보여 줍니다.", x: 33, y: 58 },
@@ -89,7 +89,7 @@ export function gameView(id: string, s: GameState): Record<string, unknown> {
   const n = GAME_IDS.indexOf(id);
   const view: Record<string, unknown> = { title: GAME_TITLES[n], mission: n + 1, stage: s.stage, feedback: s.feedback, selected: s.selected, kind: "choices" };
   if (n === 0) Object.assign(view, s.stage === 0 ? { prompt: "전시 단서 속 廣(광)·開(개)·土(토)를 찾아 누르세요.", items: ["王", "廣", "山", "川", "開", "月", "日", "土", "水"], disabled: s.collected } : { kind: "answer", prompt: "고구려와 신라 사이에 정치적 관계와 [ ㄱ ㄹ ]가 있었음을 보여 준다.", hint: "광개토대왕은 고구려 왕이고 호우총은 신라 무덤이에요. 고구려는 왜의 침략을 받은 신라를 도왔어요." });
-  if (n === 1) Object.assign(view, { kind: "order", prompt: "벽돌 그림을 다른 자리로 끌어 놓으세요. 두 번 눌러 교환해도 돼요. 8개를 맞춘 뒤 복원 확인!", reference: BRICKS.map(x => x + "무늬").join(" → "), hint: "모바일: 벽돌 그림을 끌어 이동하고, 이름·빈 여백에서 위아래로 스크롤하세요.", note: "학습용 복원 배열입니다. 실제 출토 배열을 재현한 것은 아닙니다.", items: s.order.map(i => BRICKS[i] + "무늬"), submit: "복원 확인" });
+  if (n === 1) Object.assign(view, { kind: "order", prompt: "벽돌 그림을 다른 자리로 끌어 놓으세요. 두 번 눌러 교환해도 돼요. 8개를 맞춘 뒤 복원 확인!", reference: BRICKS.join(" → "), hint: "모바일: 벽돌 그림을 끌어 이동하고, 이름·빈 여백에서 위아래로 스크롤하세요.", note: "학습용 복원 배열입니다. 실제 출토 배열을 재현한 것은 아닙니다.", items: s.order.map(i => BRICKS[i]), submit: "복원 확인" });
   if (n === 2) Object.assign(view, { prompt: "고령 지산동 고분군에서 출토된 가야 판갑옷은 무엇을 이어 만들었을까요?", items: ["나무판", "철판", "돌판"] });
   if (n === 3) Object.assign(view, { prompt: "회의에 참석할 황남대총의 금관을 찾아 주세요.", hint: "나무 모양 세움 장식·사슴뿔 모양 장식·굽은옥. 출토 장소도 확인하세요.", note: "MVP는 실물 사진 대신 이름·특징 카드로 식별합니다.", items: CROWNS });
   if (n === 4) Object.assign(view, s.stage === 0 ? { kind: "mapPuzzle", prompt: "지도 조각 두 개를 눌러 교환하세요. 참고 지도처럼 복원해 주세요.", items: s.order.length === 6 ? s.order : [3, 0, 5, 1, 2, 4], submit: "지도 복원 확인" } : { kind: "locations", prompt: `비석 설명 확인 ${s.visited.length}/5 — 다섯 곳을 모두 확인하세요.`, places: PLACES, visited: s.visited, submit: "위치 확인 완료" });

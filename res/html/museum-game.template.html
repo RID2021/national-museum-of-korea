@@ -8,7 +8,7 @@ button{touch-action:manipulation}input{font-size:16px;user-select:text;-webkit-u
 </style></head><body><main><header><div><small id="number">박물관 지키미</small><h1 id="title">미션을 불러오는 중…</h1></div><button id="close" aria-label="미션 닫기">닫기</button></header><section><p id="prompt"></p><p id="hint"></p><div id="board"></div><p id="note"></p><div id="feedback" role="status" aria-live="polite">잠시 기다려 주세요.</div></section><footer><span style="font-size:12px">진행 자동 저장</span><button id="submit" hidden>확인</button></footer></main>
 <script>
 /* BRICK_ASSETS */
-const BRICK_BOUNDS={'산수무늬':[61,53,193,212],'산수봉황무늬':[48,29,207,231],'산수도깨비무늬':[53,41,203,217],'연꽃도깨비무늬':[53,31,203,227],'연꽃무늬':[45,32,212,230],'연꽃구름무늬':[47,31,209,234],'용무늬':[54,37,202,224],'봉황무늬':[49,28,207,234]};
+const BRICK_BOUNDS={'산수문전':[61,53,193,212],'산수봉황문전':[48,29,207,231],'산수귀문전':[53,41,203,217],'연대귀문전':[53,31,203,227],'연화문전':[45,32,212,230],'와운문전':[47,31,209,234],'반룡문전':[54,37,202,224],'봉황문전':[49,28,207,234]};
 let cancelBrickDrag=()=>{};
 let suppressBrickClickUntil=0;
 function bindBrickDrag(button,frame,index){
