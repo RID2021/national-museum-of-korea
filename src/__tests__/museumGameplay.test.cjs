@@ -70,6 +70,10 @@ test('map puzzle drag swaps pieces atomically and keeps click fallback', () => {
   assert.match(html,/preserveAspectRatio="none"/);
   assert.match(html,/const SILLA_MAP_ASSET = "data:image\/webp;base64,/);
   assert.match(html,/pieceWidth=400\/2,pieceHeight=594\/3/);
+  assert.match(html,/className='location-shell'/);
+  assert.match(html,/className='map-pin'/);
+  assert.match(html,/className='location-list'/);
+  assert.match(html,/지도 위 번호나 아래 목록을 누르면 설명을 확인할 수 있어요/);
   assert.doesNotMatch(html,/const shape='<path/);
 });
 test('brick artwork covers every label and follows reordered game items', () => {
