@@ -246,6 +246,16 @@ test("all 37 fully qualified object triggers route to the intended NPC and scene
   }
 });
 
+test("Goguryeo clue triggers persist the exact gwang, gae and to identifiers", () => {
+  const { context, player } = setup();
+  player.storage = JSON.stringify({ museumClues: [] });
+  for (const clue of ["gwang", "gae", "to"]) {
+    player.tag = {};
+    assert.equal(context.handleMissionNpcTrigger(player, `npc:museum-hou-bronze-bowl:clue-${clue}`), true);
+  }
+  assert.deepEqual(JSON.parse(player.storage).museumClues, ["gwang", "gae", "to"]);
+});
+
 test("Korean aliases, default intros, and dialog prefix resolve correctly", () => {
   const { context, player, opened } = setup();
   for (const [alias, npcId] of Object.entries(data.NATIONAL_MUSEUM_NPC_ALIASES)) {

@@ -3449,7 +3449,7 @@ export function handleMissionNpcTrigger(
   let scene = resolveProgressScene(player, npc, requestedScene);
 
   if (npc.id === "museum-hou-bronze-bowl" && scene.id.indexOf("clue-") === 0) {
-    const clue = scene.id.slice(6);
+    const clue = scene.id.slice("clue-".length);
     const clues = Array.from(new Set([...houCluesBefore, clue]));
     if (clues.length !== houCluesBefore.length) {
       let storage: Record<string, unknown> = {};
