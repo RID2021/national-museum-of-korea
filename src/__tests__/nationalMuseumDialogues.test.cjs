@@ -219,11 +219,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 37 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 45 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 37);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 45);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -235,7 +235,7 @@ test("the script has eight distinct speakers and 37 nonempty dialogue scenes", (
   }
 });
 
-test("all 37 fully qualified object triggers route to the intended NPC and scene", () => {
+test("all 45 fully qualified object triggers route to the intended NPC and scene", () => {
   for (const npc of data.NATIONAL_MUSEUM_NPCS) {
     for (const scene of npc.scenes) {
       const { context, player, opened } = setup();
@@ -244,6 +244,16 @@ test("all 37 fully qualified object triggers route to the intended NPC and scene
       assert.equal(opened[0].scene.id, scene.id);
     }
   }
+});
+
+test("Baekje has eight distinct brick triggers with completion actions", () => {
+  const baekje = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-baekje-landscape-brick");
+  const ids = ["yeondaegwi", "sansu", "waun", "sansubonghwang", "bonghwang", "sansugwi", "banryong", "yeonhwa"];
+  assert.deepEqual(Array.from(baekje.scenes.filter(s => s.id.startsWith("brick-")).map(s => s.id)), ids.map(id => `brick-${id}`));
+  assert.deepEqual(Array.from(baekje.scenes.filter(s => s.id.startsWith("brick-")).map(s => s.museumTransitionId)), ids.map(id => `baekje-brick:${id}`));
+  const intro = baekje.scenes.find(s => s.id === "intro");
+  assert.equal(intro.oncePerPlayer, true);
+  assert.equal(intro.lines.length, 6);
 });
 
 test("Goguryeo clue triggers persist the exact gwang, gae and to identifiers", () => {
@@ -318,7 +328,7 @@ test("intro and meeting switch names and portraits in original script order", ()
   const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
   const meeting = context.buildNpcPayload(player, robot, robot.scenes.find(s => s.id === "meeting"));
   assert.deepEqual(Array.from(meeting.speakerLines.map(l => l.speakerName)), [
-    "안내 로봇", "호우총 청동 그릇", "산수무늬 벽돌", "진흥왕 순수비", "황남대총 금관", "판갑옷과 투구",
+    "안내 로봇", "호우총 청동 그릇", "산수문전 벽돌", "진흥왕 순수비", "황남대총 금관", "판갑옷과 투구",
   ]);
   const ending = context.buildNpcPayload(player, robot, robot.scenes.find(s => s.id === "ending"));
   assert.equal(ending.speakerlessLineTexts.length, 3);

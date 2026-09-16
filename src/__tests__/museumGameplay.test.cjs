@@ -245,11 +245,27 @@ test('real text input receives synchronous touch focus, remains mounted, and ign
   context.render({...payload,revision:1,feedback:'다시 도전'});assert.equal(elements.answer.value,'교류');assert.equal(elements.answer,originalInput);
   assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
 });
-test('arriving in every ordinary map stays in world; NPC interaction requires proximity',()=>{
-  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+test('arriving in ordinary maps stays in world; NPC interaction requires proximity',()=>{
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.baekje)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
   h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
   h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
   h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');
+});
+test('Baekje intro opens once on room entry and all eight brick dialogues unlock the puzzle',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.baekje;
+  h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]]}});
+  h.api.startMuseumExperience(h.player,h.open);h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();
+  assert.deepEqual(h.opened,['npc:museum-baekje-landscape-brick:intro']);
+  assert.equal(h.nav.journey(h.player).baekjeIntroSeen,true);
+  h.api.leaveMuseumExperience(h.player);h.player.tag={};h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,1);
+  const ids=['yeondaegwi','sansu','waun','sansubonghwang','bonghwang','sansugwi','banryong','yeonhwa'];
+  for(let i=0;i<ids.length;i++){
+    h.api.handleMuseumAction(h.player,'baekje-brick:'+ids[i],h.open);
+    assert.equal(h.widgets.length,i===ids.length-1?1:0);
+  }
+  assert.deepEqual(JSON.parse(h.player.storage).museumBaekjeBricks,ids);
 });
 test('first entry narration opens once, persists across rejoin, and never chains or teleports',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;
@@ -272,7 +288,7 @@ test('museum reset clears narrative, missions and games, preserves unrelated dat
   h.api.resetMuseumExperience(h.player,h.open);
   const data=JSON.parse(h.player.storage);
   assert.deepEqual(data.museumJourney,{completed:[]});assert.deepEqual(data.museumGames,{});
-  assert.deepEqual(data.museumClues,[]);assert.equal(data.museumHouIntroComplete,false);
+  assert.deepEqual(data.museumClues,[]);assert.equal(data.museumHouIntroComplete,false);assert.deepEqual(data.museumBaekjeBricks,[]);
   assert.deepEqual(data.inventory,['keep']);assert.deepEqual(data.missionProgress,{missions:{tomb:true}});assert.equal(data.other,'keep');
   assert.deepEqual(data.missionNpc.seenSceneKeys,['other:intro']);assert.equal(destroyed,true);assert.equal(h.player.tag.missionNpcId,undefined);
   while(h.timers.length)h.timers.shift()();assert.deepEqual(h.opened,[]);

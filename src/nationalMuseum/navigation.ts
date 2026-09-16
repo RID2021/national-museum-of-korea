@@ -9,7 +9,7 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; endingSeen?: boolean; travel?: string[] };
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; baekjeIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
 export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
@@ -25,7 +25,8 @@ export function journey(player: ScriptPlayer): Journey {
   const value = loadPlayerStorage(player).museumJourney as Journey | undefined;
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
     pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
-    story: value?.story, prologueSeen: value?.prologueSeen === true, endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
+    story: value?.story, prologueSeen: value?.prologueSeen === true, baekjeIntroSeen: value?.baekjeIntroSeen === true,
+    endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
 }
 
 function persist(player: ScriptPlayer, value: Journey): void {
@@ -102,6 +103,17 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
       current.prologueSeen = true;
       persist(player, current);
       open(player, "npc:museum-pensive-1:prologue");
+    }, 700);
+    return;
+  }
+  if (map === MUSEUM_MAPS.baekje && !state.baekjeIntroSeen && !state.completed.includes("museum-baekje-bricks")) {
+    setTimeout(function () {
+      if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;
+      const current = journey(player);
+      if (current.baekjeIntroSeen || current.completed.includes("museum-baekje-bricks")) return;
+      current.baekjeIntroSeen = true;
+      persist(player, current);
+      open(player, "npc:museum-baekje-landscape-brick:intro");
     }, 700);
     return;
   }

@@ -8,6 +8,7 @@ import { closeMuseumProgress, refreshMuseumProgress } from "./progress";
 type Open = (player: ScriptPlayer, trigger: string) => unknown;
 type Session = { widget: ScriptWidget; id: string; token: string; revision: number; promptOpen?: boolean };
 type MuseumTag = { museumGame?: Session; museumHud?: ScriptWidget; museumArrival?: boolean; missionNpcWidget?: ScriptWidget };
+const BAEKJE_BRICK_IDS = ["yeondaegwi", "sansu", "waun", "sansubonghwang", "bonghwang", "sansugwi", "banryong", "yeonhwa"];
 function tag(player: ScriptPlayer): MuseumTag { return preparePlayerTag(player) as MuseumTag; }
 function saveGame(player: ScriptPlayer, id: string, state: GameState): void {
   const data = loadPlayerStorage(player);
@@ -83,6 +84,19 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
 // its last page, never on close. Server mission completion remains authoritative.
 export function handleMuseumAction(player: ScriptPlayer, action: string, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
+  if (action.indexOf("baekje-brick:") === 0) {
+    if (ScriptApp.mapHashID !== MUSEUM_MAPS.baekje) return;
+    const brick = action.slice("baekje-brick:".length);
+    if (!BAEKJE_BRICK_IDS.includes(brick)) return;
+    const storage = loadPlayerStorage(player);
+    const stored = Array.isArray(storage.museumBaekjeBricks) ? storage.museumBaekjeBricks : [];
+    const bricks = Array.from(new Set([...stored.filter((value): value is string =>
+      typeof value === "string" && BAEKJE_BRICK_IDS.includes(value)), brick]));
+    savePlayerStorage(player, { ...storage, museumBaekjeBricks: bricks }, { persist: true });
+    if (bricks.length === BAEKJE_BRICK_IDS.length) openMuseumGame(player, GAME_IDS[1], open);
+    else player.showCenterLabel(`문전 확인 ${bricks.length}/${BAEKJE_BRICK_IDS.length}`);
+    return;
+  }
   if (action === "hou-intro-complete") {
     const storage = loadPlayerStorage(player);
     savePlayerStorage(player, { ...storage, museumHouIntroComplete: true }, { persist: true });
@@ -164,6 +178,7 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
     museumGames: {},
     museumClues: [],
     museumHouIntroComplete: false,
+    museumBaekjeBricks: [],
     ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
   }, { persist: true });
   (preparePlayerTag(player) as Record<string, unknown>).museumHouClues = [];

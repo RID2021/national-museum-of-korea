@@ -18,6 +18,7 @@ export interface MuseumNpcScene {
   nextAction?: string;
   afterNpcTrigger?: string;
   museumTransitionId?: string;
+  oncePerPlayer?: boolean;
 }
 
 export interface MuseumNpcDefinition {
