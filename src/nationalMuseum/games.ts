@@ -3,6 +3,8 @@ export const GAME_IDS = ["museum-hou-relations", "museum-baekje-bricks", "museum
 export const GAME_TITLES = ["광개토의 글자와 교류", "백제 문양전 복원", "가야 철 문화 퀴즈", "황남대총 금관 찾기", "신라의 발자취", "관람 예절 가방 검사", "유물의 빛 돌려보내기"];
 export const BRICKS = ["산수문전", "산수봉황문전", "산수귀문전", "연대귀문전", "연화문전", "와운문전", "반룡문전", "봉황문전"];
 export const CROWNS = ["교동 금관", "황남대총 북분 금관", "금관총 금관", "천마총 금관", "금령총 금관", "서봉총 금관"];
+export const ETIQUETTE_ITEMS = ["수첩", "음료수", "펜", "빵", "휴대폰", "과자", "카메라"];
+export const ETIQUETTE_ALLOWED_INDICES = [0, 2, 4, 6];
 export const PLACES = [
   { name: "북한산 순수비", description: "서울 북한산 비봉. 한강 유역으로 넓어진 신라의 세력을 보여 줍니다.", x: 46, y: 58 },
   { name: "창녕 척경비", description: "경남 창녕. 진흥왕 때 신라의 영역에 편입된 낙동강 유역을 살펴볼 수 있습니다.", x: 59, y: 81 },
@@ -71,9 +73,13 @@ export function applyGameAction(id: string, state: GameState, action: GameAction
     if (s.stage === 1 && action.kind === "submit") { s.done = s.visited.length === 5; if (!s.done) s.feedback = "아직 확인하지 않은 비석이 있어요. 다섯 곳의 설명을 모두 읽어 주세요."; }
   } else if (id === GAME_IDS[5]) {
     if (action.kind === "pick" && valid(7)) {
-      if ([1, 3, 5].includes(i!)) { if (!s.removed.includes(i!)) s.removed.push(i!); s.feedback = "음식물은 전시실 밖에 두어요."; }
-      else s.feedback = "이 물건은 가져갈 수 있어요. 촬영 가능 구역에서는 플래시를 끄고, 필기구는 정해진 공간에서 조심해서 사용해요.";
-      s.done = s.removed.length === 3;
+      if (ETIQUETTE_ALLOWED_INDICES.includes(i!)) {
+        if (!s.removed.includes(i!)) s.removed.push(i!);
+        s.feedback = `${ETIQUETTE_ITEMS[i!]}은(는) 반입 가능한 물품입니다. 획득했어요!`;
+      } else {
+        s.feedback = `${ETIQUETTE_ITEMS[i!]}은(는) 반입 금지 물품입니다. 반입 가능한 물품을 골라 주세요.`;
+      }
+      s.done = ETIQUETTE_ALLOWED_INDICES.every(index => s.removed.includes(index));
     }
   } else if (id === GAME_IDS[6]) {
     if (action.kind === "pick" && valid(10) && !s.matched.includes(i!)) {
@@ -98,7 +104,7 @@ export function gameView(id: string, s: GameState): Record<string, unknown> {
   if (n === 2) Object.assign(view, { prompt: "고령 지산동 고분군에서 출토된 가야 판갑옷은 무엇을 이어 만들었을까요?", items: ["나무판", "철판", "돌판"] });
   if (n === 3) Object.assign(view, { prompt: "회의에 참석할 황남대총의 금관을 찾아 주세요.", hint: "나무 모양 세움 장식·사슴뿔 모양 장식·굽은옥. 출토 장소도 확인하세요.", note: "MVP는 실물 사진 대신 이름·특징 카드로 식별합니다.", items: CROWNS });
   if (n === 4) Object.assign(view, s.stage === 0 ? { kind: "mapPuzzle", prompt: "지도 조각을 끌어서 자리를 바꾸고 참고 지도처럼 복원해 주세요.", hint: "PC와 모바일 모두 드래그할 수 있습니다. 조각 두 개를 차례로 눌러도 교환됩니다.", items: s.order.length === 6 ? s.order : [3, 0, 5, 1, 2, 4], submit: "지도 복원 확인" } : { kind: "locations", prompt: "진흥왕 시기의 비석은 어디에 세워졌을까요?", hint: `지도 마커와 비석 목록을 눌러 설명을 확인하세요. ${s.visited.length}/5 확인`, places: PLACES, visited: s.visited, submit: "위치 확인 완료" });
-  if (n === 5) Object.assign(view, { kind: "conveyor", prompt: `반입 금지 음식물만 눌러 수거하세요. ${s.removed.length}/3 수거`, items: ["수첩", "음료수", "펜", "빵", "휴대폰", "과자", "카메라"], disabled: s.removed, note: "MVP: 시간 제한 없이 지나가는 물품을 선택합니다." });
+  if (n === 5) Object.assign(view, { kind: "conveyor", prompt: `반입 가능한 목록의 아이템을 획득하세요. ${s.removed.length}/4 획득`, items: ETIQUETTE_ITEMS, disabled: s.removed, note: "반입 가능: 수첩 · 펜 · 휴대폰 · 카메라" });
   if (n === 6) Object.assign(view, { kind: "memory", prompt: `유물과 키워드의 짝을 찾아주세요. ${s.matched.length / 2}/5쌍 · ${s.moves}회 시도`, items: s.deck.map((value, index) => s.face.includes(index) || s.matched.includes(index) ? PAIRS[Math.floor(value / 2)][value % 2] : "?"), disabled: s.matched, note: "앞면을 본 뒤 다른 카드를 선택하세요. 틀린 두 장은 다음 선택 때 뒤집힙니다." });
   return view;
 }

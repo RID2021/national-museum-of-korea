@@ -63,6 +63,7 @@ export function handleMuseumMissionCompletion(player: ScriptPlayer, gameId: stri
   }
   state.pendingCompletion = gameId;
   persist(player, state);
+  if (gameId === "museum-etiquette") player.spawnAt(52, 40);
   open(player, `npc:${mission.npc}:${gameId === "museum-etiquette" ? "etiquette-success" : "success"}`);
   return true;
 }

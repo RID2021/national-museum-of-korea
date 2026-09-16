@@ -7,8 +7,8 @@ const ts = require("typescript");
 
 const root = path.resolve(__dirname, "../..");
 function navigationHarness() {
-  const exports = {}, moves = [], opened = [], timers = [];
-  const player = { storage: JSON.stringify({ keep: "existing" }), tag: {}, spawnAtMap: (...args) => moves.push(args) };
+  const exports = {}, moves = [], localSpawns = [], opened = [], timers = [];
+  const player = { storage: JSON.stringify({ keep: "existing" }), tag: {}, spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args) };
   const context = { exports, ScriptApp: { spaceHashID: "nLP9zE", mapHashID: "R57laZ" },
     setTimeout: fn => timers.push(fn), require: () => ({
       loadPlayerStorage: p => JSON.parse(p.storage),
@@ -18,7 +18,7 @@ function navigationHarness() {
     compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
   }).outputText, context);
   const open = (_p, trigger) => opened.push(trigger);
-  return { api: exports, context, player, moves, opened, timers, open };
+  return { api: exports, context, player, moves, localSpawns, opened, timers, open };
 }
 
 test("dialogue completion routes match live map portals and reject wrong source maps", () => {
@@ -54,6 +54,7 @@ test("all seven mission transitions require correct-room completion and are idem
     h.api.runMuseumSceneTransition(h.player, id, h.open);
     assert.equal(h.moves.length, before, "preview must not teleport");
     h.api.handleMuseumMissionCompletion(h.player, id, h.open);
+    if (id === "museum-etiquette") assert.deepEqual(h.localSpawns.at(-1), [52, 40]);
     if (id !== "museum-artifact-cards") {
       assert.equal(h.moves.length, before, "wait for success dialogue completion");
       h.api.runMuseumSceneTransition(h.player, id, h.open);
@@ -219,11 +220,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 54 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 55 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 54);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 55);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -352,6 +353,20 @@ test("intro and meeting switch names and portraits in original script order", ()
   ]);
   const ending = context.buildNpcPayload(player, robot, robot.scenes.find(s => s.id === "ending"));
   assert.equal(ending.speakerlessLineTexts.length, 3);
+});
+
+test("lobby five robot guides first and the separate bag-check trigger starts the game", () => {
+  const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
+  const intro = robot.scenes.find(s => s.id === "etiquette-intro");
+  const bagCheck = robot.scenes.find(s => s.id === "bag-check");
+  assert.deepEqual(Array.from(intro.lines), [
+    "회의를 시작하기 전에 예비 지키미님은 관람객 기초 상식 미션을 통과해야 회의에 참석하실 수 있습니다.",
+    "앞쪽에 있는 소지품 검사를 실시해주세요.",
+  ]);
+  assert.equal(intro.museumTransitionId, undefined);
+  assert.equal(bagCheck.museumTransitionId, "game:museum-etiquette");
+  assert.match(bagCheck.lines.join("\n"), /음료수/);
+  assert.match(bagCheck.lines.join("\n"), /수첩/);
 });
 
 test("Goguryeo NPC dialogue does not reveal the relation answer prompt", () => {

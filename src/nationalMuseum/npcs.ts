@@ -153,7 +153,23 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "etiquette-intro",
       title: "관람 예절 미션 안내",
-      lines: ["회의를 시작하기 전에 예비 지키미님은 관람객 기초 상식 미션을 통과해야 회의에 참석하실 수 있습니다."],
+      lines: [
+        "회의를 시작하기 전에 예비 지키미님은 관람객 기초 상식 미션을 통과해야 회의에 참석하실 수 있습니다.",
+        "앞쪽에 있는 소지품 검사를 실시해주세요.",
+      ],
+    },
+    {
+      id: "bag-check",
+      title: "관람 예절 가방 검사",
+      lines: [
+        "관람 예절 가방 검사를 시작하겠습니다.",
+        "반입 금지 목록과 반입 가능 목록은 다음과 같습니다.",
+        "반입 금지 목록",
+        "1. 음료수\n2. 빵\n3. 과자",
+        "반입 가능 목록",
+        "1. 수첩\n2. 펜\n3. 휴대폰\n4. 카메라",
+        "소지품 검사를 시작합니다. 반입 가능한 목록의 아이템을 획득하세요.",
+      ],
     },
     {
       id: "etiquette-success",
@@ -376,7 +392,7 @@ const GAME_SCENES: Record<string, Record<string, string>> = {
   // The stele explanation and the map puzzle live on separate objects.
   // Finishing all four pages only unlocks the dedicated puzzle trigger.
   "museum-jinheung-stele": { intro: "jinheung-intro-complete" },
-  "museum-guide-robot": { "etiquette-intro": "game:museum-etiquette", emergency: "emergency", ending: "ending" },
+  "museum-guide-robot": { "bag-check": "game:museum-etiquette", emergency: "emergency", ending: "ending" },
 };
 NATIONAL_MUSEUM_NPCS.forEach(character => character.scenes.forEach(scene => {
   const action = GAME_SCENES[character.id]?.[scene.id];
@@ -406,6 +422,7 @@ const SCENE_ALIASES: Record<string, string[]> = {
   prologue: ["프롤로그"],
   gwanggaeto: ["광개토대왕릉비"],
   "etiquette-intro": ["관람예절"],
+  "bag-check": ["소지품검사", "가방검사"],
   "etiquette-success": ["관람예절성공"],
   quiz: ["퀴즈"],
   hint: ["힌트"],

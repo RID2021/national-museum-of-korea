@@ -1,6 +1,6 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 import { loadPlayerStorage, preparePlayerStorage, preparePlayerTag, savePlayerStorage } from "../utils/player";
-import { GAME_IDS, createGameState, applyGameAction, gameView, GameState, GameAction } from "./games";
+import { GAME_IDS, ETIQUETTE_ALLOWED_INDICES, createGameState, applyGameAction, gameView, GameState, GameAction } from "./games";
 import { MUSEUM_MAPS, MISSIONS, journey, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
 import { nearbyMuseumNpc } from "./exploration";
 import { closeMuseumProgress, refreshMuseumProgress } from "./progress";
@@ -22,6 +22,10 @@ function readGame(player: ScriptPlayer, id: string): GameState {
   const games = loadPlayerStorage(player).museumGames as Record<string, GameState> | undefined;
   const state = games?.[id] || createGameState();
   if (id === GAME_IDS[4] && state.stage === 0 && state.order.length !== 6) state.order = [3, 0, 5, 1, 2, 4];
+  if (id === GAME_IDS[5]) {
+    state.removed = state.removed.filter(index => ETIQUETTE_ALLOWED_INDICES.includes(index));
+    state.done = ETIQUETTE_ALLOWED_INDICES.every(index => state.removed.includes(index));
+  }
   return state;
 }
 export function closeMuseumGame(player: ScriptPlayer): void {

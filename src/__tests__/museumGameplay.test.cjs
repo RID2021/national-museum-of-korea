@@ -116,9 +116,9 @@ test('brick artwork covers every label and follows reordered game items', () => 
   for (const label of after) assert.ok(assets[label]);
 });
 function harness() {
-  const cache = {}, moves = [], opened = [], widgets = [], timers = [];
+  const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [];
   const app = { spaceHashID: 'nLP9zE', mapHashID: '0EAV9k' };
-  const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel() {}, spawnAtMap: (...args) => moves.push(args),
+  const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel() {}, spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args),
     showWidget(file,align,width,height) { const w = { file, align, width, height, destroyed: false, messages: [], destroy() { this.destroyed = true; }, sendMessage(m) { this.messages.push(m); }, onMessage: { Add(fn) { w.receive = fn; } } }; widgets.push(w); return w; } };
   const utils = { preparePlayerTag: p => p.tag, loadPlayerStorage: p => JSON.parse(p.storage), savePlayerStorage: (p, s) => p.storage = JSON.stringify(s), preparePlayerStorage: p => JSON.parse(p.storage) };
   function load(name) {
@@ -128,7 +128,7 @@ function harness() {
       { exports, ScriptApp: app, setTimeout: fn => timers.push(fn), require: id => id.includes('utils/player') ? utils : load(id.replace('./', '')) });
     return exports;
   }
-  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), player, app, moves, opened, widgets, timers, open: (_p, s) => opened.push(s) };
+  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), player, app, moves, localSpawns, opened, widgets, timers, open: (_p, s) => opened.push(s) };
 }
 function solve(game, id, state) {
   state = JSON.parse(JSON.stringify(state));
@@ -142,7 +142,7 @@ function solve(game, id, state) {
     if (n===4) { for(let i=0;i<5;i++)act({kind:'pick',index:i});act({kind:'submit'}); }
   }
   if (n===2 || n===3)act({kind:'pick',index:1});
-  if (n===5)[1,3,5].forEach(index=>act({kind:'pick',index}));
+  if (n===5)[0,2,4,6].forEach(index=>act({kind:'pick',index}));
   if (n===6)for(let p=0;p<5;p++){act({kind:'pick',index:state.deck.indexOf(p*2)});act({kind:'pick',index:state.deck.indexOf(p*2+1)});}
   return state;
 }
@@ -168,6 +168,17 @@ test('wrong answers, incomplete collections, mismatches and invalid actions cann
   let s=game.createGameState();s.stage=1;s.visited=[0,1,2,3];assert.equal(game.applyGameAction(game.GAME_IDS[4],s,{kind:'submit'}).done,false);
   s=game.createGameState();s.deck=[0,2,1,3,4,5,6,7,8,9];s=game.applyGameAction(game.GAME_IDS[6],s,{kind:'pick',index:0});s=game.applyGameAction(game.GAME_IDS[6],s,{kind:'pick',index:1});assert.equal(s.matched.length,0);
 });
+test('lobby five bag check collects only allowed belongings',()=>{
+  const {game}=harness(),id=game.GAME_IDS[5];
+  let state=game.createGameState();
+  for(const index of [1,3,5])state=game.applyGameAction(id,state,{kind:'pick',index});
+  assert.equal(state.done,false);
+  assert.deepEqual(Array.from(state.removed),[]);
+  for(const index of [0,2,4,6])state=game.applyGameAction(id,state,{kind:'pick',index});
+  assert.equal(state.done,true);
+  assert.deepEqual(Array.from(state.removed),[0,2,4,6]);
+  assert.match(game.gameView(id,state).prompt,/4\/4 획득/);
+});
 test('live widget contract checks token/revision and restores saved partial progress',()=>{
   const h=harness();h.api.openMuseumGame(h.player,h.game.GAME_IDS[0],h.open);
   let w=h.widgets.at(-1), m=w.messages.at(-1);
@@ -192,9 +203,10 @@ test('widget-driven full journey completes seven missions, dialogues, moves and 
     if(n===0){[1,4,7].forEach(index=>act({kind:'pick',index}));act({kind:'answer',text:'교류'});}
     if(n===1||n===4){for(let i=0;i<state().order.length;i++){const j=state().order.indexOf(i);if(i!==j){act({kind:'pick',index:i});act({kind:'pick',index:j});}}act({kind:'submit'});if(n===4){for(let i=0;i<5;i++)act({kind:'pick',index:i});act({kind:'submit'});}}
     if(n===2){h.api.handleMuseumDialogueChoice(h.player,mission.id,1);h.api.handleMuseumAction(h.player,'quiz-complete:'+mission.id,h.open);}
-    if(n===5)[1,3,5].forEach(index=>act({kind:'pick',index}));
+    if(n===5)[0,2,4,6].forEach(index=>act({kind:'pick',index}));
     if(n===6){const deck=state().deck;for(let i=0;i<5;i++){act({kind:'pick',index:deck.indexOf(i*2)});act({kind:'pick',index:deck.indexOf(i*2+1)});}}
     if(n!==2&&n!==3)assert.equal(w.destroyed,true);assert.equal(h.nav.journey(h.player).completed.length,n+1);
+    if(n===5)assert.deepEqual(h.localSpawns.at(-1),[52,40]);
     if(n<6){assert.equal(h.nav.journey(h.player).pendingCompletion,mission.id);h.api.handleMuseumAction(h.player,mission.id,h.open);}
   }
   assert.deepEqual(h.moves.at(-1),['nLP9zE','XWA4Aj']);h.app.mapHashID='XWA4Aj';h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.match(h.opened.at(-1),/:ending$/);
