@@ -133,7 +133,7 @@ test('bag check artwork covers all seven belongings in game order', () => {
   assert.match(html, /setProperty\('--bag-delay',String\(-BAG_FLOW\.slots\[i\]\*10\/7\)\+'s'\)/);
   assert.match(html, /\.conveyor\{position:relative;display:block;height:320px/);
   assert.match(html, /\.conveyor button\[data-bag-lane="2"\]\{top:206px\}/);
-  assert.match(html, /\.conveyor:hover button,\.conveyor:focus-within button\{animation-play-state:paused\}/);
+  assert.doesNotMatch(html, /animation-play-state:paused/);
   assert.doesNotMatch(html, /className='bag-item-name'/);
 });
 function harness() {
