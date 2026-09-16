@@ -151,6 +151,10 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
     ...(npc ? { missionNpc: { ...npc, seenSceneKeys: (npc.seenSceneKeys || []).filter(key => key.indexOf("museum-") !== 0) } } : {}),
   }, { persist: true });
   (preparePlayerTag(player) as Record<string, unknown>).museumHouClues = [];
+  const runtimeRoot = globalThis as typeof globalThis & {
+    __nationalMuseumRuntime?: { museumHouClues?: Map<string, string[]> };
+  };
+  runtimeRoot.__nationalMuseumRuntime?.museumHouClues?.delete(String(player.id));
   player.showCenterLabel("박물관 미션이 초기화되었습니다. 현재 위치에서 다시 시작하세요.");
 }
 export function leaveMuseumExperience(player: ScriptPlayer): void {

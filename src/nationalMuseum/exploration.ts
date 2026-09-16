@@ -22,14 +22,24 @@ export function nearbyMuseumNpc(player: ScriptPlayer): string | undefined {
 }
 
 const HOU_CLUE_IDS = ["gwang", "gae", "to"] as const;
+type MuseumRuntimeState = { museumHouClues?: Map<string, string[]> };
+
+function runtimeHouClues(): Map<string, string[]> {
+  const root = globalThis as typeof globalThis & { __nationalMuseumRuntime?: MuseumRuntimeState };
+  root.__nationalMuseumRuntime ??= {};
+  root.__nationalMuseumRuntime.museumHouClues ??= new Map<string, string[]>();
+  return root.__nationalMuseumRuntime.museumHouClues;
+}
 
 /** Read and normalize the three persistent 호우총 단서 flags. */
 export function getMuseumHouClues(player: ScriptPlayer): string[] {
   const stored = loadPlayerStorage(player).museumClues;
   const tagged = (player.tag as Record<string, unknown> | undefined)?.museumHouClues;
+  const runtime = runtimeHouClues().get(String(player.id));
   const values = [
     ...(Array.isArray(stored) ? stored : []),
     ...(Array.isArray(tagged) ? tagged : []),
+    ...(runtime ?? []),
   ];
   return Array.from(new Set(values.filter((value): value is string =>
     typeof value === "string" && HOU_CLUE_IDS.includes(value as (typeof HOU_CLUE_IDS)[number]))));
@@ -44,6 +54,7 @@ export function recordMuseumHouClue(player: ScriptPlayer, clue: string): string[
   const clues = getMuseumHouClues(player);
   if (!HOU_CLUE_IDS.includes(clue as (typeof HOU_CLUE_IDS)[number])) return clues;
   const next = Array.from(new Set([...clues, clue]));
+  runtimeHouClues().set(String(player.id), next);
   if (next.length !== clues.length) {
     const storage = loadPlayerStorage(player);
     savePlayerStorage(player, { ...storage, museumClues: next }, { persist: true });
