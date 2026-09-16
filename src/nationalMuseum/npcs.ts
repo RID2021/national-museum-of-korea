@@ -2,6 +2,7 @@ import type {
   MuseumNpcDefinition as MissionNpcDefinition,
   MuseumNpcScene as MissionNpcScene,
 } from "./types";
+import { CROWNS } from "./games";
 
 // Source: user-provided museum synopsis, storyboard pp. 3-8.
 // These are dialogue scenes, not puzzle-completion or reward triggers.
@@ -266,15 +267,32 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "quiz",
       title: "가야 철 문화 퀴즈 안내",
+      museumQuizId: "museum-gaya-iron",
+      museumTransitionId: "quiz-complete:museum-gaya-iron",
       lines: [
         "고령 지산동 고분군에서 출토된 가야 판갑옷은 무엇을 이어 만들어졌을까요?",
-        "① 나무판 ② 철판 ③ 돌판",
       ],
+      choices: ["나무판", "철판", "돌판"].map((label, index) => ({
+        id: `answer-${index}`, label, museumQuizIndex: index,
+        repeatOnComplete: index !== 1,
+        lines: [index === 1 ? "맞았어! 여러 철판을 이어 만든 판갑옷은 가야의 뛰어난 철기 제작 기술을 보여준단다." : "다시 생각해 보렴. 가야는 뛰어난 철기 제작 기술을 가지고 있었어. 무엇을 이어 만들었을까?"],
+      })),
     },
     { id: "success", title: "판갑옷과 투구 미션 후 대화", lines: ["훌륭해! 이제 회의에 참석할 준비가 되었어."], museumTransitionId: "museum-gaya-iron" },
     meetingScene("gaya-armor-helmet"),
   ]),
   npc("hwangnam-gold-crown", "신라실(1)", "황남대총 금관의 특징과 식별 안내", [
+    {
+      id: "quiz", title: "황남대총 금관 찾기",
+      museumQuizId: "museum-hwangnam-crown",
+      museumTransitionId: "quiz-complete:museum-hwangnam-crown",
+      lines: ["나무 모양 세움 장식, 사슴뿔 모양 장식, 굽은옥을 떠올려 보렴. 회의에 참석할 황남대총의 금관은 어느 것일까? 출토 장소도 확인해 봐."],
+      choices: CROWNS.map((label, index) => ({
+        id: `answer-${index}`, label, museumQuizIndex: index,
+        repeatOnComplete: index !== 1,
+        lines: [index === 1 ? "정답이야! 황남대총 북분에서 출토된 금관을 정확히 찾았구나." : "출토 장소가 황남대총 북분인 금관을 찾아보렴. 이름을 다시 살펴보고 골라 봐."],
+      })),
+    },
     {
       id: "intro",
       title: "황남대총 금관 찾기",
@@ -314,7 +332,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
 const GAME_SCENES: Record<string, Record<string, string>> = {
   "museum-hou-bronze-bowl": { intro: "game:museum-hou-relations", quiz: "game:museum-hou-relations", hint: "game:museum-hou-relations" },
   "museum-baekje-landscape-brick": { intro: "game:museum-baekje-bricks" },
-  "museum-gaya-armor-helmet": { intro: "game:museum-gaya-iron", quiz: "game:museum-gaya-iron" },
+  "museum-gaya-armor-helmet": { intro: "game:museum-gaya-iron" },
   "museum-hwangnam-gold-crown": { intro: "game:museum-hwangnam-crown", hint: "game:museum-hwangnam-crown" },
   "museum-jinheung-stele": { intro: "game:museum-jinheung-locations" },
   "museum-guide-robot": { "etiquette-intro": "game:museum-etiquette", emergency: "emergency", ending: "ending" },

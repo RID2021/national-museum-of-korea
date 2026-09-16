@@ -8,6 +8,8 @@ export interface MuseumSpeakerLine {
 }
 
 export interface MuseumNpcScene {
+  museumQuizId?: string;
+  choices?: { id: string; label: string; lines: string[]; repeatOnComplete?: boolean; museumQuizIndex?: number }[];
   id: string;
   title: string;
   lines: string[];

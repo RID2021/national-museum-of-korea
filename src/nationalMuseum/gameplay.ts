@@ -33,6 +33,12 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
   if (index < 0 || !canPlay(player, index)) { player.showCenterLabel("먼저 이전 전시실의 미션을 마치고 해당 NPC를 찾아주세요."); return; }
   const progress = journey(player);
   if (progress.completed.includes(id)) { continueMuseum(player, open); return; }
+  if (index === 2 || index === 3) {
+    closeMuseumGame(player);
+    preparePlayerTag(player).museumAnsweredQuiz = undefined;
+    open(player, `npc:${MISSIONS[index].npc}:quiz`);
+    return;
+  }
   if (id === GAME_IDS[6] && progress.story !== "emergency") { open(player, "npc:museum-guide-robot:meeting"); return; }
   closeMuseumGame(player);
   const widget = player.showWidget("html/museum-game-v1.html", "middle", player.isMobile ? 340 : 740, player.isMobile ? 520 : 590);
@@ -77,6 +83,15 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
 // its last page, never on close. Server mission completion remains authoritative.
 export function handleMuseumAction(player: ScriptPlayer, action: string, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
+  if (action.indexOf("quiz-complete:") === 0) {
+    const id = action.slice(14), index = GAME_IDS.indexOf(id);
+    const playerTag = preparePlayerTag(player);
+    if ((index !== 2 && index !== 3) || !canPlay(player, index) || playerTag.museumAnsweredQuiz !== id) return;
+    playerTag.museumAnsweredQuiz = undefined;
+    handleMuseumMissionCompletion(player, id, open);
+    refreshMuseumProgress(player);
+    return;
+  }
   if (action.indexOf("game:") === 0) { openMuseumGame(player, action.slice(5), open); return; }
   // Narration must not chain into NPC dialogue or move the player automatically.
   if (action === "prologue") return;
@@ -138,10 +153,22 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
   else player.spawnAtMap(ScriptApp.spaceHashID, MUSEUM_MAPS.night);
 }
 export function leaveMuseumExperience(player: ScriptPlayer): void {
+  preparePlayerTag(player).museumAnsweredQuiz = undefined;
   const t = tag(player);
   t.museumArrival = false;
   closeMuseumGame(player);
   closeMuseumProgress(player);
   t.museumHud?.destroy();
   t.museumHud = undefined;
+}
+
+// Validate the answer on the server; only the subsequent dialogue completion
+// may grant progress. Closing or moving maps never completes the mission.
+export function handleMuseumDialogueChoice(player: ScriptPlayer, id: string, index: number): void {
+  const missionIndex = GAME_IDS.indexOf(id);
+  const playerTag = preparePlayerTag(player);
+  playerTag.museumAnsweredQuiz = undefined;
+  if ((missionIndex !== 2 && missionIndex !== 3) || !canPlay(player, missionIndex) || journey(player).completed.includes(id)) return;
+  const result = applyGameAction(id, createGameState(), { kind: "pick", index });
+  if (result.done) playerTag.museumAnsweredQuiz = id;
 }

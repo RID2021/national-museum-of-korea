@@ -1,5 +1,5 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
-import { handleMuseumAction, closeMuseumGame } from "../nationalMuseum/gameplay";
+import { handleMuseumAction, closeMuseumGame, handleMuseumDialogueChoice } from "../nationalMuseum/gameplay";
 import { resolveMuseumSceneId } from "../nationalMuseum/exploration";
 
 import {
@@ -586,6 +586,7 @@ type MissionNpcStorage = PlayerStorageRecord & {
 };
 
 interface MissionNpcScene {
+  museumQuizId?: string;
   museumTransitionId?: string;
   id: string;
   title: string;
@@ -664,6 +665,7 @@ interface MissionNpcSpeakerLine {
 }
 
 interface MissionNpcChoice {
+  museumQuizIndex?: number;
   id: string;
   label: string;
   lines: string[];
@@ -3334,6 +3336,7 @@ function openMissionNpc(
     const type = (data as MissionNpcIncomingMessage | undefined)?.type;
 
     if (type === "mission-npc:close") {
+      preparePlayerTag(player).museumAnsweredQuiz = undefined;
       teardownMissionNpcWidget(tag);
       return;
     }
@@ -3354,6 +3357,9 @@ function openMissionNpc(
       const selectedChoice = currentScene?.choices?.find(function (choice) {
         return choice.id === choiceId;
       });
+      if (currentScene?.museumQuizId && selectedChoice && typeof selectedChoice.museumQuizIndex === "number") {
+        handleMuseumDialogueChoice(player, currentScene.museumQuizId, selectedChoice.museumQuizIndex);
+      }
 
       if (selectedChoice?.missionId && selectedChoice.stepId) {
         markMissionStepComplete(

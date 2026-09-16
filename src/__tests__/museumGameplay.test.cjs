@@ -5,6 +5,33 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
 const base = path.resolve(__dirname, '../nationalMuseum');
+test('dialogue quizzes validate answers and wait for explanation completion',()=>{
+  for(const n of [2,3]){
+    const h=harness(),id=h.game.GAME_IDS[n];
+    h.app.mapHashID=h.nav.MISSIONS[n].map;
+    h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,n)}});
+    h.api.openMuseumGame(h.player,id,h.open);
+    assert.equal(h.widgets.length,0);
+    assert.equal(h.opened.at(-1),'npc:'+h.nav.MISSIONS[n].npc+':quiz');
+    h.api.handleMuseumAction(h.player,'quiz-complete:'+id,h.open);
+    assert.equal(h.nav.journey(h.player).completed.length,n);
+    for(const answer of [0,-1,999,1.5]){
+      h.api.handleMuseumDialogueChoice(h.player,id,answer);
+      h.api.handleMuseumAction(h.player,'quiz-complete:'+id,h.open);
+      assert.equal(h.nav.journey(h.player).completed.length,n);
+    }
+    h.api.handleMuseumDialogueChoice(h.player,id,1);
+    assert.equal(h.nav.journey(h.player).completed.length,n);
+    h.api.leaveMuseumExperience(h.player);
+    h.api.handleMuseumAction(h.player,'quiz-complete:'+id,h.open);
+    assert.equal(h.nav.journey(h.player).completed.length,n);
+    h.api.handleMuseumDialogueChoice(h.player,id,1);
+    h.api.handleMuseumAction(h.player,'quiz-complete:'+id,h.open);
+    h.api.handleMuseumAction(h.player,'quiz-complete:'+id,h.open);
+    assert.equal(h.nav.journey(h.player).completed.length,n+1);
+    assert.equal(h.moves.length,0);
+  }
+});
 test('brick drag swaps atomically and rejects invalid destinations', () => {
   const {game}=harness(), id=game.GAME_IDS[1], initial=game.createGameState();
   initial.selected=4;
@@ -103,10 +130,10 @@ test('widget-driven full journey completes seven missions, dialogues, moves and 
     const state=()=>JSON.parse(h.player.storage).museumGames[mission.id];
     if(n===0){[1,4,7].forEach(index=>act({kind:'pick',index}));act({kind:'answer',text:'교류'});}
     if(n===1||n===4){for(let i=0;i<state().order.length;i++){const j=state().order.indexOf(i);if(i!==j){act({kind:'pick',index:i});act({kind:'pick',index:j});}}act({kind:'submit'});if(n===4){for(let i=0;i<5;i++)act({kind:'pick',index:i});act({kind:'submit'});}}
-    if(n===2||n===3)act({kind:'pick',index:1});
+    if(n===2||n===3){h.api.handleMuseumDialogueChoice(h.player,mission.id,1);h.api.handleMuseumAction(h.player,'quiz-complete:'+mission.id,h.open);}
     if(n===5)[1,3,5].forEach(index=>act({kind:'pick',index}));
     if(n===6){const deck=state().deck;for(let i=0;i<5;i++){act({kind:'pick',index:deck.indexOf(i*2)});act({kind:'pick',index:deck.indexOf(i*2+1)});}}
-    assert.equal(w.destroyed,true);assert.equal(h.nav.journey(h.player).completed.length,n+1);
+    if(n!==2&&n!==3)assert.equal(w.destroyed,true);assert.equal(h.nav.journey(h.player).completed.length,n+1);
     if(n<6){assert.equal(h.nav.journey(h.player).pendingCompletion,mission.id);h.api.handleMuseumAction(h.player,mission.id,h.open);}
   }
   assert.deepEqual(h.moves.at(-1),['nLP9zE','XWA4Aj']);h.app.mapHashID='XWA4Aj';h.nav.handleMuseumArrival(h.player,h.open);h.timers.shift()();assert.match(h.opened.at(-1),/:ending$/);

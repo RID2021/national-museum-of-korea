@@ -154,9 +154,13 @@ test("museum diagnostic positioning is restricted to opted-in museum administrat
 });
 const dataSource = fs.readFileSync(path.join(root, "src/nationalMuseum/npcs.ts"), "utf8");
 const data = {};
+const gameData = {};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, 'src/nationalMuseum/games.ts'), 'utf8'), {
+  compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
+}).outputText, { exports: gameData });
 vm.runInNewContext(ts.transpileModule(dataSource, {
   compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
-}).outputText, { exports: data });
+}).outputText, { exports: data, require: () => gameData });
 
 // Exercise the registered museum data against the actual existing router.
 const engineSource = fs.readFileSync(path.join(root, "src/missionNpc/index.ts"), "utf8");
@@ -215,11 +219,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 31 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 32 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 31);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 32);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -231,7 +235,7 @@ test("the script has eight distinct speakers and 31 nonempty dialogue scenes", (
   }
 });
 
-test("all 31 fully qualified object triggers route to the intended NPC and scene", () => {
+test("all 32 fully qualified object triggers route to the intended NPC and scene", () => {
   for (const npc of data.NATIONAL_MUSEUM_NPCS) {
     for (const scene of npc.scenes) {
       const { context, player, opened } = setup();
