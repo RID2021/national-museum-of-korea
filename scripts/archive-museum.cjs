@@ -23,6 +23,9 @@ function appendDirectory(relative = "") {
       if (name === "html/museum-npc-widget.template.html") continue;
       if (name === "html/museum-game.template.html") continue;
       if (name.startsWith("images/baekje-bricks/")) continue;
+      // The Silla map is embedded in the generated game widget as a data URL.
+      if (name === "images/national-museum/silla-map-v2.png") continue;
+      if (name === "images/national-museum/silla-map-v2.webp") continue;
       // These source PNGs are already embedded, byte-for-byte, in the generated
       // widget. Do not package a second copy and exceed ZEP's upload limit.
       if (/^images\/npc\/national-museum\/night-guard\/[^/]+-portrait-v1\.png$/.test(name)) continue;
