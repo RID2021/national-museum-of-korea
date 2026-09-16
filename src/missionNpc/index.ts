@@ -3421,7 +3421,7 @@ export function handleMissionNpcTrigger(
   if (!requestedScene) {
     return false;
   }
-  const scene = resolveProgressScene(player, npc, requestedScene);
+  let scene = resolveProgressScene(player, npc, requestedScene);
 
   if (npc.id === "museum-hou-bronze-bowl" && scene.id.indexOf("clue-") === 0) {
     const clue = scene.id.slice(6);
@@ -3431,6 +3431,9 @@ export function handleMissionNpcTrigger(
     if (!clues.includes(clue)) {
       player.storage = JSON.stringify({ ...storage, museumClues: [...clues, clue] });
       if (typeof player.save === "function") player.save();
+    }
+    if (["gwang", "gae", "to"].every(item => clues.includes(item) || item === clue)) {
+      scene = { ...scene, museumTransitionId: "game:museum-hou-relations" };
     }
   }
 
