@@ -81,6 +81,16 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
     saveGame(player, id, next);
     session.revision++;
     if (next.done) {
+      if (id === GAME_IDS[5]) {
+        widget.sendMessage({ type: "museum:complete", token: session.token, title: "검사 통과!" });
+        setTimeout(function () {
+          if (tag(player).museumGame !== session || !canPlay(player, index)) return;
+          closeMuseumGame(player);
+          handleMuseumMissionCompletion(player, id, open);
+          refreshMuseumProgress(player);
+        }, 950);
+        return;
+      }
       closeMuseumGame(player);
       handleMuseumMissionCompletion(player, id, open);
       refreshMuseumProgress(player);
