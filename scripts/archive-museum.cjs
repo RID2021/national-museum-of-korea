@@ -22,7 +22,10 @@ function appendDirectory(relative = "") {
     } else if (entry.isFile()) {
       if (name === "html/museum-npc-widget.template.html") continue;
       if (name === "html/museum-game.template.html") continue;
+      if (name === "html/mission-npc-widget-v15.html") continue;
+      if (name === "html/mission-npc-widget-v16.html") continue;
       if (name.startsWith("images/baekje-bricks/")) continue;
+      if (name.startsWith("images/national-museum/bag-check/")) continue;
       // The Silla map is embedded in the generated game widget as a data URL.
       if (name === "images/national-museum/silla-map-v2.png") continue;
       if (name === "images/national-museum/silla-map-v2.webp") continue;

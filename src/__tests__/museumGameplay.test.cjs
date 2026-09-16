@@ -115,6 +115,18 @@ test('brick artwork covers every label and follows reordered game items', () => 
   assert.equal(after[1], before[0]);
   for (const label of after) assert.ok(assets[label]);
 });
+test('bag check artwork covers all seven belongings in game order', () => {
+  const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
+  const match = html.match(/const BAG_ITEM_ASSETS = (\{[^\n]+\});/);
+  assert.ok(match);
+  const assets = JSON.parse(match[1]);
+  const { game } = harness();
+  assert.deepEqual(Object.keys(assets), Array.from(game.ETIQUETTE_ITEMS));
+  assert.equal(new Set(Object.values(assets)).size, 7);
+  for (const value of Object.values(assets)) assert.ok(value.startsWith('data:image/png;base64,'));
+  assert.match(html, /v\.kind==='conveyor'&&BAG_ITEM_ASSETS\[item\]/);
+  assert.match(html, /className='bag-item-art'/);
+});
 function harness() {
   const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [];
   const app = { spaceHashID: 'nLP9zE', mapHashID: '0EAV9k' };
