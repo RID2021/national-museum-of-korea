@@ -216,6 +216,24 @@ export function handleMuseumSpecialObjectKey(player: ScriptPlayer, key: unknown,
   return true;
 }
 
+/**
+ * Give museum-only object triggers first refusal. A special object such as the
+ * Jinheung map-puzzle key also matches the generic `npc:*` trigger grammar, so
+ * running both handlers would open the game and immediately replace it with
+ * the NPC dialogue widget.
+ */
+export function handleMuseumObjectKey(
+  player: ScriptPlayer,
+  key: unknown,
+  open: Open,
+  handleNpc: (player: ScriptPlayer, key: unknown) => boolean
+): boolean {
+  if (handleMuseumSpecialObjectKey(player, key, open)) {
+    return true;
+  }
+  return handleNpc(player, key);
+}
+
 export function continueMuseum(player: ScriptPlayer, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
   const map = ScriptApp.mapHashID;

@@ -6,7 +6,7 @@ import "zep-script";
 import { handleMuseumDiagnosticCommand, runMuseumDiagnosticPhase, traceMuseumObject } from "./src/nationalMuseum/diagnostics";
 import { getEditorInteractionValue } from "./src/nationalMuseum/editorInteraction";
 import { handleMuseumMissionCompletion } from "./src/nationalMuseum/navigation";
-import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby, resetMuseumExperience, handleMuseumSpecialObjectKey } from "./src/nationalMuseum/gameplay";
+import { startMuseumExperience, leaveMuseumExperience, interactMuseumNearby, resetMuseumExperience, handleMuseumObjectKey } from "./src/nationalMuseum/gameplay";
 import { registerMuseumExploration } from "./src/nationalMuseum/exploration";
 
 import { KeyCodeType, ObjectEffectType, ScriptPlayer } from "zep-script";
@@ -182,9 +182,12 @@ function handleInteractionKey(
     handled;
   handled = handleMissionQuizObjectKey(player, normalized) || handled;
   handled =
-    handleMuseumSpecialObjectKey(player, normalized, handleMissionNpcObjectKey) ||
-    handled;
-  handled = handleMissionNpcObjectKey(player, normalized) || handled;
+    handleMuseumObjectKey(
+      player,
+      normalized,
+      handleMissionNpcObjectKey,
+      handleMissionNpcObjectKey
+    ) || handled;
   handled = handleMissionGameObjectKey(player, normalized) || handled;
   handled =
     handleAnakMuralGateObjectKey(player, normalized, ScriptMap.name) ||
@@ -252,6 +255,26 @@ function handleInteractionKeyOrObjectParam(
     rememberInteractionKey(player, normalized);
   }
 
+  const targetObject = getObjectByInteractionKey(normalized);
+  const objectParam = normalizeInteractionKey(targetObject?.param1);
+
+  // Trigger objects may expose a broad NPC key while keeping the precise
+  // interaction in param1. Prefer that precise value so the Jinheung puzzle
+  // object does not open the ordinary stele dialogue on the first press.
+  if (
+    options?.isObjectInteraction &&
+    objectParam &&
+    objectParam !== normalized
+  ) {
+    const handledByPreferredParam = handleInteractionKey(player, objectParam, {
+      ...options,
+      remember: options?.remember,
+    });
+    if (handledByPreferredParam) {
+      return true;
+    }
+  }
+
   const handledByKey = handleInteractionKey(player, normalized, {
     ...options,
     remember: false,
@@ -260,17 +283,18 @@ function handleInteractionKeyOrObjectParam(
     return true;
   }
 
-  const targetObject = getObjectByInteractionKey(normalized);
   if (!targetObject) {
     return false;
   }
 
-  const handledByParam = handleInteractionKey(player, targetObject.param1, {
-    ...options,
-    remember: options?.remember,
-  });
-  if (handledByParam) {
-    return true;
+  if (!options?.isObjectInteraction || objectParam === normalized) {
+    const handledByParam = handleInteractionKey(player, targetObject.param1, {
+      ...options,
+      remember: options?.remember,
+    });
+    if (handledByParam) {
+      return true;
+    }
   }
 
   if (

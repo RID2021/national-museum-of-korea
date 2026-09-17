@@ -357,6 +357,22 @@ test('Jinheung dialogue unlocks a separate map-puzzle object trigger',()=>{
   h.api.resetMuseumExperience(h.player,h.open);
   assert.equal(JSON.parse(h.player.storage).museumJinheungIntroComplete,false);
 });
+test('Jinheung map-puzzle trigger never falls through to the generic NPC dialogue',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.silla2;
+  const trigger='npc:museum-jinheung-stele:map-puzzle';
+  h.api.handleMuseumAction(h.player,'jinheung-intro-complete',h.open);
+  let npcCalls=0;
+  assert.equal(h.api.handleMuseumObjectKey(h.player,trigger,h.open,()=>{npcCalls+=1;return true;}),true);
+  assert.equal(h.widgets.length,1);
+  assert.equal(npcCalls,0,'the generic NPC handler must not replace the game widget');
+  assert.equal(h.api.handleMuseumObjectKey(h.player,'npc:museum-jinheung-stele',h.open,()=>{npcCalls+=1;return true;}),true);
+  assert.equal(npcCalls,1,'the normal stele trigger must still use the NPC handler');
+});
+test('Silla two relies on its two editor objects instead of an overlapping NPC proximity fallback',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.silla2;
+  h.player.tileX=39;h.player.tileY=27;
+  assert.equal(h.exploration.nearbyMuseumNpc(h.player),undefined);
+});
 test('a directly opened exhibition can complete and show its success dialogue',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.baekje;
   assert.equal(h.nav.handleMuseumMissionCompletion(h.player,h.game.GAME_IDS[1],h.open),true);

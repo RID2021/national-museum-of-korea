@@ -12,7 +12,9 @@ export const MUSEUM_NPC_SPOTS = [
   { map: MUSEUM_MAPS.baekje, x: 36, y: 30, npc: "museum-baekje-landscape-brick" },
   { map: MUSEUM_MAPS.gaya, x: 36, y: 25, npc: "museum-gaya-armor-helmet" },
   { map: MUSEUM_MAPS.silla1, x: 35, y: 25, npc: "museum-hwangnam-gold-crown" },
-  { map: MUSEUM_MAPS.silla2, x: 39, y: 27, npc: "museum-jinheung-stele" },
+  // Silla 2 has two overlapping exhibit interaction zones. Both are handled
+  // by their editor object triggers; a proximity fallback here would also
+  // open the ordinary stele dialogue when the map-puzzle object is pressed.
   { map: MUSEUM_MAPS.lobby5, x: 38, y: 49, npc: "museum-guide-robot" },
 ];
 export function nearbyMuseumNpc(player: ScriptPlayer): string | undefined {
