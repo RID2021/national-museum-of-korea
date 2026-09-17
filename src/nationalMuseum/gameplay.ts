@@ -136,7 +136,7 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
   }
   if (action === "hwangnam-crown:correct") {
     if (ScriptApp.mapHashID !== MUSEUM_MAPS.silla1) return;
-    handleMuseumMissionCompletion(player, GAME_IDS[3], open);
+    handleMuseumMissionCompletion(player, GAME_IDS[3], open, true);
     refreshMuseumProgress(player);
     return;
   }

@@ -506,8 +506,20 @@ test('Silla crown hunt opens once on entry and only the Hwangnam north crown com
   h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
   assert.equal(h.nav.journey(h.player).completed.length,4);
   assert.equal(h.opened.at(-1),'npc:museum-hwangnam-gold-crown:success');
+  const openedBeforeRetry=h.opened.length;
   h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
   assert.equal(h.nav.journey(h.player).completed.length,4);
+  assert.equal(h.opened.length,openedBeforeRetry+1);
+  assert.equal(h.opened.at(-1),'npc:museum-hwangnam-gold-crown:success');
+  const openedBeforeTravel=h.opened.length;
+  h.nav.runMuseumSceneTransition(h.player,h.game.GAME_IDS[3],h.open);
+  assert.deepEqual(h.moves.at(-1),['nLP9zE',h.nav.MUSEUM_MAPS.silla2]);
+  assert.equal(h.nav.journey(h.player).pendingCompletion,undefined);
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.silla1;
+  h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
+  assert.equal(h.opened.length,openedBeforeTravel+1);
+  assert.equal(h.opened.at(-1),'npc:museum-hwangnam-gold-crown:success');
+  assert.equal(h.nav.journey(h.player).pendingCompletion,h.game.GAME_IDS[3]);
 });
 test('pensive-room closing broadcast stays bright, then darkens after its final page without chaining or teleporting',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;

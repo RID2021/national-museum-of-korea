@@ -56,7 +56,12 @@ export function saveMuseumStory(player: ScriptPlayer, story: string): void {
 
 // Server-side completion callback only. Not registered as a chat/object/widget
 // "success" command: viewing a success dialogue cannot complete a mission.
-export function handleMuseumMissionCompletion(player: ScriptPlayer, gameId: string, open: OpenDialogue): boolean {
+export function handleMuseumMissionCompletion(
+  player: ScriptPlayer,
+  gameId: string,
+  open: OpenDialogue,
+  allowReplay = false
+): boolean {
   if (ScriptApp.spaceHashID !== SPACE) return false;
   const index = MISSIONS.findIndex(mission => mission.id === gameId);
   if (index < 0) return false;
@@ -66,7 +71,18 @@ export function handleMuseumMissionCompletion(player: ScriptPlayer, gameId: stri
   // on-site testing. Completing the correct room must therefore be valid even
   // when an earlier room has not yet been recorded in this browser session.
   if (ScriptApp.mapHashID !== mission.map) return true;
-  if (state.completed.includes(gameId)) return true;
+  if (state.completed.includes(gameId)) {
+    // A visitor can return to a room after an earlier completion or after
+    // closing its success dialogue. Re-queue that success scene instead of
+    // silently swallowing the correct interaction, so the room can always
+    // recover and continue to its intended destination.
+    if (!allowReplay || gameId === "museum-artifact-cards") return true;
+    state.pendingCompletion = gameId;
+    persist(player, state);
+    if (gameId === "museum-etiquette") player.spawnAt(52, 40);
+    open(player, `npc:${mission.npc}:${gameId === "museum-etiquette" ? "etiquette-success" : "success"}`);
+    return true;
+  }
   state.completed.push(gameId);
   if (gameId === "museum-artifact-cards") {
     state.pendingEnding = true;
