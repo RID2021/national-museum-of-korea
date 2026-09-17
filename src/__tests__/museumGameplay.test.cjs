@@ -154,20 +154,107 @@ test('artifact memory game renders themed museum cards instead of plain text', (
   assert.match(html, /@keyframes card-reveal/);
   assert.match(html, /\.memory\{grid-template-columns:repeat\(5/);
 });
+test('Goguryeo glyphs and Baekje bricks render as museum-style cards', () => {
+  const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
+  assert.match(html, /const HANJA_READINGS=/);
+  assert.match(html, /classList\.add\('hanja-grid'\)/);
+  assert.match(html, /classList\.add\('hanja-card'\)/);
+  assert.match(html, /className='hanja-glyph'/);
+  assert.match(html, /className='hanja-reading'/);
+  assert.match(html, /\.hanja-card:disabled::after\{content:"✓ 찾음"/);
+  assert.match(html, /className='brick-position'/);
+  assert.match(html, /className='brick-name'/);
+  assert.match(html, /const BRICK_THEMES=/);
+  assert.match(html, /dataset\.brickTheme=BRICK_THEMES\[item\]/);
+  assert.match(html, /className='order-guide'/);
+  assert.match(html, /className='order-guide-step'/);
+  assert.match(html, /\.order button\{--brick-accent:#496d72;--brick-soft:#dce9e5/);
+  assert.match(html, /\.brick-frame\{display:block;position:relative;overflow:hidden;width:64px;height:86px/);
+});
+test('sparse answer and choice stages use dense museum card layouts', () => {
+  const html = fs.readFileSync(path.resolve(base, '../../res/html/museum-game-v1.html'), 'utf8');
+  assert.match(html, /id="content"/);
+  assert.match(html, /content\.className='stage-'\+v\.kind/);
+  assert.match(html, /className='answer-card'/);
+  assert.match(html, /className='answer-evidence'/);
+  assert.match(html, /className='answer-entry'/);
+  assert.match(html, /찾아낸 전시 단서/);
+  assert.match(html, /\.stage-answer,\.stage-choices\{display:grid;align-content:center/);
+  assert.match(html, /\.choices:not\(\.hanja-grid\)/);
+});
+test('pensive room guide advances immediately when each indicated NPC is interacted with', () => {
+  const h = harness();
+  h.app.mapHashID = h.nav.MUSEUM_MAPS.pensive;
+
+  h.api.startMuseumExperience(h.player, h.open);
+  assert.deepEqual(h.mapObjects.at(-1).slice(0, 2), [40, 25]);
+  assert.match(h.mapObjects.at(-1)[2].path, /guide-arrows\/up\.png$/);
+  assert.equal(h.mapObjects.at(-1)[2].anims.idle.length, 58);
+  assert.equal(h.mapObjects.at(-1)[2].frameRate, 25);
+
+  h.player.tileX = 45;
+  h.player.tileY = 14;
+  assert.equal(h.api.interactMuseumNearby(h.player, h.open), true);
+  assert.equal(h.opened.at(-1), 'npc:museum-pensive-1:intro');
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 1);
+  assert.equal(h.mapObjects.at(-2)[2], null);
+  assert.deepEqual(h.mapObjects.at(-1).slice(0, 2), [18, 25]);
+
+  h.player.tileX = 19;
+  h.player.tileY = 14;
+  assert.equal(h.api.interactMuseumNearby(h.player, h.open), true);
+  assert.equal(h.opened.at(-1), 'npc:museum-pensive-2:intro');
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 2);
+  assert.equal(h.mapObjects.at(-1)[2], null);
+
+  h.api.handleMuseumAction(h.player, 'introduction', h.open);
+  assert.deepEqual(h.moves.at(-1), ['nLP9zE', h.nav.MUSEUM_MAPS.lobby1]);
+
+  h.api.resetMuseumExperience(h.player, h.open);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 0);
+  assert.deepEqual(h.mapObjects.at(-1).slice(0, 2), [40, 25]);
+});
 function harness() {
-  const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [];
-  const app = { spaceHashID: 'nLP9zE', mapHashID: '0EAV9k' };
-  const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel() {}, spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args),
+  const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [], mapObjects = [], objectMoves = [], cameraEffects = [];
+  const keyedObjects = new Map();
+  const editorArrow = { tileX: 40, tileY: 25, param1: 'guide-arrow:pensive' };
+  const app = {
+    spaceHashID: 'nLP9zE',
+    mapHashID: '0EAV9k',
+    loadSpritesheet: (path, frameWidth, frameHeight, anims, frameRate) => ({ int: 7123, path, frameWidth, frameHeight, anims, frameRate }),
+    runLater: fn => timers.push(fn),
+  };
+  const scriptMap = {
+    getObjectsByType: type => type === 21 ? [editorArrow] : [],
+    getTopObjectsByType: () => [],
+    putObjectWithKey: (...args) => {
+      mapObjects.push(args);
+      const key = args[3]?.key;
+      if (key && args[2] === null) keyedObjects.delete(key);
+      else if (key) keyedObjects.set(key, { tileX: args[0], tileY: args[1] });
+    },
+    getObjectWithKey: key => keyedObjects.get(key) || null,
+    playObjectAnimationWithKey() {},
+    moveObjectWithKey() { return true; },
+    moveObject: (...args) => {
+      objectMoves.push(args);
+      if (editorArrow.tileX === args[0] && editorArrow.tileY === args[1]) {
+        editorArrow.tileX = args[2];
+        editorArrow.tileY = args[3];
+      }
+    },
+  };
+  const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel() {}, setCameraEffectParam: (...args) => cameraEffects.push(args), spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args),
     showWidget(file,align,width,height) { const w = { file, align, width, height, destroyed: false, messages: [], destroy() { this.destroyed = true; }, sendMessage(m) { this.messages.push(m); }, onMessage: { Add(fn) { w.receive = fn; } } }; widgets.push(w); return w; } };
   const utils = { preparePlayerTag: p => p.tag, loadPlayerStorage: p => JSON.parse(p.storage), savePlayerStorage: (p, s) => p.storage = JSON.stringify(s), preparePlayerStorage: p => JSON.parse(p.storage) };
   function load(name) {
     if (cache[name]) return cache[name];
     const exports = {}; cache[name] = exports;
     vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(base, name + '.ts'), 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS } }).outputText,
-      { exports, ScriptApp: app, setTimeout: fn => timers.push(fn), require: id => id.includes('utils/player') ? utils : load(id.replace('./', '')) });
+      { exports, ScriptApp: app, ScriptMap: scriptMap, setTimeout: fn => timers.push(fn), require: id => id.includes('utils/player') ? utils : load(id.replace('./', '')) });
     return exports;
   }
-  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), player, app, moves, localSpawns, opened, widgets, timers, open: (_p, s) => opened.push(s) };
+  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), guideArrows: load('guideArrows'), player, app, moves, localSpawns, opened, widgets, timers, mapObjects, objectMoves, cameraEffects, open: (_p, s) => opened.push(s) };
 }
 function solve(game, id, state) {
   state = JSON.parse(JSON.stringify(state));
@@ -348,8 +435,8 @@ test('progress uses the unchanged tomb widget and counts only genuine museum mis
 });
 test('travel unlocks only after actual dialogue completion or cleared mission success dialogue',()=>{
   const h=harness();h.app.mapHashID='LB6MNd';assert.equal(h.progress.travelFromMuseumProgress(h.player),false);
-  h.nav.runMuseumSceneTransition(h.player,'goguryeo',h.open);assert.equal(h.nav.journey(h.player).travel.includes('0EAV9k'),true);
-  h.app.mapHashID='LB6MNd';h.moves.length=0;assert.equal(h.progress.travelFromMuseumProgress(h.player),true);assert.deepEqual(h.moves[0],['nLP9zE','0EAV9k']);
+  h.nav.runMuseumSceneTransition(h.player,'goguryeo',h.open);assert.equal(h.nav.journey(h.player).travel.includes('0EAV9k'),false);
+  h.app.mapHashID='LB6MNd';h.moves.length=0;assert.equal(h.progress.travelFromMuseumProgress(h.player),false);assert.equal(h.moves.length,0);
   h.app.mapHashID='0EAV9k';h.nav.handleMuseumMissionCompletion(h.player,h.game.GAME_IDS[0],h.open);h.moves.length=0;assert.equal(h.progress.travelFromMuseumProgress(h.player),false);assert.equal(h.moves.length,0);
   h.nav.runMuseumSceneTransition(h.player,h.game.GAME_IDS[0],h.open);h.app.mapHashID='pnNepx';h.moves.length=0;
   h.progress.showMuseumProgress(h.player);const w=h.widgets.at(-1);assert.equal(w.messages.at(-1).payload.museumButtonLabel,'백제실로 이동하기');
@@ -380,7 +467,7 @@ test('real text input receives synchronous touch focus, remains mounted, and ign
   assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
 });
 test('arriving in ordinary maps stays in world; NPC interaction requires proximity',()=>{
-  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.pensive&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
   h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
   h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
   h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');
@@ -422,22 +509,30 @@ test('Silla crown hunt opens once on entry and only the Hwangnam north crown com
   h.api.handleMuseumAction(h.player,'hwangnam-crown:correct',h.open);
   assert.equal(h.nav.journey(h.player).completed.length,4);
 });
-test('first entry narration opens once, persists across rejoin, and never chains or teleports',()=>{
-  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;
+test('pensive-room closing broadcast stays bright, then darkens after its final page without chaining or teleporting',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;
   h.api.startMuseumExperience(h.player,h.open);h.api.startMuseumExperience(h.player,h.open);
   while(h.timers.length)h.timers.shift()();
   assert.deepEqual(h.opened,['npc:museum-pensive-1:prologue']);
-  assert.equal(h.nav.journey(h.player).prologueSeen,true);
+  assert.equal(h.nav.journey(h.player).pensiveBroadcastSeen,true);
+  assert.deepEqual(h.cameraEffects.at(0),[0,0]);
+  // ZEP may initialize the same player again while page 1/3 is still open.
+  // A started broadcast must remain bright until its final page completes.
+  h.api.startMuseumExperience(h.player,h.open);
+  assert.deepEqual(h.cameraEffects.at(-1),[0,0]);
   h.api.handleMuseumAction(h.player,'prologue',h.open);
+  assert.deepEqual(h.cameraEffects.at(-1),[1,650]);
+  assert.equal(h.nav.journey(h.player).pensiveLightsOut,true);
   h.api.leaveMuseumExperience(h.player);h.player.tag={};h.api.startMuseumExperience(h.player,h.open);
   while(h.timers.length)h.timers.shift()();
   assert.equal(h.opened.length,1);assert.equal(h.moves.length,0);
+  assert.deepEqual(h.cameraEffects.at(-1),[1,650]);
   assert.equal(JSON.parse(h.player.storage).other,'keep');
   h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;
   assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-pensive-1','intro'),'intro');
 });
 test('museum reset clears narrative, missions and games, preserves unrelated data and restarts narration',()=>{
-  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;
   h.player.storage=JSON.stringify({other:'keep',inventory:['keep'],missionProgress:{missions:{tomb:true}},museumJourney:{completed:h.game.GAME_IDS,prologueSeen:true,story:'ending',endingSeen:true,pendingEnding:true,travel:['0EAV9k']},museumGames:{saved:{done:true}},missionNpc:{seenSceneKeys:['museum-pensive-1:prologue','other:intro']}});
   let destroyed=false;h.player.tag.missionNpcWidget={destroy(){destroyed=true;}};h.player.tag.missionNpcId='museum-guide-robot';
   h.api.resetMuseumExperience(h.player,h.open);
@@ -455,17 +550,15 @@ test('museum reset stays in place and invalidates the old game widget',()=>{
   h.api.resetMuseumExperience(h.player,h.open);assert.equal(w.destroyed,true);assert.deepEqual(h.moves,[]);
   w.receive(h.player,{type:'museum:action',token:m.token,revision:m.revision,action:{kind:'answer',text:'교류'}});
   assert.deepEqual(JSON.parse(h.player.storage).museumGames,{});
-  h.app.mapHashID='R57laZ';h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.at(-1),'npc:museum-pensive-1:prologue');
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.at(-1),'npc:museum-pensive-1:prologue');
   h.app.spaceHashID='other';const before=h.player.storage;h.api.resetMuseumExperience(h.player,h.open);assert.equal(h.player.storage,before);
 });
-test('entry narration skips existing progress and cancels when leaving before its timer',()=>{
-  for(const state of [{story:'introduced',completed:[]},{completed:['museum-hou-relations']},{completed:[],prologueSeen:true}]){
-    const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;h.player.storage=JSON.stringify({museumJourney:state});
-    h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0);
-  }
-  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;h.api.startMuseumExperience(h.player,h.open);
-  h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;while(h.timers.length)h.timers.shift()();
-  assert.equal(h.opened.length,0);assert.equal(h.nav.journey(h.player).prologueSeen,false);
+test('pensive broadcast skips only after it was seen and cancels when leaving before its timer',()=>{
+  const seen=harness();seen.app.mapHashID=seen.nav.MUSEUM_MAPS.pensive;seen.player.storage=JSON.stringify({museumJourney:{completed:[],pensiveBroadcastSeen:true}});
+  seen.api.startMuseumExperience(seen.player,seen.open);while(seen.timers.length)seen.timers.shift()();assert.equal(seen.opened.length,0);
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;h.api.startMuseumExperience(h.player,h.open);
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby1;while(h.timers.length)h.timers.shift()();
+  assert.equal(h.opened.length,0);assert.equal(h.nav.journey(h.player).pensiveBroadcastSeen,false);
 });
 test('mobile field opens ZEP text prompt, keeps answer as draft and ignores stale callbacks',()=>{
   const h=harness();h.player.isMobile=true;let callback;let prompts=0;h.player.showPrompt=(_text,fn)=>{callback=fn;prompts++;};

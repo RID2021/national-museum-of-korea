@@ -9,7 +9,7 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; baekjeIntroSeen?: boolean; sillaCrownIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; pensiveBroadcastSeen?: boolean; pensiveLightsOut?: boolean; baekjeIntroSeen?: boolean; sillaCrownIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
 export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
@@ -25,13 +25,26 @@ export function journey(player: ScriptPlayer): Journey {
   const value = loadPlayerStorage(player).museumJourney as Journey | undefined;
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
     pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
-    story: value?.story, prologueSeen: value?.prologueSeen === true, baekjeIntroSeen: value?.baekjeIntroSeen === true,
+    story: value?.story, prologueSeen: value?.prologueSeen === true,
+    pensiveBroadcastSeen: value?.pensiveBroadcastSeen === true,
+    // Migrate players who completed the broadcast before this field existed.
+    // Newly started broadcasts persist an explicit false until page 3/3 ends.
+    pensiveLightsOut: value?.pensiveLightsOut === true ||
+      (value?.pensiveLightsOut === undefined && value?.pensiveBroadcastSeen === true),
+    baekjeIntroSeen: value?.baekjeIntroSeen === true,
     sillaCrownIntroSeen: value?.sillaCrownIntroSeen === true,
     endingSeen: value?.endingSeen === true, travel: Array.isArray(value?.travel) ? value.travel : [] };
 }
 
 function persist(player: ScriptPlayer, value: Journey): void {
   savePlayerStorage(player, { ...loadPlayerStorage(player), museumJourney: value }, { persist: true });
+}
+
+export function completePensiveBroadcast(player: ScriptPlayer): void {
+  const state = journey(player);
+  state.pensiveBroadcastSeen = true;
+  state.pensiveLightsOut = true;
+  persist(player, state);
 }
 
 export function saveMuseumStory(player: ScriptPlayer, story: string): void {
@@ -72,7 +85,6 @@ export function runMuseumSceneTransition(player: ScriptPlayer, transition: strin
   if (ScriptApp.spaceHashID !== SPACE) return;
   const direct: Record<string, [string, string]> = {
     introduction: [MUSEUM_MAPS.pensive, MUSEUM_MAPS.lobby1],
-    goguryeo: [MUSEUM_MAPS.lobby1, MUSEUM_MAPS.goguryeo],
   };
   const route = direct[transition];
   if (route) {
@@ -80,6 +92,14 @@ export function runMuseumSceneTransition(player: ScriptPlayer, transition: strin
       const state = journey(player);
       if (!state.travel?.includes(route[1])) state.travel = [...(state.travel || []), route[1]];
       persist(player, state);
+      if (transition === "introduction") {
+        try {
+          player.setCameraEffectParam(0, 0);
+          player.sendUpdated();
+        } catch (_error) {
+          // Older clients may not expose the per-player camera effect API.
+        }
+      }
       player.spawnAtMap(ScriptApp.spaceHashID, route[1]);
     }
     return;
@@ -100,15 +120,15 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
   let trigger = "";
   // Only the first entry narration and earned ending are automatic. Finishing
   // the narration leaves the player in the world; NPCs still require interaction.
-  if (map === MUSEUM_MAPS.night && !state.prologueSeen && !state.story && !state.completed.length) {
+  if (map === MUSEUM_MAPS.pensive && !state.pensiveBroadcastSeen) {
     setTimeout(function () {
       if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;
       const current = journey(player);
-      if (current.prologueSeen || current.story || current.completed.length) return;
-      current.prologueSeen = true;
+      if (current.pensiveBroadcastSeen) return;
+      current.pensiveBroadcastSeen = true;
       persist(player, current);
       open(player, "npc:museum-pensive-1:prologue");
-    }, 700);
+    }, 300);
     return;
   }
   if (map === MUSEUM_MAPS.baekje && !state.baekjeIntroSeen && !state.completed.includes("museum-baekje-bricks")) {

@@ -5,8 +5,8 @@ import { journey, MISSIONS, MUSEUM_MAPS } from "./navigation";
 
 // Verified editor/world coordinates. Interaction requires walking to the NPC.
 export const MUSEUM_NPC_SPOTS = [
-  { map: MUSEUM_MAPS.pensive, x: 19, y: 14, npc: "museum-pensive-1" },
-  { map: MUSEUM_MAPS.pensive, x: 45, y: 14, npc: "museum-pensive-2" },
+  { map: MUSEUM_MAPS.pensive, x: 45, y: 14, npc: "museum-pensive-1" },
+  { map: MUSEUM_MAPS.pensive, x: 19, y: 14, npc: "museum-pensive-2" },
   { map: MUSEUM_MAPS.lobby1, x: 42, y: 14, npc: "museum-guide-robot" },
   { map: MUSEUM_MAPS.goguryeo, x: 31, y: 29, npc: "museum-hou-bronze-bowl" },
   { map: MUSEUM_MAPS.baekje, x: 36, y: 30, npc: "museum-baekje-landscape-brick" },

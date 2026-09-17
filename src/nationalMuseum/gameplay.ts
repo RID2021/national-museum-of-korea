@@ -1,10 +1,16 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 import { loadPlayerStorage, preparePlayerStorage, preparePlayerTag, savePlayerStorage } from "../utils/player";
 import { GAME_IDS, ETIQUETTE_ALLOWED_INDICES, createGameState, applyGameAction, gameView, GameState, GameAction } from "./games";
-import { MUSEUM_MAPS, MISSIONS, journey, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
+import { MUSEUM_MAPS, MISSIONS, journey, completePensiveBroadcast, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
 import { nearbyMuseumNpc } from "./exploration";
 import { closeMuseumProgress, refreshMuseumProgress } from "./progress";
 import { recordMuseumGayaClue } from "./exploration";
+import {
+  completePensiveGuideFirstStep,
+  completePensiveGuideRoute,
+  resetPensiveGuideArrow,
+  syncPensiveGuideArrow,
+} from "./guideArrows";
 
 type Open = (player: ScriptPlayer, trigger: string) => unknown;
 type Session = { widget: ScriptWidget; id: string; token: string; revision: number; promptOpen?: boolean };
@@ -12,6 +18,14 @@ type MuseumTag = { museumGame?: Session; museumHud?: ScriptWidget; museumArrival
 const BAEKJE_BRICK_IDS = ["yeondaegwi", "sansu", "waun", "sansubonghwang", "bonghwang", "sansugwi", "banryong", "yeonhwa"];
 const JINHEUNG_MAP_TRIGGER = "npc:museum-jinheung-stele:map-puzzle";
 function tag(player: ScriptPlayer): MuseumTag { return preparePlayerTag(player) as MuseumTag; }
+function setPensiveLighting(player: ScriptPlayer, dark: boolean): void {
+  try {
+    player.setCameraEffectParam(dark ? 1 : 0, dark ? 650 : 0);
+    player.sendUpdated();
+  } catch (_error) {
+    // Older clients may not expose the per-player camera effect API.
+  }
+}
 function saveGame(player: ScriptPlayer, id: string, state: GameState): void {
   const data = loadPlayerStorage(player);
   const games = (data.museumGames || {}) as Record<string, GameState>;
@@ -105,6 +119,10 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
 // its last page, never on close. Server mission completion remains authoritative.
 export function handleMuseumAction(player: ScriptPlayer, action: string, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
+  if (action === "pensive-guide-next") {
+    completePensiveGuideFirstStep(player);
+    return;
+  }
   if (action.indexOf("gaya-clue:") === 0) {
     if (ScriptApp.mapHashID !== MUSEUM_MAPS.gaya) return;
     const clues = recordMuseumGayaClue(player, action.slice("gaya-clue:".length));
@@ -167,8 +185,16 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
     return;
   }
   if (action.indexOf("game:") === 0) { openMuseumGame(player, action.slice(5), open); return; }
-  // Narration must not chain into NPC dialogue or move the player automatically.
-  if (action === "prologue") return;
+  // Keep the room bright while the closing broadcast is playing. Its final
+  // page turns the lights off without chaining into NPC dialogue or movement.
+  if (action === "prologue") {
+    if (ScriptApp.mapHashID === MUSEUM_MAPS.pensive) {
+      completePensiveBroadcast(player);
+      setPensiveLighting(player, true);
+    }
+    return;
+  }
+  if (action === "introduction") completePensiveGuideRoute(player);
   if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return; }
   if (action === "emergency") { saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return; }
   runMuseumSceneTransition(player, action, open);
@@ -210,6 +236,11 @@ export function continueMuseum(player: ScriptPlayer, open: Open): void {
 export function interactMuseumNearby(player: ScriptPlayer, open: Open): boolean {
   const npc = nearbyMuseumNpc(player);
   if (!npc) return false;
+  if (npc === "museum-pensive-1") {
+    completePensiveGuideFirstStep(player);
+  } else if (npc === "museum-pensive-2") {
+    completePensiveGuideRoute(player);
+  }
   open(player, `npc:${npc}:intro`);
   return true;
 }
@@ -217,9 +248,15 @@ export function interactMuseumNearby(player: ScriptPlayer, open: Open): boolean 
 export function startMuseumExperience(player: ScriptPlayer, open: Open): void {
   if (ScriptApp.spaceHashID !== "nLP9zE") return;
   preparePlayerStorage(player, { museumGames: {} });
+  const progress = journey(player);
+  setPensiveLighting(
+    player,
+    ScriptApp.mapHashID === MUSEUM_MAPS.pensive && progress.pensiveLightsOut === true
+  );
   const t = tag(player);
   t.museumHud?.destroy();
   t.museumHud = undefined;
+  syncPensiveGuideArrow(player);
   handleMuseumArrival(player, open);
 }
 export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
@@ -259,6 +296,7 @@ export function resetMuseumExperience(player: ScriptPlayer, open: Open): void {
   if (runtimeRoot.__nationalMuseumRuntime?.museumHouIntroComplete) {
     delete runtimeRoot.__nationalMuseumRuntime.museumHouIntroComplete[String(player.id)];
   }
+  resetPensiveGuideArrow(player);
   player.showCenterLabel("박물관 미션이 초기화되었습니다. 현재 위치에서 다시 시작하세요.");
 }
 export function leaveMuseumExperience(player: ScriptPlayer): void {

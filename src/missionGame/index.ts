@@ -222,7 +222,7 @@ const MISSION_GAMES: MissionGameDefinition[] = [
     successMessage: "그렇다. 잘 짝지었구나.",
     soundUrl: "item_acquired.mp3",
     image: {
-      url: "images/muryeong-trade-map.png",
+      url: "images/muryeong-trade-map.webp",
       width: 1448,
       height: 1086,
       alt: "무령왕릉 부장품 교류 지도",

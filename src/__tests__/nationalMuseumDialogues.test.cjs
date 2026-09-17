@@ -26,7 +26,7 @@ test("dialogue completion routes match live map portals and reject wrong source 
   h.context.ScriptApp.mapHashID = "R57laZ";
   h.api.runMuseumSceneTransition(h.player, "prologue", h.open);
   assert.equal(h.moves.length, 0, "Entry narration leaves the player free to explore");
-  for (const [id, source, target] of [["introduction", "WarEng", "LB6MNd"], ["goguryeo", "LB6MNd", "0EAV9k"]]) {
+  for (const [id, source, target] of [["introduction", "WarEng", "LB6MNd"]]) {
     h.context.ScriptApp.mapHashID = "wrong";
     const before = h.moves.length;
     h.api.runMuseumSceneTransition(h.player, id, h.open);
@@ -35,6 +35,10 @@ test("dialogue completion routes match live map portals and reject wrong source 
     h.api.runMuseumSceneTransition(h.player, id, h.open);
     assert.deepEqual(h.moves.at(-1), ["nLP9zE", target]);
   }
+  h.context.ScriptApp.mapHashID = "LB6MNd";
+  const beforeLobbyGuide = h.moves.length;
+  h.api.runMuseumSceneTransition(h.player, "goguryeo", h.open);
+  assert.equal(h.moves.length, beforeLobbyGuide, "Lobby dialogue must not teleport to Goguryeo");
 });
 
 test("all seven mission transitions require correct-room completion and are idempotent", () => {
@@ -338,13 +342,29 @@ test("unknown NPCs and unknown scenes do not open a substitute dialogue", () => 
   assert.equal(opened.length, 0);
 });
 
-test("intro and meeting switch names and portraits in original script order", () => {
+test("pensive broadcast and statue dialogues follow the requested order", () => {
   const { context, player } = setup();
   const statue = data.NATIONAL_MUSEUM_NPCS[0];
+  const broadcast = context.buildNpcPayload(player, statue, statue.scenes.find(s => s.id === "prologue"));
+  assert.deepEqual(Array.from(broadcast.speakerlessLineTexts), [
+    "띠리링",
+    "방송 : 관람객 여러분께 알립니다.",
+    "오늘은 관람이 종료되었습니다.",
+  ]);
   const intro = context.buildNpcPayload(player, statue, statue.scenes.find(s => s.id === "intro"));
-  assert.equal(intro.speakerLines[0].speakerless, true);
-  assert.deepEqual(Array.from(intro.speakerLines.slice(1).map(l => l.speakerName)), [
-    "반가사유상 ①", "반가사유상 ②", "반가사유상 ①", "반가사유상 ②", "반가사유상 ①", "반가사유상 ②",
+  assert.deepEqual(Array.from(intro.lines), [
+    "안녕하십니까. 놀라셨나요?",
+    "걱정하지 마세요. 모든 사람이 우리가 말하는 모습을 볼 수 있는 것은 아닙니다.",
+    "당신은 새로운 박물관 지키미 후보로 선택받았습니다.",
+    "지키미는 밤마다 깨어나는 유물들의 이야기를 듣고, 관람객들이 더 즐겁고 안전하게 박물관을 이용할 수 있도록 돕는 존재입니다.",
+    "오늘 밤 회의에 참석할 유물들의 빛을 모아 로비로 데려와 주세요.",
+    "전시실마다 우리 친구들이 기다리고 있을 것입니다.",
+    "다음 공간으로 이동하려면 제 옆에 친구를 찾아가주세요.",
+  ]);
+  const statue2 = data.NATIONAL_MUSEUM_NPCS[1];
+  assert.deepEqual(Array.from(statue2.scenes.find(s => s.id === "intro").lines), [
+    "어서와요. 기다리고 있었습니다.",
+    "다음 공간으로 이동시켜주지요.",
   ]);
   const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
   const meeting = context.buildNpcPayload(player, robot, robot.scenes.find(s => s.id === "meeting"));
@@ -367,6 +387,13 @@ test("lobby five robot guides first and the separate bag-check trigger starts th
   assert.equal(bagCheck.museumTransitionId, "game:museum-etiquette");
   assert.match(bagCheck.lines.join("\n"), /음료수/);
   assert.match(bagCheck.lines.join("\n"), /수첩/);
+});
+
+test("lobby one through four guide dialogues never request automatic travel", () => {
+  const robot = data.NATIONAL_MUSEUM_NPCS.find(n => n.id === "museum-guide-robot");
+  for (const sceneId of ["intro", "gwanggaeto", "baekje-guide", "gaya-guide", "silla-guide"]) {
+    assert.equal(robot.scenes.find(scene => scene.id === sceneId).museumTransitionId, undefined, sceneId);
+  }
 });
 
 test("Goguryeo NPC dialogue does not reveal the relation answer prompt", () => {

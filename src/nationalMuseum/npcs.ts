@@ -8,8 +8,8 @@ const PORTRAIT_BASE = "../images/npc/national-museum/night-guard";
 const MUSEUM_MAP_NAMES = ["국립중앙박물관", "National Museum of Korea"];
 
 export const MUSEUM_CAST = {
-  "pensive-1": "반가사유상 ①",
-  "pensive-2": "반가사유상 ②",
+  "pensive-1": "반가사유상1",
+  "pensive-2": "반가사유상2",
   "guide-robot": "안내 로봇",
   "hou-bronze-bowl": "호우총 청동 그릇",
   "baekje-landscape-brick": "산수문전 벽돌",
@@ -50,7 +50,6 @@ function npc(
       ...MUSEUM_MAP_NAMES,
       room,
       ...(id === "guide-robot" ? ["로비(1)", "로비(2)", "로비(3)", "로비(4)", "로비(5)", "외부맵(낮)"] : []),
-      ...(id === "pensive-1" ? ["외부맵(밤)"] : []),
     ],
     profileImageUrl: `${PORTRAIT_BASE}/${id}-portrait-v1.png`,
     role,
@@ -85,39 +84,38 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "prologue",
       museumTransitionId: "prologue",
-      title: "국립중앙박물관: 밤의 지키미",
+      title: "관람 종료 안내 방송",
       lines: [],
       speakerLines: [
-        narrator("역사를 좋아하는 나는 오늘도 국립중앙박물관을 찾았다. 내가 가장 좋아하는 공간은 2층 사유의 방."),
-        narrator("오늘은 반가사유상과 함께 있는 공간을 온전히 즐기며 조금 더 오래 생각에 잠겨 있다."),
+        narrator("띠리링"),
+        narrator("방송 : 관람객 여러분께 알립니다."),
+        narrator("오늘은 관람이 종료되었습니다."),
       ],
     },
     {
       id: "intro",
-      title: "반가사유상과의 첫 만남",
-      museumTransitionId: "introduction",
-      lines: [],
-      // Existing speakerLines support switches name and portrait per line.
-      speakerLines: [
-        narrator("관람객 여러분, 오늘의 관람이 종료되었습니다."),
-        spoken("pensive-1", "안녕하십니까. 놀라셨나요?"),
-        spoken("pensive-2", "걱정하지 마세요. 모든 사람이 우리가 움직이는 모습을 볼 수 있는 것은 아닙니다."),
-        spoken("pensive-1", "당신은 새로운 박물관 지키미 후보로 선택받았습니다."),
-        spoken("pensive-2", "지키미는 밤마다 깨어나는 유물들의 이야기를 듣고, 관람객들이 더 즐겁고 안전하게 박물관을 이용할 수 있도록 돕는 존재입니다."),
-        spoken("pensive-1", "오늘 밤 회의에 참석할 유물들의 빛을 모아 로비로 데려와 주세요."),
-        spoken("pensive-2", "전시실마다 우리 친구들이 기다리고 있을 것입니다."),
+      title: "박물관 지키미 후보",
+      museumTransitionId: "pensive-guide-next",
+      lines: [
+        "안녕하십니까. 놀라셨나요?",
+        "걱정하지 마세요. 모든 사람이 우리가 말하는 모습을 볼 수 있는 것은 아닙니다.",
+        "당신은 새로운 박물관 지키미 후보로 선택받았습니다.",
+        "지키미는 밤마다 깨어나는 유물들의 이야기를 듣고, 관람객들이 더 즐겁고 안전하게 박물관을 이용할 수 있도록 돕는 존재입니다.",
+        "오늘 밤 회의에 참석할 유물들의 빛을 모아 로비로 데려와 주세요.",
+        "전시실마다 우리 친구들이 기다리고 있을 것입니다.",
+        "다음 공간으로 이동하려면 제 옆에 친구를 찾아가주세요.",
       ],
-      nextAction: "상설전시관 로비에서 안내 로봇을 만나세요.",
+      nextAction: "옆에 있는 반가사유상2를 찾아가세요.",
     },
   ]),
-  npc("pensive-2", "사유의 방", "지키미 역할과 전시실 친구들 안내", [
+  npc("pensive-2", "사유의 방", "다음 공간 이동 안내", [
     {
       id: "intro",
-      title: "박물관 지키미의 역할",
+      title: "다음 공간으로",
+      museumTransitionId: "introduction",
       lines: [
-        "걱정하지 마세요. 모든 사람이 우리가 움직이는 모습을 볼 수 있는 것은 아닙니다.",
-        "지키미는 밤마다 깨어나는 유물들의 이야기를 듣고, 관람객들이 더 즐겁고 안전하게 박물관을 이용할 수 있도록 돕는 존재입니다.",
-        "전시실마다 우리 친구들이 기다리고 있을 것입니다.",
+        "어서와요. 기다리고 있었습니다.",
+        "다음 공간으로 이동시켜주지요.",
       ],
       nextAction: "상설전시관 로비에서 안내 로봇을 만나세요.",
     },
@@ -126,7 +124,6 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
     {
       id: "intro",
       title: "오늘의 회의 참석 명단",
-      museumTransitionId: "goguryeo",
       lines: [
         "안녕하세요! 예비 박물관 지키미님. 오늘 회의에 참석할 유물 명단입니다.",
         "호우총 청동 그릇, 산수문전 벽돌, 판갑옷과 투구, 황남대총 금관, 진흥왕 순수비",
@@ -134,7 +131,7 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       ],
       nextAction: "고구려실에서 호우총 청동 그릇을 만나세요.",
     },
-    { id: "gwanggaeto", title: "디지털 광개토대왕릉비", lines: GWANGGAETO_LINES, museumTransitionId: "goguryeo" },
+    { id: "gwanggaeto", title: "디지털 광개토대왕릉비", lines: GWANGGAETO_LINES },
     {
       id: "baekje-guide",
       title: "백제실 안내",
