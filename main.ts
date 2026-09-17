@@ -674,7 +674,7 @@ ScriptApp.onSay.Add((player: ScriptPlayer, text: string) => {
       }
     } else if (text === "!진행률") {
       showMissionProgress(player, ScriptMap.name);
-    } else if (text === "!미션리셋") {
+    } else if (trimmedText === "!미션리셋" || trimmedText === "!전체미션리셋") {
       if (ScriptApp.spaceHashID === "nLP9zE") {
         resetMuseumExperience(player, handleMissionNpcObjectKey);
       } else {
