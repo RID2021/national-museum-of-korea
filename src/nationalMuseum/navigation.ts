@@ -9,7 +9,7 @@ export const MUSEUM_MAPS = {
 };
 const SPACE = "nLP9zE";
 type OpenDialogue = (player: ScriptPlayer, trigger: string) => unknown;
-type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; pensiveBroadcastSeen?: boolean; pensiveLightsOut?: boolean; baekjeIntroSeen?: boolean; sillaCrownIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
+type Journey = { completed: string[]; pendingEnding?: boolean; pendingCompletion?: string; story?: string; prologueSeen?: boolean; entryPrologueSeen?: boolean; pensiveBroadcastSeen?: boolean; pensiveLightsOut?: boolean; baekjeIntroSeen?: boolean; sillaCrownIntroSeen?: boolean; endingSeen?: boolean; travel?: string[] };
 export const MISSIONS = [
   { id: "museum-hou-relations", map: MUSEUM_MAPS.goguryeo, destination: MUSEUM_MAPS.lobby2, npc: "museum-hou-bronze-bowl" },
   { id: "museum-baekje-bricks", map: MUSEUM_MAPS.baekje, destination: MUSEUM_MAPS.lobby3, npc: "museum-baekje-landscape-brick" },
@@ -26,6 +26,7 @@ export function journey(player: ScriptPlayer): Journey {
   return { completed: Array.isArray(value?.completed) ? value.completed : [], pendingEnding: value?.pendingEnding === true,
     pendingCompletion: typeof value?.pendingCompletion === "string" ? value.pendingCompletion : undefined,
     story: value?.story, prologueSeen: value?.prologueSeen === true,
+    entryPrologueSeen: value?.entryPrologueSeen === true,
     pensiveBroadcastSeen: value?.pensiveBroadcastSeen === true,
     // Migrate players who completed the broadcast before this field existed.
     // Newly started broadcasts persist an explicit false until page 3/3 ends.
@@ -134,8 +135,20 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
   const map = ScriptApp.mapHashID;
   const state = journey(player);
   let trigger = "";
-  // Only the first entry narration and earned ending are automatic. Finishing
-  // the narration leaves the player in the world; NPCs still require interaction.
+  // The opening narration is separate from the closing broadcast in the
+  // pensive room. It appears once on the exterior night entry map and leaves
+  // the player in place when it finishes.
+  if (map === MUSEUM_MAPS.night && !state.entryPrologueSeen) {
+    setTimeout(function () {
+      if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;
+      const current = journey(player);
+      if (current.entryPrologueSeen) return;
+      current.entryPrologueSeen = true;
+      persist(player, current);
+      open(player, "npc:museum-pensive-1:entry-prologue");
+    }, 700);
+    return;
+  }
   if (map === MUSEUM_MAPS.pensive && !state.pensiveBroadcastSeen) {
     setTimeout(function () {
       if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;

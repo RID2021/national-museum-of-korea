@@ -483,10 +483,20 @@ test('real text input receives synchronous touch focus, remains mounted, and ign
   assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
 });
 test('arriving in ordinary maps stays in world; NPC interaction requires proximity',()=>{
-  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.pensive&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.pensive&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
   h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
   h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
   h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');
+});
+test('night entry opens the two-page prologue once without moving the player',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.night;
+  h.api.startMuseumExperience(h.player,h.open);h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();
+  assert.deepEqual(h.opened,['npc:museum-pensive-1:entry-prologue']);
+  assert.equal(h.nav.journey(h.player).entryPrologueSeen,true);
+  assert.deepEqual(h.moves,[]);
+  h.api.leaveMuseumExperience(h.player);h.player.tag={};h.api.startMuseumExperience(h.player,h.open);
+  while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,1);
 });
 test('Baekje intro opens once on room entry and all eight brick dialogues unlock the puzzle',()=>{
   const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.baekje;

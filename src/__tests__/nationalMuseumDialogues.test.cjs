@@ -224,11 +224,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 55 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 56 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 55);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 56);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
@@ -345,6 +345,11 @@ test("unknown NPCs and unknown scenes do not open a substitute dialogue", () => 
 test("pensive broadcast and statue dialogues follow the requested order", () => {
   const { context, player } = setup();
   const statue = data.NATIONAL_MUSEUM_NPCS[0];
+  const entry = context.buildNpcPayload(player, statue, statue.scenes.find(s => s.id === "entry-prologue"));
+  assert.deepEqual(Array.from(entry.speakerlessLineTexts), [
+    "역사를 좋아하는 나는 오늘도 국립중앙박물관을 찾았다. 내가 가장 좋아하는 공간은 2층 사유의 방.",
+    "오늘은 반가사유상과 함께 있는 공간을 온전히 즐기며 조금 더 오래 생각에 잠겨 있다.",
+  ]);
   const broadcast = context.buildNpcPayload(player, statue, statue.scenes.find(s => s.id === "prologue"));
   assert.deepEqual(Array.from(broadcast.speakerlessLineTexts), [
     "띠리링",

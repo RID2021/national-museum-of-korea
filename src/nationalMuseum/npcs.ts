@@ -82,6 +82,15 @@ const GWANGGAETO_LINES = [
 export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
   npc("pensive-1", "사유의 방", "지키미 후보 선정과 밤의 회의 안내", [
     {
+      id: "entry-prologue",
+      title: "국립중앙박물관: 밤의 지키미",
+      lines: [],
+      speakerLines: [
+        narrator("역사를 좋아하는 나는 오늘도 국립중앙박물관을 찾았다. 내가 가장 좋아하는 공간은 2층 사유의 방."),
+        narrator("오늘은 반가사유상과 함께 있는 공간을 온전히 즐기며 조금 더 오래 생각에 잠겨 있다."),
+      ],
+    },
+    {
       id: "prologue",
       museumTransitionId: "prologue",
       title: "관람 종료 안내 방송",
