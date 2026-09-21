@@ -316,6 +316,31 @@ test('live widget contract checks token/revision and restores saved partial prog
   h.api.openMuseumGame(h.player,h.game.GAME_IDS[0],h.open);w=h.widgets.at(-1);assert.deepEqual(Array.from(w.messages.at(-1).disabled),[1]);
   h.api.leaveMuseumExperience(h.player);assert.equal(w.destroyed,true);assert.equal(JSON.parse(h.player.storage).other,'keep');
 });
+test('completed Goguryeo mission can be replayed and returns to lobby two after success',()=>{
+  const h=harness(),id=h.game.GAME_IDS[0];
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.goguryeo;
+  h.player.storage=JSON.stringify({
+    museumJourney:{completed:[id]},
+    museumGames:{[id]:solve(h.game,id,h.game.createGameState())},
+    museumHouIntroComplete:true,
+    museumClues:['gwang','gae','to'],
+  });
+  assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'quiz');
+  h.api.openMuseumGame(h.player,id,h.open);
+  const w=h.widgets.at(-1);
+  assert.ok(w);
+  assert.equal(JSON.parse(h.player.storage).museumGames[id].done,false);
+  function act(action){const m=w.messages.at(-1);w.receive(h.player,{type:'museum:action',token:m.token,revision:m.revision,action});}
+  [1,4,7].forEach(index=>act({kind:'pick',index}));
+  act({kind:'answer',text:'교류'});
+  assert.equal(w.destroyed,true);
+  assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:success');
+  assert.equal(h.nav.journey(h.player).pendingCompletion,id);
+  assert.deepEqual(Array.from(h.nav.journey(h.player).completed),[id]);
+  h.api.handleMuseumAction(h.player,id,h.open);
+  assert.deepEqual(h.moves.at(-1),['nLP9zE',h.nav.MUSEUM_MAPS.lobby2]);
+  assert.equal(h.nav.journey(h.player).pendingCompletion,undefined);
+});
 test('widget-driven full journey completes seven missions, dialogues, moves and ending',()=>{
   const h=harness();
   for(let n=0;n<7;n++){

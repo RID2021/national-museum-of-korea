@@ -56,7 +56,12 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
   const index = GAME_IDS.indexOf(id);
   if (index < 0 || !canPlay(player, index)) { player.showCenterLabel("해당 전시실의 NPC 가까이에서 미션을 진행해 주세요."); return; }
   const progress = journey(player);
-  if (progress.completed.includes(id)) { continueMuseum(player, open); return; }
+  const isGoguryeoReplay = id === GAME_IDS[0] && progress.completed.includes(id);
+  if (progress.completed.includes(id) && !isGoguryeoReplay) { continueMuseum(player, open); return; }
+  // QA visitors can revisit the Goguryeo room and solve its mission again.
+  // Keep the journey completion flag, but start the local puzzle from a clean
+  // state so an earlier `done` save cannot immediately short-circuit replay.
+  if (isGoguryeoReplay) saveGame(player, id, createGameState());
   if (index === 2 || index === 3) {
     closeMuseumGame(player);
     preparePlayerTag(player).museumAnsweredQuiz = undefined;
@@ -108,7 +113,7 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
         return;
       }
       closeMuseumGame(player);
-      handleMuseumMissionCompletion(player, id, open);
+      handleMuseumMissionCompletion(player, id, open, id === GAME_IDS[0]);
       refreshMuseumProgress(player);
     } else send();
   });
