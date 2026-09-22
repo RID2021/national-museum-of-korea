@@ -41,6 +41,19 @@ function persist(player: ScriptPlayer, value: Journey): void {
   savePlayerStorage(player, { ...loadPlayerStorage(player), museumJourney: value }, { persist: true });
 }
 
+function hasCompletedBeforeFinale(state: Journey): boolean {
+  return MISSIONS.slice(0, -1).every(mission => state.completed.includes(mission.id));
+}
+
+export function canStartMuseumFinale(player: ScriptPlayer): boolean {
+  return hasCompletedBeforeFinale(journey(player));
+}
+
+export function hasCompletedEntireMuseumJourney(player: ScriptPlayer): boolean {
+  const state = journey(player);
+  return MISSIONS.every(mission => state.completed.includes(mission.id));
+}
+
 export function completePensiveBroadcast(player: ScriptPlayer): void {
   const state = journey(player);
   state.pensiveBroadcastSeen = true;
@@ -72,6 +85,10 @@ export function handleMuseumMissionCompletion(
   // on-site testing. Completing the correct room must therefore be valid even
   // when an earlier room has not yet been recorded in this browser session.
   if (ScriptApp.mapHashID !== mission.map) return true;
+  if (gameId === "museum-artifact-cards" && !hasCompletedBeforeFinale(state)) {
+    player.showCenterLabel("아직 완료하지 않은 박물관 미션이 있습니다.");
+    return true;
+  }
   if (state.completed.includes(gameId)) {
     // A visitor can return to a room after an earlier completion or after
     // closing its success dialogue. Re-queue that success scene instead of
@@ -126,7 +143,11 @@ export function runMuseumSceneTransition(player: ScriptPlayer, transition: strin
   if (!mission || ScriptApp.mapHashID !== mission.map || state.pendingCompletion !== transition || !state.completed.includes(transition)) return;
   state.pendingCompletion = undefined;
   persist(player, state);
-  if (transition === "museum-etiquette") open(player, "npc:museum-guide-robot:meeting");
+  if (transition === "museum-etiquette") {
+    open(player, hasCompletedBeforeFinale(state)
+      ? "npc:museum-guide-robot:meeting"
+      : "npc:museum-guide-robot:missions-incomplete");
+  }
   else if (mission.destination) player.spawnAtMap(ScriptApp.spaceHashID, mission.destination);
 }
 
@@ -135,6 +156,17 @@ export function handleMuseumArrival(player: ScriptPlayer, open: OpenDialogue): v
   const map = ScriptApp.mapHashID;
   const state = journey(player);
   let trigger = "";
+  if (map === MUSEUM_MAPS.day && !MISSIONS.every(mission => state.completed.includes(mission.id))) {
+    setTimeout(function () {
+      if (ScriptApp.spaceHashID !== SPACE || ScriptApp.mapHashID !== map) return;
+      const current = journey(player);
+      const missing = MISSIONS.find(mission => !current.completed.includes(mission.id));
+      if (!missing) return;
+      player.showCenterLabel("모든 박물관 미션을 완료해야 외부로 나갈 수 있습니다.");
+      player.spawnAtMap(ScriptApp.spaceHashID, missing.map);
+    }, 300);
+    return;
+  }
   // The opening narration is separate from the closing broadcast in the
   // pensive room. It appears once on the exterior night entry map and leaves
   // the player in place when it finishes.

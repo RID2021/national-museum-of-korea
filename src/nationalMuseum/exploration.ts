@@ -1,7 +1,7 @@
 import type { ScriptPlayer } from "zep-script";
 import { loadPlayerStorage, savePlayerStorage } from "../utils/player";
 import { GAME_IDS } from "./games";
-import { journey, MISSIONS, MUSEUM_MAPS } from "./navigation";
+import { canStartMuseumFinale, journey, MISSIONS, MUSEUM_MAPS } from "./navigation";
 
 // Verified editor/world coordinates. Interaction requires walking to the NPC.
 export const MUSEUM_NPC_SPOTS = [
@@ -116,6 +116,7 @@ export function resolveMuseumSceneId(player: ScriptPlayer, npc: string, requeste
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby4) return "silla-guide";
   if (npc === "museum-guide-robot" && ScriptApp.mapHashID === MUSEUM_MAPS.lobby5) {
     if (!state.completed.includes(GAME_IDS[5])) return "etiquette-intro";
+    if (!canStartMuseumFinale(player)) return "missions-incomplete";
     return state.story === "emergency" ? "emergency" : "meeting";
   }
   return requested;

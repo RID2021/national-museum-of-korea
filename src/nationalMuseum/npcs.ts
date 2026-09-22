@@ -188,6 +188,14 @@ export const NATIONAL_MUSEUM_NPCS: MissionNpcDefinition[] = [
       ],
     },
     {
+      id: "missions-incomplete",
+      title: "남은 전시실 미션 안내",
+      lines: [
+        "아직 완료하지 않은 전시실 미션이 있습니다.",
+        "모든 전시실 미션을 완료한 뒤 다시 회의장으로 돌아와 주세요.",
+      ],
+    },
+    {
       id: "meeting",
       title: "밤의 유물 회의",
       lines: [],

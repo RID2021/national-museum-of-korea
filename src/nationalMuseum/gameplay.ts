@@ -1,7 +1,7 @@
 import type { ScriptPlayer, ScriptWidget } from "zep-script";
 import { loadPlayerStorage, preparePlayerStorage, preparePlayerTag, savePlayerStorage } from "../utils/player";
 import { GAME_IDS, ETIQUETTE_ALLOWED_INDICES, createGameState, applyGameAction, gameView, GameState, GameAction } from "./games";
-import { MUSEUM_MAPS, MISSIONS, journey, completePensiveBroadcast, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
+import { MUSEUM_MAPS, MISSIONS, canStartMuseumFinale, hasCompletedEntireMuseumJourney, journey, completePensiveBroadcast, saveMuseumStory, handleMuseumArrival, handleMuseumMissionCompletion, runMuseumSceneTransition } from "./navigation";
 import { nearbyMuseumNpc } from "./exploration";
 import { closeMuseumProgress, refreshMuseumProgress } from "./progress";
 import { recordMuseumGayaClue } from "./exploration";
@@ -59,10 +59,16 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
   const progress = journey(player);
   const isGoguryeoReplay = id === GAME_IDS[0] && progress.completed.includes(id);
   if (progress.completed.includes(id) && !isGoguryeoReplay) { continueMuseum(player, open); return; }
+  if (id === GAME_IDS[6] && !canStartMuseumFinale(player)) {
+    open(player, "npc:museum-guide-robot:missions-incomplete");
+    return;
+  }
   // QA visitors can revisit the Goguryeo room and solve its mission again.
   // Keep the journey completion flag, but start the local puzzle from a clean
   // state so an earlier `done` save cannot immediately short-circuit replay.
-  if (isGoguryeoReplay) saveGame(player, id, createGameState());
+  if (isGoguryeoReplay || (!progress.completed.includes(id) && readGame(player, id).done)) {
+    saveGame(player, id, createGameState());
+  }
   if (index === 2 || index === 3) {
     closeMuseumGame(player);
     preparePlayerTag(player).museumAnsweredQuiz = undefined;
@@ -97,13 +103,15 @@ export function openMuseumGame(player: ScriptPlayer, id: string, open: Open): vo
       return;
     }
     if (message.type !== "museum:action" || message.revision !== session.revision || !message.action) return;
-    const next = applyGameAction(id, readGame(player, id), message.action);
+    const previous = readGame(player, id);
+    if (previous.done) return;
+    const next = applyGameAction(id, previous, message.action);
     saveGame(player, id, next);
     session.revision++;
     if (next.done) {
       if (id === GAME_IDS[5] || id === GAME_IDS[6]) {
         widget.sendMessage(id === GAME_IDS[5]
-          ? { type: "museum:complete", token: session.token, title: "검사 통과!", copy: "박물관 지키미 자격을 획득했어요" }
+          ? { type: "museum:complete", token: session.token, title: "검사 통과!", copy: "소지품 검사를 통과했어요" }
           : { type: "museum:complete", token: session.token, title: "유물의 빛 복원 완료!", copy: "모든 유물의 빛이 제자리로 돌아왔어요", theme: "artifact" });
         setTimeout(function () {
           if (tag(player).museumGame !== session || !canPlay(player, index)) return;
@@ -207,8 +215,20 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
     }
     completePensiveGuideRoute(player);
   }
-  if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return; }
-  if (action === "emergency") { saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return; }
+  if (action === "ending") {
+    if (!hasCompletedEntireMuseumJourney(player)) {
+      player.showCenterLabel("모든 박물관 미션을 완료해야 지키미가 될 수 있습니다.");
+      return;
+    }
+    saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return;
+  }
+  if (action === "emergency") {
+    if (!canStartMuseumFinale(player)) {
+      open(player, "npc:museum-guide-robot:missions-incomplete");
+      return;
+    }
+    saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return;
+  }
   runMuseumSceneTransition(player, action, open);
 }
 

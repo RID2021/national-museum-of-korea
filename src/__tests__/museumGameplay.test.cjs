@@ -329,6 +329,27 @@ test('lobby five bag check collects only allowed belongings',()=>{
   assert.deepEqual(Array.from(state.removed),[0,2,4,6]);
   assert.match(game.gameView(id,state).prompt,/4\/4 획득/);
 });
+test('unfinished exhibition missions cannot show keeper success or move outside',()=>{
+  const h=harness(),finalId=h.game.GAME_IDS[6];
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby5;
+  h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,4),story:'emergency'},museumGames:{[finalId]:{...h.game.createGameState(),done:true}}});
+  h.api.openMuseumGame(h.player,finalId,h.open);
+  assert.equal(h.widgets.length,0);
+  assert.equal(h.opened.at(-1),'npc:museum-guide-robot:missions-incomplete');
+  assert.equal(h.moves.length,0);
+  h.api.handleMuseumAction(h.player,'ending',h.open);
+  assert.equal(h.nav.journey(h.player).endingSeen,false);
+  assert.equal(h.moves.length,0);
+});
+test('stale completed final-game data is reset before a legitimate new attempt',()=>{
+  const h=harness(),finalId=h.game.GAME_IDS[6];
+  h.app.mapHashID=h.nav.MUSEUM_MAPS.lobby5;
+  h.player.storage=JSON.stringify({museumJourney:{completed:h.game.GAME_IDS.slice(0,6),story:'emergency'},museumGames:{[finalId]:{...h.game.createGameState(),done:true}}});
+  h.api.openMuseumGame(h.player,finalId,h.open);
+  assert.equal(h.widgets.length,1);
+  assert.equal(JSON.parse(h.player.storage).museumGames[finalId].done,false);
+  assert.equal(h.moves.length,0);
+});
 test('live widget contract checks token/revision and restores saved partial progress',()=>{
   const h=harness();h.api.openMuseumGame(h.player,h.game.GAME_IDS[0],h.open);
   let w=h.widgets.at(-1), m=w.messages.at(-1);
@@ -532,7 +553,7 @@ test('real text input receives synchronous touch focus, remains mounted, and ign
   assert.doesNotMatch(html,/키보드가 안 뜨나요|정답 글자/);
 });
 test('arriving in ordinary maps stays in world; NPC interaction requires proximity',()=>{
-  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.pensive&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
+  const h=harness();for(const map of Object.values(h.nav.MUSEUM_MAPS).filter(map=>map!==h.nav.MUSEUM_MAPS.night&&map!==h.nav.MUSEUM_MAPS.pensive&&map!==h.nav.MUSEUM_MAPS.baekje&&map!==h.nav.MUSEUM_MAPS.silla1&&map!==h.nav.MUSEUM_MAPS.day)){h.app.mapHashID=map;h.api.startMuseumExperience(h.player,h.open);while(h.timers.length)h.timers.shift()();assert.equal(h.opened.length,0,map);assert.equal(h.moves.length,0,map);}
   h.app.mapHashID='0EAV9k';h.player.tileX=2;h.player.tileY=2;assert.equal(h.api.interactMuseumNearby(h.player,h.open),false);
   h.player.tileX=31;h.player.tileY=30;assert.equal(h.api.interactMuseumNearby(h.player,h.open),true);assert.equal(h.opened.at(-1),'npc:museum-hou-bronze-bowl:intro');
   h.player.storage=JSON.stringify({museumJourney:{completed:[h.game.GAME_IDS[0]],pendingCompletion:h.game.GAME_IDS[0]}});assert.equal(h.exploration.resolveMuseumSceneId(h.player,'museum-hou-bronze-bowl','intro'),'success');

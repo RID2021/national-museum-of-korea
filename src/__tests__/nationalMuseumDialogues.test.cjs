@@ -7,8 +7,8 @@ const ts = require("typescript");
 
 const root = path.resolve(__dirname, "../..");
 function navigationHarness() {
-  const exports = {}, moves = [], localSpawns = [], opened = [], timers = [];
-  const player = { storage: JSON.stringify({ keep: "existing" }), tag: {}, spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args) };
+  const exports = {}, moves = [], localSpawns = [], opened = [], timers = [], labels = [];
+  const player = { storage: JSON.stringify({ keep: "existing" }), tag: {}, showCenterLabel: message => labels.push(message), spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args) };
   const context = { exports, ScriptApp: { spaceHashID: "nLP9zE", mapHashID: "R57laZ" },
     setTimeout: fn => timers.push(fn), require: () => ({
       loadPlayerStorage: p => JSON.parse(p.storage),
@@ -18,7 +18,7 @@ function navigationHarness() {
     compilerOptions: { target: ts.ScriptTarget.ES2019, module: ts.ModuleKind.CommonJS },
   }).outputText, context);
   const open = (_p, trigger) => opened.push(trigger);
-  return { api: exports, context, player, moves, localSpawns, opened, timers, open };
+  return { api: exports, context, player, moves, localSpawns, opened, timers, labels, open };
 }
 
 test("dialogue completion routes match live map portals and reject wrong source maps", () => {
@@ -75,6 +75,26 @@ test("all seven mission transitions require correct-room completion and are idem
   h.timers.shift()();
   assert.equal(h.opened.at(-1), "npc:museum-guide-robot:ending");
   assert.equal(JSON.parse(h.player.storage).keep, "existing");
+});
+
+test("the exterior and final completion stay locked until every museum mission is complete", () => {
+  const h = navigationHarness();
+  h.context.ScriptApp.mapHashID = "pnNeN3";
+  h.player.storage = JSON.stringify({ museumJourney: { completed: [
+    "museum-hou-relations", "museum-baekje-bricks", "museum-gaya-iron",
+    "museum-hwangnam-crown", "museum-etiquette",
+  ] } });
+  h.api.handleMuseumMissionCompletion(h.player, "museum-artifact-cards", h.open);
+  assert.equal(h.moves.length, 0);
+  assert.equal(h.api.hasCompletedEntireMuseumJourney(h.player), false);
+  assert.equal(JSON.parse(h.player.storage).museumJourney.completed.includes("museum-artifact-cards"), false);
+  assert.match(h.labels.at(-1), /완료하지 않은/);
+
+  h.context.ScriptApp.mapHashID = "XWA4Aj";
+  h.api.handleMuseumArrival(h.player, h.open);
+  h.timers.shift()();
+  assert.deepEqual(h.moves.at(-1), ["nLP9zE", "dJzqzn"]);
+  assert.match(h.labels.at(-1), /모든 박물관 미션/);
 });
 
 test("closing a dialogue has no completion side effects; pending success survives reconnect", () => {
@@ -224,11 +244,11 @@ function setup() {
   return { context, player, opened, entered, touched, timers };
 }
 
-test("the script has eight distinct speakers and 56 nonempty dialogue scenes", () => {
+test("the script has eight distinct speakers and 57 nonempty dialogue scenes", () => {
   const npcs = data.NATIONAL_MUSEUM_NPCS;
   assert.equal(npcs.length, 8);
   assert.equal(new Set(npcs.map(n => n.id)).size, 8);
-  assert.equal(npcs.flatMap(n => n.scenes).length, 56);
+  assert.equal(npcs.flatMap(n => n.scenes).length, 57);
   for (const n of npcs) {
     assert.ok(n.scenes.some(s => s.id === "intro"));
     assert.equal(new Set(n.scenes.map(s => s.id)).size, n.scenes.length);
