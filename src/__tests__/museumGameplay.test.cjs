@@ -192,6 +192,15 @@ test('pensive room guide advances immediately when each indicated NPC is interac
   assert.equal(h.mapObjects.at(-1)[2].anims.idle.length, 58);
   assert.equal(h.mapObjects.at(-1)[2].frameRate, 25);
 
+  h.player.tileX = 19;
+  h.player.tileY = 14;
+  assert.equal(h.api.interactMuseumNearby(h.player, h.open), true);
+  assert.equal(h.opened.length, 0);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage ?? 0, 0);
+  assert.equal(h.centerLabels.at(-1), '먼저 반가사유상 1과 대화해 주세요.');
+  h.api.handleMuseumAction(h.player, 'introduction', h.open);
+  assert.equal(h.moves.length, 0);
+
   h.player.tileX = 45;
   h.player.tileY = 14;
   assert.equal(h.api.interactMuseumNearby(h.player, h.open), true);
@@ -204,18 +213,33 @@ test('pensive room guide advances immediately when each indicated NPC is interac
   h.player.tileY = 14;
   assert.equal(h.api.interactMuseumNearby(h.player, h.open), true);
   assert.equal(h.opened.at(-1), 'npc:museum-pensive-2:intro');
-  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 2);
-  assert.equal(h.mapObjects.at(-1)[2], null);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 1);
 
   h.api.handleMuseumAction(h.player, 'introduction', h.open);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 2);
+  assert.equal(h.mapObjects.at(-1)[2], null);
   assert.deepEqual(h.moves.at(-1), ['nLP9zE', h.nav.MUSEUM_MAPS.lobby1]);
 
   h.api.resetMuseumExperience(h.player, h.open);
   assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage, 0);
   assert.deepEqual(h.mapObjects.at(-1).slice(0, 2), [40, 25]);
 });
+test('pensive statue object triggers also require statue one before statue two',()=>{
+  const h=harness();h.app.mapHashID=h.nav.MUSEUM_MAPS.pensive;
+  let npcCalls=0;
+  const handleNpc=()=>{npcCalls+=1;return true;};
+  assert.equal(h.api.handleMuseumObjectKey(h.player,'npc:반가사유상2',h.open,handleNpc),true);
+  assert.equal(npcCalls,0);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage??0,0);
+  assert.equal(h.api.handleMuseumObjectKey(h.player,'npc:반가사유상1',h.open,handleNpc),true);
+  assert.equal(npcCalls,1);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage,1);
+  assert.equal(h.api.handleMuseumObjectKey(h.player,'npc:museum-pensive-2:intro',h.open,handleNpc),true);
+  assert.equal(npcCalls,2);
+  assert.equal(JSON.parse(h.player.storage).museumPensiveGuideStage,1);
+});
 function harness() {
-  const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [], mapObjects = [], objectMoves = [], cameraEffects = [];
+  const cache = {}, moves = [], localSpawns = [], opened = [], widgets = [], timers = [], mapObjects = [], objectMoves = [], cameraEffects = [], centerLabels = [];
   const keyedObjects = new Map();
   const editorArrow = { tileX: 40, tileY: 25, param1: 'guide-arrow:pensive' };
   const app = {
@@ -244,7 +268,7 @@ function harness() {
       }
     },
   };
-  const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel() {}, setCameraEffectParam: (...args) => cameraEffects.push(args), spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args),
+  const player = { tag: {}, storage: JSON.stringify({ other: 'keep' }), isMobile: false, sendUpdated() {}, save() {}, showCenterLabel: message => centerLabels.push(message), setCameraEffectParam: (...args) => cameraEffects.push(args), spawnAt: (...args) => localSpawns.push(args), spawnAtMap: (...args) => moves.push(args),
     showWidget(file,align,width,height) { const w = { file, align, width, height, destroyed: false, messages: [], destroy() { this.destroyed = true; }, sendMessage(m) { this.messages.push(m); }, onMessage: { Add(fn) { w.receive = fn; } } }; widgets.push(w); return w; } };
   const utils = { preparePlayerTag: p => p.tag, loadPlayerStorage: p => JSON.parse(p.storage), savePlayerStorage: (p, s) => p.storage = JSON.stringify(s), preparePlayerStorage: p => JSON.parse(p.storage) };
   function load(name) {
@@ -254,7 +278,7 @@ function harness() {
       { exports, ScriptApp: app, ScriptMap: scriptMap, setTimeout: fn => timers.push(fn), require: id => id.includes('utils/player') ? utils : load(id.replace('./', '')) });
     return exports;
   }
-  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), guideArrows: load('guideArrows'), player, app, moves, localSpawns, opened, widgets, timers, mapObjects, objectMoves, cameraEffects, open: (_p, s) => opened.push(s) };
+  return { game: load('games'), nav: load('navigation'), api: load('gameplay'), exploration: load('exploration'), progress: load('progress'), guideArrows: load('guideArrows'), player, app, moves, localSpawns, opened, widgets, timers, mapObjects, objectMoves, cameraEffects, centerLabels, open: (_p, s) => opened.push(s) };
 }
 function solve(game, id, state) {
   state = JSON.parse(JSON.stringify(state));

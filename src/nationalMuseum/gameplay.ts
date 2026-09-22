@@ -8,6 +8,7 @@ import { recordMuseumGayaClue } from "./exploration";
 import {
   completePensiveGuideFirstStep,
   completePensiveGuideRoute,
+  getPensiveGuideStage,
   resetPensiveGuideArrow,
   syncPensiveGuideArrow,
 } from "./guideArrows";
@@ -199,7 +200,13 @@ export function handleMuseumAction(player: ScriptPlayer, action: string, open: O
     }
     return;
   }
-  if (action === "introduction") completePensiveGuideRoute(player);
+  if (action === "introduction") {
+    if (ScriptApp.mapHashID !== MUSEUM_MAPS.pensive || getPensiveGuideStage(player) < 1) {
+      player.showCenterLabel("먼저 반가사유상 1과 대화해 주세요.");
+      return;
+    }
+    completePensiveGuideRoute(player);
+  }
   if (action === "ending") { saveMuseumStory(player, "ending"); refreshMuseumProgress(player); return; }
   if (action === "emergency") { saveMuseumStory(player, "emergency"); openMuseumGame(player, GAME_IDS[6], open); return; }
   runMuseumSceneTransition(player, action, open);
@@ -236,6 +243,25 @@ export function handleMuseumObjectKey(
   if (handleMuseumSpecialObjectKey(player, key, open)) {
     return true;
   }
+  if (ScriptApp.spaceHashID === "nLP9zE" && ScriptApp.mapHashID === MUSEUM_MAPS.pensive) {
+    const normalized = typeof key === "string" ? key.trim().toLowerCase().replace(/\s+/g, "") : "";
+    const body = normalized.indexOf("npc:") === 0
+      ? normalized.slice(4)
+      : normalized.indexOf("dialog:") === 0
+        ? normalized.slice(7)
+        : normalized;
+    const first = ["museum-pensive-1", "반가사유상1", "반가사유상①"].some(alias =>
+      body === alias || body.indexOf(`${alias}:`) === 0
+    );
+    const second = ["museum-pensive-2", "반가사유상2", "반가사유상②"].some(alias =>
+      body === alias || body.indexOf(`${alias}:`) === 0
+    );
+    if (second && getPensiveGuideStage(player) < 1) {
+      player.showCenterLabel("먼저 반가사유상 1과 대화해 주세요.");
+      return true;
+    }
+    if (first) completePensiveGuideFirstStep(player);
+  }
   return handleNpc(player, key);
 }
 
@@ -262,7 +288,10 @@ export function interactMuseumNearby(player: ScriptPlayer, open: Open): boolean 
   if (npc === "museum-pensive-1") {
     completePensiveGuideFirstStep(player);
   } else if (npc === "museum-pensive-2") {
-    completePensiveGuideRoute(player);
+    if (getPensiveGuideStage(player) < 1) {
+      player.showCenterLabel("먼저 반가사유상 1과 대화해 주세요.");
+      return true;
+    }
   }
   open(player, `npc:${npc}:intro`);
   return true;
